@@ -18,7 +18,7 @@ const ACCENT = {
 };
 
 // ─── Backend helper ───────────────────────────────────────────────────────────
-const API = "http://localhost:8000";
+const API = "https://formly-production-fd25.up.railway.app";
 async function callAI(endpoint, prompt) {
   const res = await fetch(`${API}${endpoint}`, {
     method:"POST", headers:{"Content-Type":"application/json"},
