@@ -18,17 +18,23 @@ const ACCENT = {
 };
 
 // ─── Backend helper ───────────────────────────────────────────────────────────
-const API = "https://formly-production-fd25.up.railway.app";
+const API = "http://localhost:8000";
 async function callAI(endpoint, prompt) {
-  const res = await fetch(`${API}${endpoint}`, {
-    method:"POST", headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({ prompt }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(()=>({}));
-    throw new Error(err.detail || `Server error ${res.status}`);
+  try {
+    const res = await fetch(`${API}${endpoint}`, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ prompt }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(()=>({}));
+      throw new Error(err.detail || `Server error ${res.status}`);
+    }
+    return (await res.json()).result;
+  } catch(e) {
+    console.error("callAI error:", endpoint, e.message);
+    throw new Error(e.message || "Request failed");
   }
-  return (await res.json()).result;
 }
 
 // ─── Storage helpers ──────────────────────────────────────────────────────────
