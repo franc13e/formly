@@ -527,6 +527,23 @@ const GOAL_FOODS = {
 function NutritionPage({ cycleInfo, showToast }) {
   const [subTab, setSubTab] = useState("cycle");
   const [selectedGoal, setSelectedGoal] = useState(() => load("food-goal", ""));
+  const [customGoal, setCustomGoal] = useState("");
+  const [aiGoalFoods, setAiGoalFoods] = useState(() => load("ai-goal-foods", null));
+  const [aiGoalLoading, setAiGoalLoading] = useState(false);
+
+  const fetchAiGoalFoods = async () => {
+    const goalText = customGoal.trim() || selectedGoal;
+    if (!goalText) return;
+    setAiGoalLoading(true);
+    const phaseCtx = cycleInfo ? `Currently in ${cycleInfo.phase.label} phase (Day ${cycleInfo.dayOfCycle}).` : "";
+    try {
+      const result = await callAI("/api/suggest-goals", `My fitness goal: ${goalText}. ${phaseCtx} What foods should I focus on to support this goal? Be practical and specific. Mention how my current cycle phase affects food needs if provided.`);
+      const cleaned = result.replace(/\*\*(.*?)\*\*/g,"$1").replace(/\*(.*?)\*/g,"$1").trim();
+      setAiGoalFoods(cleaned);
+      save("ai-goal-foods", cleaned);
+    } catch(e) { console.error(e); }
+    setAiGoalLoading(false);
+  };
   const [foodLog, setFoodLog] = useState(() => load("food-diary", []));
   const [newEntry, setNewEntry] = useState("");
 
@@ -612,7 +629,7 @@ function NutritionPage({ cycleInfo, showToast }) {
           <div>
             <div className="card" style={{marginBottom:14}}>
               <div style={{fontWeight:800,fontSize:14,color:C.textMid,marginBottom:12}}>What is your main goal?</div>
-              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
                 {Object.keys(GOAL_FOODS).map(g => {
                   const sel = selectedGoal === g;
                   return (
@@ -622,6 +639,13 @@ function NutritionPage({ cycleInfo, showToast }) {
                     </button>
                   );
                 })}
+              </div>
+              <div style={{marginBottom:6}}>
+                <label className="label">Or describe your goal in your own words</label>
+                <textarea className="input" rows={2} placeholder="e.g. I want to build my glutes and feel stronger. I train 4x a week and prefer whole foods." value={customGoal} onChange={e=>setCustomGoal(e.target.value)} style={{resize:"none",lineHeight:1.6,marginBottom:8}}/>
+                <button className="btn btn-primary" style={{width:"100%"}} onClick={fetchAiGoalFoods} disabled={aiGoalLoading||(!selectedGoal&&!customGoal.trim())}>
+                  {aiGoalLoading?<><div className="spin"/>Getting your food focus...</>:"✨ Get personalised food suggestions"}
+                </button>
               </div>
             </div>
 
@@ -653,6 +677,15 @@ function NutritionPage({ cycleInfo, showToast }) {
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+
+            {aiGoalFoods && (
+              <div style={{marginTop:14,background:C.lavender,borderRadius:16,padding:"14px 16px"}}>
+                <div style={{fontSize:11,fontWeight:800,color:"#7050B0",marginBottom:8}}>✨ AI FOOD SUGGESTIONS</div>
+                <div style={{fontSize:13,lineHeight:1.7,color:"#4030A0",fontWeight:500,whiteSpace:"pre-wrap"}}>{aiGoalFoods}</div>
+                <button style={{marginTop:10,background:"none",border:"none",fontSize:11,color:"#9070C0",fontWeight:700,cursor:"pointer",fontFamily:"Nunito"}} onClick={()=>{setAiGoalFoods(null);save("ai-goal-foods",null);}}>Clear</button>
+              </div>
               </div>
             )}
           </div>
@@ -1457,7 +1490,7 @@ function SettingsPage({ userName, setUserName, showToast }) {
       <div className="card" style={{marginBottom:14,background:`linear-gradient(135deg,${C.lavender},${C.rose})`,border:"none"}}>
         <div style={{fontSize:18,fontWeight:900,color:C.text,marginBottom:8}}>🌸 About Formly</div>
         <div style={{fontSize:13,color:C.textMid,fontWeight:500,lineHeight:1.8}}>
-          Formly is a fitness app built around how women's bodies actually work not a one-size-fits-all tracker.
+          Formly is a women-forward fitness app built around how your body works across your cycle. Understand your energy, plan your workouts, and learn what your body needs at each phase.
         </div>
       </div>
 
@@ -1466,7 +1499,7 @@ function SettingsPage({ userName, setUserName, showToast }) {
         <div className="sec-title">What Formly does</div>
         {[
           {emoji:"🌙",title:"Cycle-aware fitness",desc:"Tracks your menstrual cycle and uses it to contextualise your energy, mood, weight fluctuations, and workout capacity. Because 1-3kg of water retention in luteal phase is not failure it's just physiology."},
-          {emoji:"🥗",title:"Nutrition guidance",desc:"Log meals by name and let AI estimate the macros. Get personalised macro suggestions based on your goals, height, weight, and age framed as starting points to experiment from, not rules."},
+          {emoji:"🥗",title:"Nutrition guidance",desc:"Get food suggestions tailored to your cycle phase and fitness goals. Understand what to prioritise and why based on where you are in your cycle."},
           {emoji:"🏋️",title:"Workout planning",desc:"Browse workouts, build a weekly schedule, and get an AI-generated plan tailored to your goal and current cycle phase. Log your sets, reps, and weights to track progress over time."},
           {emoji:"📏",title:"Body tracking",desc:"Track measurements over time and see trends. Weight naturally fluctuates throughout the month Formly helps you understand why rather than reacting to every number."},
           {emoji:"✨",title:"AI Coach",desc:"Generates personalised workout and nutrition plans that account for your cycle phase, fitness goal, activity level, and any personal context you share like injuries or preferences."},
@@ -1485,7 +1518,7 @@ function SettingsPage({ userName, setUserName, showToast }) {
       <div className="card" style={{marginBottom:14,background:C.sage,border:"none"}}>
         <div style={{fontSize:13,fontWeight:700,color:ACCENT.fiber.text,marginBottom:6}}>Our approach</div>
         <div style={{fontSize:13,color:"#2A5A28",fontWeight:500,lineHeight:1.7}}>
-          Formly is not about being smaller. It's about understanding your body, working with your cycle, hitting your goals, and feeling capable not guilty. Numbers are context, not verdicts.
+          Formly is built around awareness. Understanding your body, working with your cycle, and moving in ways that feel good.
         </div>
       </div>
 
