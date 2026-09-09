@@ -686,7 +686,6 @@ function NutritionPage({ cycleInfo, showToast }) {
                 <div style={{fontSize:13,lineHeight:1.7,color:"#4030A0",fontWeight:500,whiteSpace:"pre-wrap"}}>{aiGoalFoods}</div>
                 <button style={{marginTop:10,background:"none",border:"none",fontSize:11,color:"#9070C0",fontWeight:700,cursor:"pointer",fontFamily:"Nunito"}} onClick={()=>{setAiGoalFoods(null);save("ai-goal-foods",null);}}>Clear</button>
               </div>
-              </div>
             )}
           </div>
         )}
