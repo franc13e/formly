@@ -87,6 +87,16 @@ const CSS = `
   html,body,#root{height:100%;background:#E8DDD0;font-family:'Nunito',sans-serif;color:${C.text};}
   ::-webkit-scrollbar{display:none;}
   .shell{max-width:430px;min-height:100dvh;margin:0 auto;background:${C.bg};display:flex;flex-direction:column;overflow:hidden;}
+  @media(min-width:768px){
+    .shell{max-width:100%;flex-direction:row;}
+    .desktop-sidebar{width:240px;min-width:240px;height:100dvh;background:${C.card};border-right:1.5px solid ${C.border};display:flex;flex-direction:column;padding:32px 0;position:sticky;top:0;flex-shrink:0;}
+    .desktop-content{flex:1;max-width:720px;overflow-y:auto;height:100dvh;}
+    .bottom-nav{display:none !important;}
+    .scroll{padding-bottom:40px !important;}
+    .modal{border-radius:18px !important;margin:auto;max-width:520px !important;}
+    .modal-overlay{align-items:center !important;}
+  }
+  @media(max-width:767px){.desktop-sidebar{display:none;}}
   .scroll{flex:1;overflow-y:auto;padding-bottom:90px;}
   .card{background:${C.card};border-radius:22px;box-shadow:0 2px 12px ${C.shadow};padding:18px;border:1.5px solid ${C.border};}
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;transition:transform .1s;border-radius:50px;}
@@ -1518,6 +1528,75 @@ function SettingsPage({ userName, setUserName, showToast }) {
 // ══════════════════════════════════════════════════════════════════════════════
 // ─── ROOT APP ─────────────────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+function NotificationBell({ cycleInfo, schedule, workoutLog, userName }) {
+  const [permission, setPermission] = useState(() => typeof Notification !== "undefined" ? Notification.permission : "default");
+  const [open, setOpen] = useState(false);
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  const notifications = [];
+
+  // Cycle alerts
+  if (cycleInfo) {
+    if (cycleInfo.daysUntilNext <= 3 && cycleInfo.daysUntilNext > 0) {
+      notifications.push({ id:"period", emoji:"🌙", title:"Period coming soon", body:`Your next period is due in ${cycleInfo.daysUntilNext} day${cycleInfo.daysUntilNext>1?"s":""}. Stock up on iron-rich foods and take it easy.`, color:C.rose });
+    }
+    if (cycleInfo.phase.id === "luteal") {
+      notifications.push({ id:"luteal", emoji:"🍂", title:"Luteal phase reminder", body:"Weight fluctuations this week are normal. Progesterone causes water retention — not fat gain.", color:C.lavender });
+    }
+    if (cycleInfo.phase.id === "ovulation") {
+      notifications.push({ id:"ovulation", emoji:"☀️", title:"Peak energy window", body:"You're in your strongest phase. Great time to push harder in your workouts!", color:C.butter });
+    }
+  }
+
+  // Workout reminders
+  const todaySchedule = Array.isArray(schedule[todayStr]) ? schedule[todayStr] : [];
+  const completedToday = (workoutLog||[]).filter(e=>e.date===todayStr).length;
+  if (todaySchedule.length > 0 && completedToday === 0) {
+    notifications.push({ id:"workout", emoji:"🏋️", title:"Workout planned today", body:`You have ${todaySchedule.length} workout${todaySchedule.length>1?"s":""} scheduled. You've got this!`, color:C.sage });
+  }
+
+  const requestPermission = async () => {
+    if (typeof Notification === "undefined") return;
+    const result = await Notification.requestPermission();
+    setPermission(result);
+    if (result === "granted") {
+      new Notification("Formly", { body: `Hi ${userName||"there"}! You'll now get cycle and workout reminders.`, icon: "/favicon.svg" });
+    }
+  };
+
+  return (
+    <div style={{position:"relative",padding:"0 16px 8px"}}>
+      <button onClick={()=>setOpen(o=>!o)} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 14px",borderRadius:12,border:`1.5px solid ${C.border}`,background:C.white,cursor:"pointer",width:"100%",fontFamily:"Nunito",fontWeight:700,fontSize:13,color:C.textMid,position:"relative"}}>
+        <Icon d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" size={16} stroke={C.textMid} strokeWidth={1.8}/>
+        Notifications
+        {notifications.length>0&&<span style={{position:"absolute",top:8,right:8,width:8,height:8,borderRadius:"50%",background:"#E05050"}}/>}
+      </button>
+      {open&&(
+        <div style={{position:"absolute",bottom:"110%",left:0,right:0,background:C.white,borderRadius:16,border:`1.5px solid ${C.border}`,boxShadow:`0 8px 32px ${C.shadow}`,zIndex:200,overflow:"hidden"}}>
+          <div style={{padding:"14px 16px",borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span style={{fontWeight:800,fontSize:14,color:C.text}}>Notifications</span>
+            <button onClick={()=>setOpen(false)} style={{background:"none",border:"none",cursor:"pointer",fontSize:18,color:C.textSoft}}>×</button>
+          </div>
+          {notifications.length===0&&<div style={{padding:"20px 16px",textAlign:"center",color:C.textSoft,fontSize:13}}>No alerts right now 🌿</div>}
+          {notifications.map(n=>(
+            <div key={n.id} style={{padding:"12px 16px",borderBottom:`1px solid ${C.border}`,background:n.color,display:"flex",gap:10,alignItems:"flex-start"}}>
+              <span style={{fontSize:18,flexShrink:0}}>{n.emoji}</span>
+              <div><div style={{fontWeight:700,fontSize:13,color:C.text,marginBottom:2}}>{n.title}</div><div style={{fontSize:12,color:C.textMid,fontWeight:500,lineHeight:1.5}}>{n.body}</div></div>
+            </div>
+          ))}
+          {permission!=="granted"&&(
+            <div style={{padding:"12px 16px"}}>
+              <button onClick={requestPermission} className="btn btn-primary" style={{width:"100%",fontSize:13}}>Enable push notifications</button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const TABS=[{id:"home",icon:"home",label:"Home"},{id:"nutrition",icon:"nutrition",label:"Nutrition"},{id:"body",icon:"body",label:"Body"},{id:"workouts",icon:"workouts",label:"Workouts"},{id:"settings",icon:"profile",label:"Profile"}];
 
 export default function App() {
@@ -1566,6 +1645,25 @@ export default function App() {
       <style>{CSS}</style>
       <div className="shell">
         {toast&&<div className="toast">{toast}</div>}
+        {/* Desktop sidebar — hidden on mobile via CSS */}
+        <div className="desktop-sidebar">
+          <div style={{padding:"0 24px 32px",fontFamily:"Nunito",fontWeight:900,fontSize:22,color:"#5040A0",letterSpacing:"-0.5px"}}>
+            formly
+          </div>
+          {TABS.map(t=>(
+            <button key={t.id} onClick={()=>setTab(t.id)} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 24px",background:tab===t.id?C.lavender:"transparent",border:"none",cursor:"pointer",width:"100%",textAlign:"left",fontFamily:"Nunito",fontWeight:700,fontSize:14,color:tab===t.id?"#5040A0":C.textMid,borderLeft:tab===t.id?"3px solid #7050B0":"3px solid transparent",transition:"all .15s"}}>
+              <Icon d={Icons[t.icon]} size={18} stroke={tab===t.id?"#7050B0":C.textMid} strokeWidth={1.8}/>
+              {t.label}
+            </button>
+          ))}
+          <div style={{flex:1}}/>
+          {cycleInfo&&<div style={{margin:"0 16px 16px",background:cycleInfo.phase.bg,borderRadius:14,padding:"12px 14px",border:`1.5px solid ${cycleInfo.phase.color}`}}>
+            <div style={{fontSize:12,fontWeight:800,color:cycleInfo.phase.textColor}}>{cycleInfo.phase.emoji} {cycleInfo.phase.label} phase</div>
+            <div style={{fontSize:11,color:cycleInfo.phase.textColor,opacity:.8,marginTop:2,fontWeight:500}}>Day {cycleInfo.dayOfCycle} of {cycleInfo.cycleLength}</div>
+          </div>}
+          <NotificationBell cycleInfo={cycleInfo} schedule={schedule} workoutLog={workoutLog} userName={userName}/>
+        </div>
+        <div className="desktop-content">
         {tab==="home"&&<Dashboard nutrition={nutrition} goals={goals} measurements={measurements} workoutPlan={workoutPlan} schedule={schedule} weightHistory={weightHistory} cycleInfo={cycleInfo} workoutLog={workoutLog} userName={userName}/>}
         {tab==="nutrition"&&<NutritionPage cycleInfo={cycleInfo} showToast={showToast}/>}
         {tab==="body"&&<BodyPage measurements={measurements} setMeasurements={setMeasurements} weightHistory={weightHistory} setWeightHistory={setWeightHistory} cycleInfo={cycleInfo} periodStart={periodStart} setPeriodStart={setPeriodStart} periodHistory={periodHistory} setPeriodHistory={setPeriodHistory} cycleLength={cycleLength} setCycleLength={setCycleLength} showToast={showToast}/>}
@@ -1582,6 +1680,7 @@ export default function App() {
           ))}
         </nav>
       </div>
+        </div>{/* end desktop-content */}
     </>
   );
 }
