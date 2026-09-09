@@ -125,7 +125,7 @@ async def ai_plan(req: PromptRequest):
     text = await call_groq(
         prompt=req.prompt,
         system="You are a women's fitness and nutrition coach. Be extremely concise. Rules: 1) Create EXACTLY the number of workout days specified. Format each day as: Day N: Name, then 3 exercises max as '- Exercise x sets x reps', then '- WHY: one sentence'. 2) After all days use these headers: FOODS TO FOCUS ON:, WHAT YOU WILL ACHIEVE:, COACH'S NOTE:. 3) Max 2 bullets per section after workout plan. 4) Finish every section. Do not cut off.",
-        max_tokens=2000,
+        max_tokens=2500,
         temperature=0.3,
     )
     return {"result": text}
