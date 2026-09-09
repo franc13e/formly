@@ -408,8 +408,10 @@ function Dashboard({ nutrition, goals, measurements, workoutPlan, schedule, weig
   const today = new Date().toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"});
   const todayStr = new Date().toISOString().slice(0,10);
   const todaySchedule = schedule[todayStr]||[];
-  const todayWorkouts = workoutPlan.filter(w=>todaySchedule.includes(w.id));
+  const isRestDay = todaySchedule === "rest";
+  const todayScheduledItems = Array.isArray(todaySchedule) ? todaySchedule : [];
   const completedToday = (workoutLog||[]).filter(e=>e.date===todayStr).length;
+  const todayLoggedWorkouts = (workoutLog||[]).filter(e=>e.date===todayStr);
   const greet=()=>{const h=new Date().getHours();return h<12?"Good morning ☀️":h<17?"Good afternoon 🌤️":"Good evening 🌙";};
   const weekStreak = (() => {
     const days = Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-i);return d.toISOString().slice(0,10);});
@@ -446,9 +448,38 @@ function Dashboard({ nutrition, goals, measurements, workoutPlan, schedule, weig
           <div className="sec-title" style={{margin:0}}>Today's workouts</div>
           {completedToday>0&&<span style={{fontSize:12,fontWeight:700,color:ACCENT.fiber.text,background:C.sage,padding:"3px 10px",borderRadius:99}}>✓ {completedToday} done</span>}
         </div>
-        {todayWorkouts.length===0
-          ?<div style={{textAlign:"center",padding:"16px 0",color:C.textSoft,fontSize:13,fontWeight:600}}>Nothing scheduled today 🌿<br/><span style={{fontSize:12}}>Head to Workouts to build your plan</span></div>
-          :todayWorkouts.map(w=><div key={w.id} className="row" style={{padding:"8px 0",borderTop:`1px solid ${C.border}`}}><span style={{fontSize:22}}>{w.emoji}</span><div><div style={{fontWeight:700,fontSize:14}}>{w.name}</div><div style={{fontSize:12,color:C.textSoft,fontWeight:500}}>{w.muscle} · {w.duration}</div></div></div>)}
+        {isRestDay
+          ? <div style={{textAlign:"center",padding:"16px 0"}}>
+              <div style={{fontSize:28,marginBottom:6}}>🌿</div>
+              <div style={{fontWeight:700,fontSize:14,color:C.text}}>Rest day</div>
+              <div style={{fontSize:12,color:C.textSoft,marginTop:4}}>Recovery is part of the plan. Enjoy it.</div>
+            </div>
+          : todayLoggedWorkouts.length > 0
+            ? todayLoggedWorkouts.map(e=>(
+                <div key={e.id} className="row" style={{padding:"8px 0",borderTop:`1px solid ${C.border}`,gap:10}}>
+                  <span style={{fontSize:22}}>{e.emoji||"🏋️"}</span>
+                  <div style={{flex:1}}>
+                    <div style={{fontWeight:700,fontSize:14}}>{e.name}</div>
+                    <div style={{fontSize:12,color:C.textSoft,fontWeight:500}}>{e.sets&&`${e.sets} sets`}{e.reps&&` × ${e.reps} reps`}{e.weight&&` @ ${e.weight}kg`}</div>
+                  </div>
+                  <span style={{fontSize:11,color:ACCENT.fiber.text,fontWeight:700,background:C.sage,padding:"2px 8px",borderRadius:99}}>✓</span>
+                </div>
+              ))
+            : todayScheduledItems.length > 0
+              ? todayScheduledItems.map((item,i)=>(
+                  <div key={i} className="row" style={{padding:"8px 0",borderTop:`1px solid ${C.border}`,gap:10}}>
+                    <span style={{fontSize:22}}>{item.emoji||"🏋️"}</span>
+                    <div style={{flex:1}}>
+                      <div style={{fontWeight:700,fontSize:14}}>{item.name}</div>
+                      <div style={{fontSize:12,color:C.textSoft,fontWeight:500}}>{item.detail||""}</div>
+                    </div>
+                    <span style={{fontSize:11,color:C.textSoft,fontWeight:600}}>planned</span>
+                  </div>
+                ))
+              : <div style={{textAlign:"center",padding:"16px 0",color:C.textSoft,fontSize:13,fontWeight:600}}>
+                  Nothing scheduled today 🌿<br/><span style={{fontSize:12}}>Head to Workouts to build your plan</span>
+                </div>
+        }
       </div>
       {weightHistory&&weightHistory.length>0&&<div className="card"><div className="sec-title">Weight this week</div><WeightChart history={weightHistory} cycleInfo={cycleInfo}/></div>}
     </div>
@@ -927,8 +958,10 @@ function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedule, work
   const completedToday = new Set((workoutLog||[]).filter(e=>e.date===todayStr).map(e=>e.name));
 
   const DAYS = Array.from({length:7}, (_,i) => {
-    const d = new Date(); d.setDate(d.getDate() - d.getDay() + i);
-    return { date: d.toISOString().slice(0,10), label:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][i], num: d.getDate() };
+    const d = new Date();
+    const monday = d.getDate() - ((d.getDay()+6)%7);
+    d.setDate(monday + i);
+    return { date: d.toISOString().slice(0,10), label:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][i], num: d.getDate() };
   });
 
   const addToDay = (date, item) => setSchedule(s => ({ ...s, [date]: [...(s[date]||[]), item] }));
@@ -966,7 +999,7 @@ function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedule, work
 
           {/* Calendar grid header */}
           <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:4,marginBottom:6}}>
-            {["S","M","T","W","T","F","S"].map((d,i)=>(
+            {["M","T","W","T","F","S","S"].map((d,i)=>(
               <div key={i} style={{textAlign:"center",fontSize:10,fontWeight:800,color:C.textSoft,padding:"4px 0"}}>{d}</div>
             ))}
           </div>
@@ -985,13 +1018,15 @@ function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedule, work
                   transition:"all .15s",
                 }}>
                   <div style={{fontSize:11,fontWeight:900,color:isPicking?"white":isToday?"#7050B0":C.text}}>{day.num}</div>
-                  {items.length>0 && (
-                    <div style={{display:"flex",flexWrap:"wrap",gap:2,justifyContent:"center"}}>
-                      {items.slice(0,3).map((_,i)=>(
-                        <div key={i} style={{width:5,height:5,borderRadius:"50%",background:isPicking?"white":"#9070D0"}}/>
-                      ))}
-                    </div>
-                  )}
+                  {items==="rest"
+                    ? <div style={{fontSize:9}}>🌿</div>
+                    : items.length>0 && (
+                      <div style={{display:"flex",flexWrap:"wrap",gap:2,justifyContent:"center"}}>
+                        {items.slice(0,3).map((_,i)=>(
+                          <div key={i} style={{width:5,height:5,borderRadius:"50%",background:isPicking?"white":"#9070D0"}}/>
+                        ))}
+                      </div>
+                    )}
                 </div>
               );
             })}
@@ -1031,7 +1066,13 @@ function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedule, work
 
                 {/* Add workout */}
                 <div style={{marginTop:8}}>
-                  {workoutPlan.length>0&&(
+                  {/* Rest day toggle */}
+                  <div className="row" style={{marginBottom:12,gap:8}}>
+                    <button onClick={()=>{setSchedule(s=>({...s,[pickingDay]:s[pickingDay]==="rest"?[]:"rest"}));showToast(schedule[pickingDay]==="rest"?"Rest day removed":"Rest day set 🌿");}} style={{padding:"7px 14px",borderRadius:99,border:`1.5px solid ${schedule[pickingDay]==="rest"?C.sageDeep:C.border}`,background:schedule[pickingDay]==="rest"?C.sage:"transparent",color:schedule[pickingDay]==="rest"?ACCENT.fiber.text:C.textSoft,fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"Nunito",transition:"all .15s"}}>
+                      🌿 {schedule[pickingDay]==="rest"?"Rest day set":"Mark as rest day"}
+                    </button>
+                  </div>
+                  {workoutPlan.length>0&&schedule[pickingDay]!=="rest"&&(
                     <div style={{marginBottom:10}}>
                       <div style={{fontSize:11,color:C.textSoft,fontWeight:700,marginBottom:6}}>Quick add from your plan:</div>
                       <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
@@ -1043,12 +1084,12 @@ function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedule, work
                       </div>
                     </div>
                   )}
-                  <div className="row" style={{gap:8}}>
+                  {schedule[pickingDay]!=="rest"&&<div className="row" style={{gap:8}}>
                     <input className="input" placeholder="Type a workout name..." value={customInput} onChange={e=>setCustomInput(e.target.value)}
                       onKeyDown={e=>{if(e.key==="Enter"&&customInput.trim()){addToDay(pickingDay,{name:customInput.trim(),emoji:"🏋️"});setCustomInput("");showToast("Added ✓");}}}
                       style={{fontSize:13}}/>
                     <button className="btn btn-primary btn-sm" style={{flexShrink:0}} onClick={()=>{if(customInput.trim()){addToDay(pickingDay,{name:customInput.trim(),emoji:"🏋️"});setCustomInput("");showToast("Added ✓");}}}>Add</button>
-                  </div>
+                  </div>}
                 </div>
               </div>
             );
