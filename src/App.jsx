@@ -90,9 +90,9 @@ const CSS = `
   @media(min-width:768px){
     .shell{max-width:100%;flex-direction:row;}
     .desktop-sidebar{width:240px;min-width:240px;height:100dvh;background:${C.card};border-right:1.5px solid ${C.border};display:flex;flex-direction:column;padding:32px 0;position:sticky;top:0;flex-shrink:0;}
-    .desktop-content{flex:1;max-width:720px;overflow-y:auto;height:100dvh;}
+    .desktop-content{flex:1;max-width:860px;overflow-y:auto;height:100dvh;}
     .bottom-nav{display:none !important;}
-    .scroll{padding-bottom:40px !important;}
+    .scroll{padding-bottom:40px !important;padding-top:32px !important;}
     .modal{border-radius:18px !important;margin:auto;max-width:520px !important;}
     .modal-overlay{align-items:center !important;}
   }
@@ -452,6 +452,7 @@ function Dashboard({ nutrition, goals, measurements, workoutPlan, schedule, weig
 
   return (
     <div className="scroll" style={{padding:"32px 24px 40px"}}>
+      <style>{`@media(min-width:768px){.home-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}.home-full{grid-column:1/-1;}}`}</style>
       <div style={{marginBottom:cycleInfo?10:16}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
           <div style={{fontSize:22,fontWeight:900,color:C.text}}>{greet()}{userName?`, ${userName}`:""}</div>
@@ -656,7 +657,7 @@ function NutritionPage({ cycleInfo, showToast }) {
 
   return (
     <div className="scroll" style={{paddingBottom:90}}>
-      <div style={{padding:"52px 18px 0",background:C.bg}}>
+      <div style={{padding:"24px 24px 0",background:C.bg}}>
         <div className="row" style={{marginBottom:2}}><span style={{fontSize:26}}>🥗</span><div style={{fontSize:24,fontWeight:900,color:C.text,marginLeft:8}}>Nutrition</div></div>
         <div style={{fontSize:13,color:C.textSoft,fontWeight:500,marginBottom:14}}>Food insights for your cycle and goals</div>
         <SubTabs/>
@@ -860,7 +861,7 @@ function BodyPage({ measurements, setMeasurements, weightHistory, setWeightHisto
 
   return (
     <div className="scroll" style={{paddingBottom:90}}>
-      <div style={{padding:"52px 18px 0",background:C.bg}}>
+      <div style={{padding:"24px 24px 0",background:C.bg}}>
         <div className="row" style={{marginBottom:2}}><span style={{fontSize:26}}>🌸</span><div style={{fontSize:24,fontWeight:900,color:C.text}}>Body</div></div>
         <div style={{fontSize:13,color:C.textSoft,fontWeight:500,marginBottom:14}}>Your body, your cycle, your context</div>
         <SubTabs/>
@@ -1035,7 +1036,7 @@ function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedule, work
   );
 
   return (
-    <div className="scroll" style={{padding:"52px 16px 90px"}}>
+    <div className="scroll" style={{padding:"24px 24px 40px"}}>
       <div style={{fontSize:24,fontWeight:900,color:C.text,marginBottom:16}}>Workouts</div>
       <TabRow/>
 
@@ -1468,7 +1469,7 @@ function SettingsPage({ userName, setUserName, showToast }) {
   const [localName, setLocalName] = useState(userName || "");
 
   return (
-    <div className="scroll" style={{padding:"52px 16px 90px"}}>
+    <div className="scroll" style={{padding:"24px 24px 40px"}}>
       <div style={{fontSize:24,fontWeight:900,color:C.text,marginBottom:4}}>Profile</div>
       <div style={{fontSize:13,color:C.textSoft,fontWeight:500,marginBottom:20}}>Your details and about Formly</div>
 
@@ -1579,7 +1580,7 @@ function NotificationBell({ cycleInfo, schedule, workoutLog, userName }) {
         {notifications.length>0&&<span style={{position:"absolute",top:6,right:6,width:8,height:8,borderRadius:"50%",background:"#E05050"}}/>}
       </button>
       {open&&(
-        <div style={{position:"absolute",bottom:"110%",left:0,right:0,background:C.white,borderRadius:16,border:`1.5px solid ${C.border}`,boxShadow:`0 8px 32px ${C.shadow}`,zIndex:200,overflow:"hidden"}}>
+        <div style={{position:"fixed",top:60,right:16,left:16,background:C.white,borderRadius:16,border:`1.5px solid ${C.border}`,boxShadow:`0 8px 32px ${C.shadow}`,zIndex:200,overflow:"hidden"}}>
           <div style={{padding:"14px 16px",borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <span style={{fontWeight:800,fontSize:14,color:C.text}}>Notifications</span>
             <button onClick={()=>setOpen(false)} style={{background:"none",border:"none",cursor:"pointer",fontSize:18,color:C.textSoft}}>×</button>
