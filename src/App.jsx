@@ -1107,7 +1107,7 @@ function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedule, work
                       </div>
                       <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4}}>
                         <span style={{fontSize:10,color:C.textSoft,fontWeight:600}}>{e.time}</span>
-                        <button style={{background:"none",border:"none",fontSize:11,color:C.textSoft,cursor:"pointer",fontFamily:"Nunito",fontWeight:600,padding:0}} onClick={()=>setWorkoutLog(l=>l.filter(x=>x.id!==e.id))}>delete</button>
+                        <button style={{background:"none",border:"none",fontSize:16,color:C.textSoft,cursor:"pointer",padding:0,lineHeight:1,opacity:.6}} onClick={()=>setWorkoutLog(l=>l.filter(x=>x.id!==e.id))} title="Delete">🗑️</button>
                       </div>
                     </div>
                   </div>
