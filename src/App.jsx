@@ -1580,7 +1580,7 @@ function NotificationBell({ cycleInfo, schedule, workoutLog, userName }) {
         {notifications.length>0&&<span style={{position:"absolute",top:6,right:6,width:8,height:8,borderRadius:"50%",background:"#E05050"}}/>}
       </button>
       {open&&(
-        <div style={{position:"fixed",bottom:80,left:16,width:220,background:C.white,borderRadius:16,border:`1.5px solid ${C.border}`,boxShadow:`0 8px 32px ${C.shadow}`,zIndex:200,overflow:"hidden"}}>
+        <div style={{position:"fixed",bottom:"auto",top:70,right:16,left:16,width:"auto",background:C.white,borderRadius:16,border:`1.5px solid ${C.border}`,boxShadow:`0 8px 32px ${C.shadow}`,zIndex:200,overflow:"hidden",maxWidth:360}}>
           <div style={{padding:"14px 16px",borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <span style={{fontWeight:800,fontSize:14,color:C.text}}>Notifications</span>
             <button onClick={()=>setOpen(false)} style={{background:"none",border:"none",cursor:"pointer",fontSize:18,color:C.textSoft}}>×</button>
