@@ -119,8 +119,9 @@ async def body_insight(req: PromptRequest):
 async def ai_plan(req: PromptRequest):
     text = await call_groq(
         prompt=req.prompt,
-        system="You are a women's fitness and nutrition coach. Rules: 1) Create EXACTLY the number of workout days specified, no more, no less. Number them Day 1, Day 2 etc. 2) Under each day write one WHY line explaining how it suits the current cycle phase if provided. 3) Use these headers exactly: WEEKLY WORKOUT PLAN:, FOODS TO FOCUS ON:, WHAT YOU WILL ACHIEVE:, COACH'S NOTE:. 4) Every header must appear. 5) Use bullet points only.",
-        max_tokens=700,
+        system="You are a women's fitness and nutrition coach. Rules: 1) Create EXACTLY the number of workout days specified. Number them Day 1, Day 2 etc. Each day: name, 4 exercises with sets/reps, one WHY line for the cycle phase. Keep each day concise. 2) Use these headers exactly on their own line: WEEKLY WORKOUT PLAN:, FOODS TO FOCUS ON:, WHAT YOU WILL ACHIEVE:, COACH'S NOTE:. 3) Every header must appear. 4) Bullet points only. 5) Be concise — finish all sections.",
+        max_tokens=1500,
+        temperature=0.5,
         temperature=0.7,
     )
     return {"result": text}
