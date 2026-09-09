@@ -1,4 +1,24 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+
+// ─── Icon components (clean SVG, no emoji) ───────────────────────────────────
+const Icon = ({ d, size=20, stroke="#7A6055", strokeWidth=1.8 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+    {Array.isArray(d) ? d.map((p,i) => <path key={i} d={p}/>) : <path d={d}/>}
+  </svg>
+);
+const Icons = {
+  home:     ["M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z","M9 22V12h6v10"],
+  nutrition:"M12 2a9 9 0 00-9 9c0 4.17 2.84 7.67 6.69 8.69L12 22l2.31-2.31C18.16 18.67 21 15.17 21 11A9 9 0 0012 2z",
+  body:     ["M12 2a4 4 0 100 8 4 4 0 000-8z","M6 21v-1a6 6 0 0112 0v1"],
+  workouts: ["M6.5 6.5h11","M6.5 17.5h11","M3 12h18","M16 6.5V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v1.5","M16 17.5V19a1 1 0 01-1 1h-2a1 1 0 01-1-1v-1.5"],
+  profile:  ["M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2","M12 3a4 4 0 100 8 4 4 0 000-8z"],
+  trash:    ["M3 6h18","M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6","M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"],
+  plus:     "M12 5v14M5 12h14",
+  check:    "M20 6L9 17l-5-5",
+  x:        "M18 6L6 18M6 6l12 12",
+  chevron:  "M6 9l6 6 6-6",
+  leaf:     "M17 8C8 10 5.9 16.17 3.82 20.82a10.71 10.71 0 01-.82-4.82C3 9 9 5 17 8z",
+};
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const C = {
@@ -948,6 +968,30 @@ function BodyPage({ measurements, setMeasurements, weightHistory, setWeightHisto
 
 // ══════════════════════════════════════════════════════════════════════════════
 // ─── WORKOUTS ─────────────────────────────────────────────────────────────────
+
+// ─── Swipe to delete ──────────────────────────────────────────────────────────
+function SwipeToDelete({ onDelete }) {
+  const [swiped, setSwiped] = useState(false);
+  const startX = useRef(null);
+  return swiped ? (
+    <button onClick={onDelete} style={{background:C.rose,border:"none",borderRadius:10,padding:"4px 10px",cursor:"pointer",display:"flex",alignItems:"center",gap:4,flexShrink:0}}>
+      <Icon d={Icons.trash} size={14} stroke={ACCENT.protein.text} strokeWidth={2}/>
+      <span style={{fontSize:11,fontWeight:700,color:ACCENT.protein.text}}>Delete?</span>
+    </button>
+  ) : (
+    <div
+      style={{color:C.textSoft,cursor:"pointer",padding:"4px",flexShrink:0,opacity:.5}}
+      onTouchStart={e=>{startX.current=e.touches[0].clientX;}}
+      onTouchEnd={e=>{if(startX.current-e.changedTouches[0].clientX>40)setSwiped(true);}}
+      onMouseDown={e=>{startX.current=e.clientX;}}
+      onMouseUp={e=>{if(startX.current-e.clientX>20)setSwiped(true);}}
+      title="Swipe left to delete"
+    >
+      <Icon d={Icons.trash} size={15} stroke={C.textSoft} strokeWidth={1.8}/>
+    </div>
+  );
+}
+
 function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedule, workoutLog, setWorkoutLog, aiPlan, measurements, goals, cycleInfo, showToast }) {
   const [tab, setTab] = useState("schedule");
   const [logModal, setLogModal] = useState(null);
@@ -1148,7 +1192,7 @@ function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedule, work
                       </div>
                       <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4}}>
                         <span style={{fontSize:10,color:C.textSoft,fontWeight:600}}>{e.time}</span>
-                        <button style={{background:"none",border:"none",fontSize:16,color:C.textSoft,cursor:"pointer",padding:0,lineHeight:1,opacity:.6}} onClick={()=>setWorkoutLog(l=>l.filter(x=>x.id!==e.id))} title="Delete">🗑️</button>
+                        <SwipeToDelete onDelete={()=>setWorkoutLog(l=>l.filter(x=>x.id!==e.id))}/>
                       </div>
                     </div>
                   </div>
@@ -1482,7 +1526,7 @@ function SettingsPage({ userName, setUserName, showToast }) {
 // ══════════════════════════════════════════════════════════════════════════════
 // ─── ROOT APP ─────────────────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
-const TABS=[{id:"home",icon:"🏠",label:"Home"},{id:"nutrition",icon:"🥗",label:"Nutrition"},{id:"body",icon:"🌸",label:"Body"},{id:"workouts",icon:"🏋️",label:"Workouts"},{id:"settings",icon:"👤",label:"Profile"}];
+const TABS=[{id:"home",icon:"home",label:"Home"},{id:"nutrition",icon:"nutrition",label:"Nutrition"},{id:"body",icon:"body",label:"Body"},{id:"workouts",icon:"workouts",label:"Workouts"},{id:"settings",icon:"profile",label:"Profile"}];
 
 export default function App() {
   const [tab,setTab]=useState("home");
@@ -1538,7 +1582,9 @@ export default function App() {
         <nav className="bottom-nav">
           {TABS.map(t=>(
             <div key={t.id} className="nav-tab" onClick={()=>setTab(t.id)}>
-              <div className={`nav-icon-wrap${tab===t.id?" active":""}`}>{t.icon}</div>
+              <div className={`nav-icon-wrap${tab===t.id?" active":""}`}>
+              <Icon d={Icons[t.icon]} size={18} stroke={tab===t.id?"#7050B0":"#B09A8A"} strokeWidth={1.8}/>
+            </div>
               <span className={`nav-label${tab===t.id?" active":""}`}>{t.label}</span>
             </div>
           ))}
