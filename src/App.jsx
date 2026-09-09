@@ -460,7 +460,7 @@ function Dashboard({ nutrition, goals, measurements, workoutPlan, schedule, weig
         </div>
         <div className="row-between" style={{marginTop:2}}>
           <div style={{fontSize:13,color:C.textSoft,fontWeight:500}}>{today}</div>
-          {weekStreak>0&&<div style={{background:C.butter,borderRadius:99,padding:"3px 10px",fontSize:11,fontWeight:800,color:ACCENT.carbs.text}}>🔥 {weekStreak} day{weekStreak>1?"s":""} this week</div>}
+          {weekStreak>0&&<div style={{fontSize:12,fontWeight:700,color:ACCENT.carbs.text}}>🔥 {weekStreak} day{weekStreak>1?"s":""} this week</div>}
         </div>
       </div>
       {cycleInfo&&<div style={{marginBottom:10}}><PhaseBadge cycleInfo={cycleInfo}/></div>}
@@ -1580,7 +1580,7 @@ function NotificationBell({ cycleInfo, schedule, workoutLog, userName }) {
         {notifications.length>0&&<span style={{position:"absolute",top:6,right:6,width:8,height:8,borderRadius:"50%",background:"#E05050"}}/>}
       </button>
       {open&&(
-        <div style={{position:"fixed",top:60,right:16,left:16,background:C.white,borderRadius:16,border:`1.5px solid ${C.border}`,boxShadow:`0 8px 32px ${C.shadow}`,zIndex:200,overflow:"hidden"}}>
+        <div style={{position:"fixed",top:60,right:16,left:"auto",width:320,background:C.white,borderRadius:16,border:`1.5px solid ${C.border}`,boxShadow:`0 8px 32px ${C.shadow}`,zIndex:200,overflow:"hidden"}}>
           <div style={{padding:"14px 16px",borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <span style={{fontWeight:800,fontSize:14,color:C.text}}>Notifications</span>
             <button onClick={()=>setOpen(false)} style={{background:"none",border:"none",cursor:"pointer",fontSize:18,color:C.textSoft}}>×</button>
@@ -1593,8 +1593,12 @@ function NotificationBell({ cycleInfo, schedule, workoutLog, userName }) {
             </div>
           ))}
           {permission!=="granted"&&(
-            <div style={{padding:"12px 16px"}}>
-              <button onClick={requestPermission} className="btn btn-primary" style={{width:"100%",fontSize:13}}>Enable push notifications</button>
+            <div style={{padding:"12px 16px",borderTop:`1px solid ${C.border}`}}>
+              <button onClick={requestPermission} style={{width:"100%",padding:"10px",borderRadius:12,border:`1.5px solid ${C.lavenderDeep}`,background:C.lavender,color:"#5040A0",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"Nunito",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+                <Icon d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" size={15} stroke="#5040A0" strokeWidth={2}/>
+                Enable notifications
+              </button>
+              <div style={{fontSize:11,color:C.textSoft,textAlign:"center",marginTop:6,fontWeight:500}}>Get cycle alerts and workout reminders</div>
             </div>
           )}
         </div>
