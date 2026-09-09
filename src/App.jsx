@@ -97,6 +97,8 @@ const CSS = `
     .modal-overlay{align-items:center !important;}
   }
   @media(max-width:767px){.desktop-sidebar{display:none;}}
+  @media(min-width:768px){.mobile-notif{display:none;}}
+  @media(max-width:767px){.desktop-only-text{display:none;} .mobile-notif button{padding:8px !important;width:auto !important;border-radius:50% !important;}}
   .scroll{flex:1;overflow-y:auto;padding-bottom:90px;}
   .card{background:${C.card};border-radius:22px;box-shadow:0 2px 12px ${C.shadow};padding:18px;border:1.5px solid ${C.border};}
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;transition:transform .1s;border-radius:50px;}
@@ -449,15 +451,18 @@ function Dashboard({ nutrition, goals, measurements, workoutPlan, schedule, weig
   })();
 
   return (
-    <div className="scroll" style={{padding:"52px 16px 90px"}}>
-      <div style={{marginBottom:cycleInfo?12:20}}>
-        <div style={{fontSize:22,fontWeight:900,color:C.text}}>{greet()}{userName?`, ${userName}`:""}</div>
+    <div className="scroll" style={{padding:"32px 24px 40px"}}>
+      <div style={{marginBottom:cycleInfo?10:16}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div style={{fontSize:22,fontWeight:900,color:C.text}}>{greet()}{userName?`, ${userName}`:""}</div>
+          <div className="mobile-notif"><NotificationBell cycleInfo={cycleInfo} schedule={schedule} workoutLog={workoutLog} userName={userName}/></div>
+        </div>
         <div className="row-between" style={{marginTop:2}}>
           <div style={{fontSize:13,color:C.textSoft,fontWeight:500}}>{today}</div>
           {weekStreak>0&&<div style={{background:C.butter,borderRadius:99,padding:"3px 10px",fontSize:11,fontWeight:800,color:ACCENT.carbs.text}}>🔥 {weekStreak} day{weekStreak>1?"s":""} this week</div>}
         </div>
       </div>
-      {cycleInfo&&<PhaseBadge cycleInfo={cycleInfo}/>}
+      {cycleInfo&&<div style={{marginBottom:10}}><PhaseBadge cycleInfo={cycleInfo}/></div>}
       {cycleInfo && (
         <div className="card" style={{marginBottom:14,background:cycleInfo.phase.bg,border:`1.5px solid ${cycleInfo.phase.color}`}}>
           <div style={{fontWeight:800,fontSize:13,color:cycleInfo.phase.textColor,marginBottom:8}}>
@@ -1570,8 +1575,8 @@ function NotificationBell({ cycleInfo, schedule, workoutLog, userName }) {
     <div style={{position:"relative",padding:"0 16px 8px"}}>
       <button onClick={()=>setOpen(o=>!o)} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 14px",borderRadius:12,border:`1.5px solid ${C.border}`,background:C.white,cursor:"pointer",width:"100%",fontFamily:"Nunito",fontWeight:700,fontSize:13,color:C.textMid,position:"relative"}}>
         <Icon d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" size={16} stroke={C.textMid} strokeWidth={1.8}/>
-        Notifications
-        {notifications.length>0&&<span style={{position:"absolute",top:8,right:8,width:8,height:8,borderRadius:"50%",background:"#E05050"}}/>}
+        <span className="desktop-only-text">Notifications</span>
+        {notifications.length>0&&<span style={{position:"absolute",top:6,right:6,width:8,height:8,borderRadius:"50%",background:"#E05050"}}/>}
       </button>
       {open&&(
         <div style={{position:"absolute",bottom:"110%",left:0,right:0,background:C.white,borderRadius:16,border:`1.5px solid ${C.border}`,boxShadow:`0 8px 32px ${C.shadow}`,zIndex:200,overflow:"hidden"}}>
