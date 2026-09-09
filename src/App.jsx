@@ -375,7 +375,7 @@ function OnboardingFlow({ onDone }) {
           <button className="btn btn-ghost btn-sm" style={{alignSelf:"flex-start"}} onClick={()=>setStep(4)}>Skip for now</button>
         </div>}
         {step===4&&<div style={{display:"flex",flexDirection:"column",gap:10}}>
-          {[{emoji:"🥗",text:"Log meals by name and let AI fill in the macros"},{emoji:"🏋️",text:"Track workouts and log your sets, reps, and weights"},{emoji:trackCycle?"🌙":"📏",text:trackCycle?"See what phase you're in and why your body feels the way it does":"Track your measurements and weight over time"},{emoji:"✨",text:"Get an AI-generated plan tailored to your goals"+(trackCycle?" and cycle phase":"")}].map((item,i)=>(
+          {[{emoji:"🥗",text:"Get food insights for your cycle phase and fitness goals"},{emoji:"🏋️",text:"Plan and log workouts with cycle-aware suggestions"},{emoji:trackCycle?"🌙":"📏",text:trackCycle?"See what phase you're in and why your body feels the way it does":"Track your measurements and weight over time"},{emoji:"✨",text:"Get an AI workout plan"+(trackCycle?" tailored to your current cycle phase":"")}].map((item,i)=>(
             <div key={i} className="row" style={{background:C.card,borderRadius:14,padding:"12px 14px",gap:12,border:`1px solid ${C.border}`}}><span style={{fontSize:22}}>{item.emoji}</span><span style={{fontSize:13,fontWeight:600,color:C.textMid}}>{item.text}</span></div>
           ))}
         </div>}
@@ -1343,129 +1343,6 @@ const GOAL_CARDS=[{id:"lose-fat",emoji:"🔥",label:"Lose Fat",sub:"Caloric defi
 const ACTIVITY_OPTIONS=[{id:"sedentary",emoji:"🪑",label:"Sedentary",sub:"Desk job, little exercise"},{id:"light",emoji:"🚶",label:"Light",sub:"1-3 days/week exercise"},{id:"moderate",emoji:"🏃",label:"Moderate",sub:"3-5 days/week exercise"},{id:"active",emoji:"⚡",label:"Active",sub:"6-7 days/week exercise"},{id:"very-active",emoji:"🔥",label:"Very Active",sub:"Physical job or 2x/day training"}];
 const FOCUS_AREAS=[{id:"chest",emoji:"💪",label:"Chest"},{id:"back",emoji:"🦅",label:"Back"},{id:"legs",emoji:"🦵",label:"Legs"},{id:"arms",emoji:"💪",label:"Arms"},{id:"shoulders",emoji:"🏋️",label:"Shoulders"},{id:"core",emoji:"🔥",label:"Core"},{id:"cardio",emoji:"🏃",label:"Cardio"},{id:"glutes",emoji:"🍑",label:"Glutes"}];
 
-function AIPage({ measurements, goals, workoutPlan, cycleInfo, showToast }) {
-  const [goalId,setGoalId]=useState(()=>load("ai-goal",""));
-  const [activityId,setActivityId]=useState(()=>load("ai-activity",""));
-  const [focusAreas,setFocusAreas]=useState(()=>load("ai-focus",[]));
-  const [age,setAge]=useState(()=>load("ai-age",""));
-  const [sex,setSex]=useState(()=>load("ai-sex","Female"));
-  const [workoutsPerWeek,setWorkoutsPerWeek]=useState(()=>load("ai-wpw","4"));
-  const [customNote,setCustomNote]=useState("");
-  const [plan,setPlan]=useState(()=>load("ai-plan",null));
-  const [loading,setLoading]=useState(false);
-  const [error,setError]=useState("");
-
-  useEffect(()=>{save("ai-goal",goalId);},[goalId]);
-  useEffect(()=>{save("ai-activity",activityId);},[activityId]);
-  useEffect(()=>{save("ai-focus",focusAreas);},[focusAreas]);
-  useEffect(()=>{save("ai-age",age);},[age]);
-  useEffect(()=>{save("ai-sex",sex);},[sex]);
-  useEffect(()=>{save("ai-wpw",workoutsPerWeek);},[workoutsPerWeek]);
-
-  const toggleFocus=id=>setFocusAreas(f=>f.includes(id)?f.filter(x=>x!==id):[...f,id]);
-
-  const generate=async()=>{
-    if(!goalId||!activityId){setError("Pick a goal and activity level to continue.");return;}
-    setLoading(true);setPlan(null);setError("");
-    const goalLabel=GOAL_CARDS.find(g=>g.id===goalId)?.label||goalId;
-    const actLabel=ACTIVITY_OPTIONS.find(a=>a.id===activityId)?.label||activityId;
-    const focusLabel=focusAreas.length?focusAreas.join(", "):"general";
-    const phaseCtx=cycleInfo?`Currently in ${cycleInfo.phase.label} phase of cycle (Day ${cycleInfo.dayOfCycle}). ${cycleInfo.phase.tagline}.`:"";
-    const ctx=[age&&`Age: ${age}`,sex&&`Sex: ${sex}`,measurements.height&&`Height: ${measurements.height}cm`,measurements.weight&&`Weight: ${measurements.weight}kg`,`Goal: ${goalLabel}`,`Activity: ${actLabel}`,workoutsPerWeek&&`Workouts per week: ${workoutsPerWeek} days`,focusAreas.length&&`Focus areas: ${focusLabel}`,phaseCtx&&phaseCtx,customNote&&`Extra context: ${customNote}`].filter(Boolean).join(". ");
-    try{
-      const result=await callAI("/api/ai-plan",`My profile: ${ctx}\n\nBuild me a personalised weekly workout structure and daily nutrition targets to reach my goal. Give me practical food suggestions (not a strict diet plan). End with a short motivating note.`);
-      setPlan(result);save("ai-plan",result);showToast("Your plan is ready! ✨");
-    }catch(e){setError("Could not generate plan. Make sure the backend server is running.");}
-    setLoading(false);
-  };
-
-  const stripMd=t=>t.replace(/\*\*(.*?)\*\*/g,"$1").replace(/\*(.*?)\*/g,"$1").replace(/^#+\s/gm,"").trim();
-  const formatPlan=text=>{
-    if(!text)return null;
-    const colors=[C.lavender,C.butter,C.sage,C.rose];
-    return text.split(/\n(?=[A-Z']+[\w\s']*:)/).map((s,i)=>{
-      const lines=s.split("\n"),head=lines[0],body=lines.slice(1).join("\n").trim();
-      const isHeader=/^[A-Z']+[\w\s']*:/.test(head);
-      return <div key={i} style={{background:colors[i%colors.length],borderRadius:18,padding:"14px 16px",marginBottom:10}}>
-        {isHeader&&<div style={{fontSize:11,fontWeight:900,color:C.textMid,letterSpacing:".5px",marginBottom:8}}>{head.replace(/:$/,"").toUpperCase()}</div>}
-        <div style={{fontSize:13.5,lineHeight:1.7,color:C.text,fontWeight:500,whiteSpace:"pre-wrap"}}>{isHeader?stripMd(body):stripMd(s)}</div>
-      </div>;
-    });
-  };
-
-  return (
-    <div className="scroll" style={{padding:"0 0 90px"}}>
-      <div style={{padding:"52px 20px 16px",background:`linear-gradient(160deg,${C.lavender} 0%,${C.bg} 100%)`}}>
-        <div style={{fontSize:11,fontWeight:800,color:"#9070D0",letterSpacing:".5px",marginBottom:4}}>✨ AI COACH</div>
-        <div style={{fontSize:22,fontWeight:900,color:C.text,lineHeight:1.2}}>Tell me your goals and get a personalised plan</div>
-      </div>
-      <div style={{padding:"0 16px"}}>
-        <div style={{marginBottom:22}}>
-          {GOAL_CARDS.map(g=>{const sel=goalId===g.id;return(
-            <button key={g.id} onClick={()=>setGoalId(g.id)} style={{width:"100%",display:"flex",alignItems:"center",gap:14,background:sel?C.lavender:C.card,border:`1.5px solid ${sel?C.lavenderDeep:C.border}`,borderRadius:16,padding:"14px 16px",marginBottom:8,cursor:"pointer",textAlign:"left",fontFamily:"Nunito",transition:"all .15s"}}>
-              <div style={{width:40,height:40,borderRadius:12,flexShrink:0,background:sel?C.lavenderDeep:C.bgDeep,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>{g.emoji}</div>
-              <div><div style={{fontWeight:800,fontSize:15,color:sel?"#5040A0":C.text}}>{g.label}</div><div style={{fontSize:12,color:sel?"#7060B0":C.textSoft,fontWeight:500,marginTop:1}}>{g.sub}</div></div>
-              <div style={{marginLeft:"auto",width:18,height:18,borderRadius:"50%",border:`2px solid ${sel?"#7050B0":C.border}`,background:sel?"#7050B0":"transparent",flexShrink:0}}/>
-            </button>
-          );})}
-        </div>
-
-        <div style={{marginBottom:8}}>
-          <div style={{fontSize:12,fontWeight:800,color:C.textMid,letterSpacing:".5px",marginBottom:12}}>YOUR STATS 📊</div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
-            <div><label className="label">🎂 Age (years)</label><input className="input" type="number" placeholder="e.g. 26" value={age} onChange={e=>setAge(e.target.value)}/></div>
-            <div><label className="label">📅 Workouts/week</label><input className="input" type="number" min="1" max="7" placeholder="4" value={workoutsPerWeek} onChange={e=>setWorkoutsPerWeek(e.target.value)}/></div>
-            <div><label className="label">📏 Height (cm)</label><input className="input" type="number" value={measurements.height||""} readOnly style={{opacity:.7}} placeholder="from Body tab"/></div>
-            <div><label className="label">⚖️ Weight (kg)</label><input className="input" type="number" value={measurements.weight||""} readOnly style={{opacity:.7}} placeholder="from Body tab"/></div>
-          </div>
-          <div><label className="label">👤 Sex</label><select className="input" value={sex} onChange={e=>setSex(e.target.value)}><option>Female</option><option>Male</option><option>Non-binary</option><option>Prefer not to say</option></select></div>
-          <div style={{fontSize:11,color:C.textSoft,fontWeight:600,marginTop:6}}>Height and weight pull from your Body tab. Update them there if needed.</div>
-        </div>
-
-        <div style={{marginBottom:22,marginTop:20}}>
-          <div style={{fontSize:12,fontWeight:800,color:C.textMid,letterSpacing:".5px",marginBottom:12}}>ACTIVITY LEVEL 🏃</div>
-          {ACTIVITY_OPTIONS.map(a=>{const sel=activityId===a.id;return(
-            <button key={a.id} onClick={()=>setActivityId(a.id)} style={{width:"100%",display:"flex",alignItems:"center",gap:12,background:sel?C.lavender:C.card,border:`1.5px solid ${sel?C.lavenderDeep:C.border}`,borderRadius:14,padding:"12px 14px",marginBottom:7,cursor:"pointer",textAlign:"left",fontFamily:"Nunito",transition:"all .15s"}}>
-              <div style={{width:18,height:18,borderRadius:"50%",border:`2px solid ${sel?"#7050B0":C.border}`,background:sel?"#7050B0":"transparent",flexShrink:0}}/>
-              <span style={{fontSize:18}}>{a.emoji}</span>
-              <div><span style={{fontWeight:800,fontSize:14,color:sel?"#5040A0":C.text}}>{a.label} </span><span style={{fontSize:12,color:C.textSoft,fontWeight:500}}>— {a.sub}</span></div>
-            </button>
-          );})}
-        </div>
-
-        <div style={{marginBottom:22}}>
-          <div style={{fontSize:12,fontWeight:800,color:C.textMid,letterSpacing:".5px",marginBottom:4}}>FOCUS AREAS <span style={{fontWeight:500,color:C.textSoft}}>(optional)</span></div>
-          <div style={{display:"flex",flexWrap:"wrap",gap:8,marginTop:10}}>
-            {FOCUS_AREAS.map(f=>{const on=focusAreas.includes(f.id);return(<button key={f.id} onClick={()=>toggleFocus(f.id)} className={`chip${on?" on":""}`} style={on?{background:C.lavenderDeep,borderColor:"transparent",color:"#5040A0"}:{}}>{f.emoji} {f.label}</button>);})}
-          </div>
-        </div>
-
-        <div style={{marginBottom:22}}>
-          <div style={{fontSize:12,fontWeight:800,color:C.textMid,letterSpacing:".5px",marginBottom:8}}>ANYTHING ELSE? <span style={{fontWeight:500,color:C.textSoft}}>(optional)</span></div>
-          <textarea className="input" rows={3} placeholder="e.g. I have a bad knee so no high-impact jumping. I prefer home workouts. I don't eat meat..." value={customNote} onChange={e=>setCustomNote(e.target.value)} style={{resize:"none",lineHeight:1.6}}/>
-        </div>
-
-        {cycleInfo&&<div style={{marginBottom:14}}><PhaseBadge cycleInfo={cycleInfo} compact/><div style={{fontSize:11,color:C.textSoft,fontWeight:600,marginTop:6}}>Your plan will be tailored to your {cycleInfo.phase.label.toLowerCase()} phase ✨</div></div>}
-        <div style={{background:C.sage,borderRadius:12,padding:"8px 14px",marginBottom:12,fontSize:12,fontWeight:700,color:ACCENT.fiber.text}}>✓ AI ready. Make sure the backend server is running.</div>
-        {error&&<div style={{fontSize:13,color:"#C05070",fontWeight:700,marginBottom:12,padding:"10px 14px",background:C.rose,borderRadius:12}}>{error}</div>}
-        <button className="btn btn-primary" style={{width:"100%",fontSize:16,padding:"16px",marginBottom:24}} onClick={generate} disabled={loading}>
-          {loading?<><div className="spin"/>Crafting your plan...</>:"✨ Generate my plan!"}
-        </button>
-
-        {plan&&<div style={{marginBottom:24}}>
-          <div style={{fontSize:12,fontWeight:800,color:C.textMid,letterSpacing:".5px",marginBottom:12}}>YOUR PLAN ✨</div>
-          {formatPlan(plan)}
-          <div style={{fontSize:11,color:C.textSoft,fontWeight:600,textAlign:"center",marginTop:10,lineHeight:1.6}}>Suggestions only, not medical or dietary advice. Talk to a professional for personalised health guidance.</div>
-          <button className="btn btn-ghost" style={{width:"100%",marginTop:12}} onClick={()=>{setPlan(null);save("ai-plan",null);}}>Clear and start over</button>
-        </div>}
-      </div>
-    </div>
-  );
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-// ─── SETTINGS ─────────────────────────────────────────────────────────────────
-// ══════════════════════════════════════════════════════════════════════════════
 function SettingsPage({ userName, setUserName, showToast }) {
   const [localName, setLocalName] = useState(userName || "");
 
