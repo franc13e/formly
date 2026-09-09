@@ -57,8 +57,9 @@ function useToast() {
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-  body{-webkit-user-select:none;user-select:none;}
-  input,textarea,select{-webkit-user-select:text;user-select:text;}
+  html,body{-webkit-user-select:none;user-select:none;}
+  *{-webkit-user-select:none;user-select:none;}
+  input,textarea,select{-webkit-user-select:text !important;user-select:text !important;}
   html,body,#root{height:100%;background:#E8DDD0;font-family:'Nunito',sans-serif;color:${C.text};}
   ::-webkit-scrollbar{display:none;}
   .shell{max-width:430px;min-height:100dvh;margin:0 auto;background:${C.bg};display:flex;flex-direction:column;overflow:hidden;}
