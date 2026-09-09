@@ -21,11 +21,15 @@ const ACCENT = {
 const API = "http://localhost:8000";
 async function callAI(endpoint, prompt) {
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 60000);
     const res = await fetch(`${API}${endpoint}`, {
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body: JSON.stringify({ prompt }),
+      signal: controller.signal,
     });
+    clearTimeout(timeout);
     if (!res.ok) {
       const err = await res.json().catch(()=>({}));
       throw new Error(err.detail || `Server error ${res.status}`);
@@ -33,6 +37,7 @@ async function callAI(endpoint, prompt) {
     return (await res.json()).result;
   } catch(e) {
     console.error("callAI error:", endpoint, e.message);
+    if (e.name === "AbortError") throw new Error("Request timed out. The server may be waking up — try again in 30 seconds.");
     throw new Error(e.message || "Request failed");
   }
 }

@@ -18,7 +18,7 @@ app.add_middleware(
 
 GROQ_KEY = os.getenv("GROQ_API_KEY", "")
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
-MODEL = "openai/gpt-oss-120b"
+MODEL = "openai/gpt-oss-20b"
 
 
 class PromptRequest(BaseModel):
@@ -37,7 +37,7 @@ async def call_groq(prompt: str, system: str = "", max_tokens: int = 800, temper
         messages.append({"role": "system", "content": system})
     messages.append({"role": "user", "content": prompt})
 
-    async with httpx.AsyncClient(timeout=30) as client:
+    async with httpx.AsyncClient(timeout=90) as client:
         res = await client.post(
             GROQ_URL,
             headers={"Authorization": f"Bearer {GROQ_KEY}", "Content-Type": "application/json"},
@@ -120,9 +120,8 @@ async def ai_plan(req: PromptRequest):
     text = await call_groq(
         prompt=req.prompt,
         system="You are a women's fitness and nutrition coach. Rules: 1) Create EXACTLY the number of workout days specified. Number them Day 1, Day 2 etc. Each day: name, 4 exercises with sets/reps, one WHY line for the cycle phase. Keep each day concise. 2) Use these headers exactly on their own line: WEEKLY WORKOUT PLAN:, FOODS TO FOCUS ON:, WHAT YOU WILL ACHIEVE:, COACH'S NOTE:. 3) Every header must appear. 4) Bullet points only. 5) Be concise — finish all sections.",
-        max_tokens=1500,
+        max_tokens=900,
         temperature=0.5,
-        temperature=0.7,
     )
     return {"result": text}
 
