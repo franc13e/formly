@@ -45,9 +45,14 @@ async def call_groq(prompt: str, system: str = "", max_tokens: int = 800, temper
         )
 
     if res.status_code != 200:
+        print(f"Groq error {res.status_code}: {res.text[:500]}")
         raise HTTPException(status_code=res.status_code, detail=res.text)
 
-    return res.json()["choices"][0]["message"]["content"]
+    data = res.json()
+    print(f"Groq response keys: {list(data.keys())}")
+    if "choices" not in data:
+        raise HTTPException(status_code=500, detail=f"Unexpected response: {str(data)[:300]}")
+    return data["choices"][0]["message"]["content"]
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────
