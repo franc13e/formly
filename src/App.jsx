@@ -60,6 +60,10 @@ const CSS = `
   html,body{-webkit-user-select:none;user-select:none;}
   *{-webkit-user-select:none;user-select:none;}
   input,textarea,select{-webkit-user-select:text !important;user-select:text !important;}
+  @keyframes slideIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:.7}}
+  .slide-in{animation:slideIn .25s cubic-bezier(.34,1.2,.64,1)}
+  .pulse-dot{animation:pulse 2s ease-in-out infinite}
   html,body,#root{height:100%;background:#E8DDD0;font-family:'Nunito',sans-serif;color:${C.text};}
   ::-webkit-scrollbar{display:none;}
   .shell{max-width:430px;min-height:100dvh;margin:0 auto;background:${C.bg};display:flex;flex-direction:column;overflow:hidden;}
@@ -281,7 +285,7 @@ function PhaseWheel({ cycleInfo, size=200 }) {
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
       {phases.map(p=><path key={p.id} d={arcPath(p.start,p.end,r,innerR)} fill={p.color} opacity={cycleInfo?.phase?.id===p.id?1:.35}/>)}
       {phases.map(p=>{const a=toAngle((p.start+p.end)/2),labelR=(r+innerR)/2;return <text key={p.id} x={cx+labelR*Math.cos(a)} y={cy+labelR*Math.sin(a)+5} textAnchor="middle" fontSize={size*.09} fontFamily="Nunito">{p.label}</text>;})}
-      {cycleInfo&&<circle cx={dotX} cy={dotY} r={size*.045} fill={cycleInfo.phase.color} stroke="white" strokeWidth={2}/>}
+      {cycleInfo&&<circle cx={dotX} cy={dotY} r={size*.045} fill={cycleInfo.phase.color} stroke="white" strokeWidth={2} className="pulse-dot" style={{transformOrigin:`${dotX}px ${dotY}px`}}/>}
       <text x={cx} y={cy-8} textAnchor="middle" fill={C.textMid} fontSize={size*.09} fontWeight={800} fontFamily="Nunito">{cycleInfo?`Day ${cycleInfo.dayOfCycle}`:"Log"}</text>
       <text x={cx} y={cy+8} textAnchor="middle" fill={C.textSoft} fontSize={size*.07} fontFamily="Nunito">{cycleInfo?"of cycle":"period"}</text>
     </svg>
@@ -407,12 +411,19 @@ function Dashboard({ nutrition, goals, measurements, workoutPlan, schedule, weig
   const todayWorkouts = workoutPlan.filter(w=>todaySchedule.includes(w.id));
   const completedToday = (workoutLog||[]).filter(e=>e.date===todayStr).length;
   const greet=()=>{const h=new Date().getHours();return h<12?"Good morning ☀️":h<17?"Good afternoon 🌤️":"Good evening 🌙";};
+  const weekStreak = (() => {
+    const days = Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-i);return d.toISOString().slice(0,10);});
+    return days.filter(d=>(workoutLog||[]).some(e=>e.date===d)).length;
+  })();
 
   return (
     <div className="scroll" style={{padding:"52px 16px 90px"}}>
       <div style={{marginBottom:cycleInfo?12:20}}>
         <div style={{fontSize:22,fontWeight:900,color:C.text}}>{greet()}{userName?`, ${userName}`:""}</div>
-        <div style={{fontSize:13,color:C.textSoft,fontWeight:500,marginTop:2}}>{today}</div>
+        <div className="row-between" style={{marginTop:2}}>
+          <div style={{fontSize:13,color:C.textSoft,fontWeight:500}}>{today}</div>
+          {weekStreak>0&&<div style={{background:C.butter,borderRadius:99,padding:"3px 10px",fontSize:11,fontWeight:800,color:ACCENT.carbs.text}}>🔥 {weekStreak} day{weekStreak>1?"s":""} this week</div>}
+        </div>
       </div>
       {cycleInfo&&<PhaseBadge cycleInfo={cycleInfo}/>}
       {cycleInfo && (
@@ -825,7 +836,15 @@ function BodyPage({ measurements, setMeasurements, weightHistory, setWeightHisto
             </div>}
             {periodHistory&&periodHistory.length>1&&<div className="card" style={{marginBottom:14}}>
               <div style={{fontWeight:800,fontSize:13,color:C.textMid,marginBottom:10}}>🗓 Period history</div>
-              {periodHistory.slice(0,6).map((p,i,arr)=>{const next=arr[i+1];const len=next?Math.round((new Date(p.date)-new Date(next.date))/(1000*60*60*24)):null;return(<div key={p.date} className="row-between" style={{padding:"6px 0",borderTop:i>0?`1px solid ${C.border}`:"none"}}><span style={{fontSize:13,fontWeight:600,color:C.textMid}}>{new Date(p.date+"T12:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</span>{len&&<span style={{fontSize:11,color:C.textSoft,fontWeight:600}}>{len}d cycle</span>}</div>);})}
+              {(() => {
+                const entries = periodHistory.slice(0,6);
+                const lengths = entries.map((p,i,arr)=>arr[i+1]?Math.round((new Date(p.date)-new Date(arr[i+1].date))/(1000*60*60*24)):null).filter(Boolean);
+                const avg = lengths.length ? Math.round(lengths.reduce((a,b)=>a+b,0)/lengths.length) : null;
+                return (<>
+                  {avg&&<div style={{background:C.lavender,borderRadius:10,padding:"8px 12px",marginBottom:10,fontSize:12,fontWeight:700,color:"#7050B0"}}>Your average cycle: {avg} days</div>}
+                  {entries.map((p,i,arr)=>{const next=arr[i+1];const len=next?Math.round((new Date(p.date)-new Date(next.date))/(1000*60*60*24)):null;return(<div key={p.date} className="row-between" style={{padding:"6px 0",borderTop:i>0?`1px solid ${C.border}`:"none"}}><span style={{fontSize:13,fontWeight:600,color:C.textMid}}>{new Date(p.date+"T12:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</span>{len&&<span style={{fontSize:11,color:C.textSoft,fontWeight:600}}>{len}d</span>}</div>);})}
+                </>);
+              })()}
             </div>}
             <button className="btn btn-ghost" style={{width:"100%",marginBottom:14}} onClick={()=>setModal("cycle-setup")}>✏️ Update period date or cycle length</button>
           </>}
@@ -984,7 +1003,7 @@ function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedule, work
             const items = schedule[pickingDay]||[];
             const isToday = pickingDay===todayStr;
             return (
-              <div className="card" style={{marginBottom:14}}>
+              <div className="card slide-in" style={{marginBottom:14}}>
                 <div className="row-between" style={{marginBottom:12}}>
                   <div>
                     <div style={{fontWeight:900,fontSize:16,color:C.text}}>{day?.label}, {new Date(pickingDay+"T12:00").toLocaleDateString("en-US",{month:"long",day:"numeric"})}</div>
@@ -1070,7 +1089,7 @@ function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedule, work
       {tab==="history" && (
         <div>
           {(!workoutLog||workoutLog.length===0)
-            ?<div style={{textAlign:"center",padding:"40px 0",color:C.textSoft}}><div style={{fontSize:36,marginBottom:10}}>🏋️</div><div style={{fontWeight:700}}>No workouts logged yet</div><div style={{fontSize:13,marginTop:4}}>Tap Log on any workout to get started</div></div>
+            ?<div style={{textAlign:"center",padding:"40px 0",color:C.textSoft}}><div style={{fontSize:40,marginBottom:10}}>🌱</div><div style={{fontWeight:800,fontSize:15,color:C.text}}>Nothing logged yet</div><div style={{fontSize:13,marginTop:6,lineHeight:1.6}}>Every workout counts. Tap Log on any session to start tracking your progress.</div></div>
             :Object.entries((workoutLog||[]).reduce((acc,e)=>{if(!acc[e.date])acc[e.date]=[];acc[e.date].push(e);return acc;},{})).sort(([a],[b])=>b.localeCompare(a)).map(([date,entries])=>(
               <div key={date} style={{marginBottom:18}}>
                 <div style={{fontSize:12,fontWeight:800,color:C.textMid,marginBottom:8}}>
