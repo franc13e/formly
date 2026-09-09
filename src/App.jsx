@@ -1008,8 +1008,8 @@ function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedule, work
     return { date: d.toISOString().slice(0,10), label:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][i], num: d.getDate() };
   });
 
-  const addToDay = (date, item) => setSchedule(s => ({ ...s, [date]: [...(s[date]||[]), item] }));
-  const removeFromDay = (date, idx) => setSchedule(s => ({ ...s, [date]: (s[date]||[]).filter((_,i)=>i!==idx) }));
+  const addToDay = (date, item) => setSchedule(s => ({ ...s, [date]: [...(Array.isArray(s[date])?s[date]:[]), item] }));
+  const removeFromDay = (date, idx) => setSchedule(s => ({ ...s, [date]: (Array.isArray(s[date])?s[date]:[]).filter((_,i)=>i!==idx) }));
 
   const logWorkout = () => {
     if (!logModal) return;
@@ -1051,14 +1051,14 @@ function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedule, work
           {/* Calendar day cells */}
           <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:4,marginBottom:16}}>
             {DAYS.map(day => {
-              const items = schedule[day.date] || [];
+              const items = Array.isArray(schedule[day.date]) ? schedule[day.date] : schedule[day.date] === "rest" ? "rest" : [];
               const isToday = day.date === todayStr;
               const isPicking = pickingDay === day.date;
               return (
                 <div key={day.date} onClick={()=>setPickingDay(isPicking?null:day.date)} style={{
                   borderRadius:12, padding:"8px 4px", display:"flex", flexDirection:"column", alignItems:"center", gap:3,
-                  cursor:"pointer", border:`1.5px solid ${isPicking?"#9070D0":isToday?C.lavenderDeep:items.length?C.lavenderDeep:C.border}`,
-                  background:isPicking?"#9070D0":isToday?C.lavender:items.length?C.lavender+"60":C.white,
+                  cursor:"pointer", border:`1.5px solid ${isPicking?"#9070D0":isToday?C.lavenderDeep:items==="rest"?C.sageDeep:items.length?C.lavenderDeep:C.border}`,
+                  background:isPicking?"#9070D0":isToday?C.lavender:items==="rest"?C.sage:items.length?C.lavender+"60":C.white,
                   transition:"all .15s",
                 }}>
                   <div style={{fontSize:11,fontWeight:900,color:isPicking?"white":isToday?"#7050B0":C.text}}>{day.num}</div>
@@ -1079,7 +1079,7 @@ function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedule, work
           {/* Selected day detail panel */}
           {pickingDay && (()=>{
             const day = DAYS.find(d=>d.date===pickingDay);
-            const items = schedule[pickingDay]||[];
+            const items = Array.isArray(schedule[pickingDay]) ? schedule[pickingDay] : [];
             const isToday = pickingDay===todayStr;
             return (
               <div className="card slide-in" style={{marginBottom:14}}>
