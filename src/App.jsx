@@ -1580,7 +1580,7 @@ function NotificationBell({ cycleInfo, schedule, workoutLog, userName }) {
         {notifications.length>0&&<span style={{position:"absolute",top:6,right:6,width:8,height:8,borderRadius:"50%",background:"#E05050"}}/>}
       </button>
       {open&&(
-        <div style={{position:"fixed",top:60,right:16,left:"auto",width:320,background:C.white,borderRadius:16,border:`1.5px solid ${C.border}`,boxShadow:`0 8px 32px ${C.shadow}`,zIndex:200,overflow:"hidden"}}>
+        <div style={{position:"fixed",bottom:80,left:16,width:220,background:C.white,borderRadius:16,border:`1.5px solid ${C.border}`,boxShadow:`0 8px 32px ${C.shadow}`,zIndex:200,overflow:"hidden"}}>
           <div style={{padding:"14px 16px",borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <span style={{fontWeight:800,fontSize:14,color:C.text}}>Notifications</span>
             <button onClick={()=>setOpen(false)} style={{background:"none",border:"none",cursor:"pointer",fontSize:18,color:C.textSoft}}>×</button>
@@ -1589,16 +1589,15 @@ function NotificationBell({ cycleInfo, schedule, workoutLog, userName }) {
           {notifications.map(n=>(
             <div key={n.id} style={{padding:"12px 16px",borderBottom:`1px solid ${C.border}`,background:n.color,display:"flex",gap:10,alignItems:"flex-start"}}>
               <span style={{fontSize:18,flexShrink:0}}>{n.emoji}</span>
-              <div><div style={{fontWeight:700,fontSize:13,color:C.text,marginBottom:2}}>{n.title}</div><div style={{fontSize:12,color:C.textMid,fontWeight:500,lineHeight:1.5}}>{n.body}</div></div>
+              <div><div style={{fontWeight:700,fontSize:13,color:C.text,marginBottom:2}}>{n.title}</div><div style={{fontSize:12,color:C.textMid,fontWeight:500,lineHeight:1.5,wordBreak:"break-word"}}>{n.body}</div></div>
             </div>
           ))}
           {permission!=="granted"&&(
-            <div style={{padding:"12px 16px",borderTop:`1px solid ${C.border}`}}>
-              <button onClick={requestPermission} style={{width:"100%",padding:"10px",borderRadius:12,border:`1.5px solid ${C.lavenderDeep}`,background:C.lavender,color:"#5040A0",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"Nunito",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
-                <Icon d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" size={15} stroke="#5040A0" strokeWidth={2}/>
-                Enable notifications
+            <div style={{padding:"12px 16px",borderTop:`1px solid ${C.border}`,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+              <div style={{fontSize:12,color:C.textSoft,fontWeight:500}}>Get cycle and workout alerts</div>
+              <button onClick={requestPermission} style={{padding:"6px 14px",borderRadius:8,border:"none",background:C.lavenderDeep,color:"#5040A0",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"Nunito",flexShrink:0}}>
+                Enable
               </button>
-              <div style={{fontSize:11,color:C.textSoft,textAlign:"center",marginTop:6,fontWeight:500}}>Get cycle alerts and workout reminders</div>
             </div>
           )}
         </div>
