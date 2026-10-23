@@ -1,16 +1,63 @@
-# React + Vite
+# Formly — AI Fitness & Nutrition Tracker for Women
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Formly is a mobile-first fitness app that combines workout logging, nutrition tracking and optional menstrual-cycle tracking, with AI coaching that adapts to where you are in your cycle.
 
-Currently, two official plugins are available:
+**Live demo:** https://formly-coral-psi.vercel.app
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+**Tech Stack:** React 19 · Vite · FastAPI · Groq LLM API · Vercel (frontend) · Railway (backend)
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Features
 
-## Expanding the ESLint configuration
+- **Workout logging**: log workouts by type (cardio, strength, etc.), add notes and PRs, mark rest days, and swipe or tap to delete
+- **Nutrition tracking**: describe what you ate and the AI estimates calories, protein, carbs, fats, sugar and fiber
+- **AI workout plans**: personalised weekly plans based on your goal (lose fat, build muscle, tone, maintain), activity level and available days
+- **Cycle-aware insights**: optional cycle tracking (menstrual, follicular, ovulation, luteal) that tailors body and progress insights to each phase
+- **Body measurements**: track weight and measurements over time with supportive, non-judgemental AI feedback
+- **Goal suggestions**: AI recommendations for which nutrients to prioritise for your goals
+- **Responsive layout**: bottom navigation on mobile, sidebar layout on desktop
+- **Local-first**: your data stays in the browser (localStorage)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Project Structure
+
+```
+formly/
+├── src/
+│   ├── App.jsx          # Main app: screens, state and UI
+│   └── main.jsx         # React entry point
+├── main.py              # FastAPI backend (AI endpoints)
+├── requirements.txt     # Python dependencies
+├── package.json         # Frontend dependencies
+└── vercel.json          # Vercel deployment config
+```
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/nutrition` | Estimate macros from a food description |
+| `POST` | `/api/ai-plan` | Generate a personalised workout and nutrition plan |
+| `POST` | `/api/body-insight` | Cycle-aware feedback on body measurements |
+| `POST` | `/api/health-check` | Feedback on health goals |
+| `POST` | `/api/suggest-goals` | Nutrient priorities for the user's goals |
+| `GET` | `/health` | Health check |
+
+## Running Locally
+
+### Backend
+
+```bash
+pip install -r requirements.txt
+echo "GROQ_API_KEY=your_key_here" > .env
+uvicorn main:app --reload
+```
+
+### Frontend
+
+```bash
+npm install
+npm run dev
+```
+
+> Point the `API` constant in `src/App.jsx` at `http://localhost:8000` when running the backend locally.
