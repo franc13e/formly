@@ -4,13 +4,14 @@ import { C } from "../theme";
 import { callAI } from "../lib/api";
 import { load, save } from "../lib/storage";
 import { PhaseBadge } from "./PhaseBadge";
-import type { CycleInfo, FocusArea, Goals, Measurements, OptionCard, ShowToast, Workout } from "../types";
+import type { CycleInfo, FocusArea, Measurements, OptionCard, Setter, ShowToast } from "../types";
 
 interface AICoachPanelProps {
   measurements: Measurements;
-  goals: Goals;
-  workoutPlan: Workout[];
   cycleInfo: CycleInfo | null;
+  /** The saved AI plan text (App state, persisted under "ai-plan"), or null. */
+  plan: string | null;
+  setPlan: Setter<string | null>;
   showToast: ShowToast;
 }
 
@@ -20,7 +21,7 @@ interface PlanDay {
 }
 
 // ─── AI Coach Panel (embedded in Workouts tab) ────────────────────────────────
-export function AICoachPanel({ measurements, goals, workoutPlan, cycleInfo, showToast }: AICoachPanelProps) {
+export function AICoachPanel({ measurements, cycleInfo, plan, setPlan, showToast }: AICoachPanelProps) {
   const [goalId, setGoalId] = useState<string>(() => load("ai-goal", ""));
   const [activityId, setActivityId] = useState<string>(() => load("ai-activity", ""));
   const [focusAreas, setFocusAreas] = useState<string[]>(() => load("ai-focus", []));
@@ -28,7 +29,6 @@ export function AICoachPanel({ measurements, goals, workoutPlan, cycleInfo, show
   const [sex, setSex] = useState<string>(() => load("ai-sex", "Female"));
   const [workoutsPerWeek, setWorkoutsPerWeek] = useState<string>(() => load("ai-wpw", "4"));
   const [customNote, setCustomNote] = useState("");
-  const [plan, setPlan] = useState<string | null>(() => load<string | null>("ai-plan", null));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -36,6 +36,8 @@ export function AICoachPanel({ measurements, goals, workoutPlan, cycleInfo, show
   useEffect(() => { save("ai-activity", activityId); }, [activityId]);
   useEffect(() => { save("ai-focus", focusAreas); }, [focusAreas]);
   useEffect(() => { save("ai-age", age); }, [age]);
+  useEffect(() => { save("ai-sex", sex); }, [sex]);
+  useEffect(() => { save("ai-wpw", workoutsPerWeek); }, [workoutsPerWeek]);
 
   const toggleFocus = (id: string) => setFocusAreas(f => f.includes(id) ? f.filter(x => x !== id) : [...f, id]);
 
@@ -62,7 +64,8 @@ export function AICoachPanel({ measurements, goals, workoutPlan, cycleInfo, show
 
   const generate = async () => {
     if (!goalId || !activityId) { setError("Pick a goal and activity level to continue."); return; }
-    setLoading(true); setPlan(null); setError("");
+    // The previous plan stays saved until a new one arrives; it is only hidden while loading.
+    setLoading(true); setError("");
     const goalLabel = GOAL_CARDS.find(g => g.id === goalId)?.label || goalId;
     const actLabel = ACTIVITY_OPTIONS.find(a => a.id === activityId)?.label || activityId;
     const phaseCtx = cycleInfo ? `Currently in ${cycleInfo.phase.label} phase (Day ${cycleInfo.dayOfCycle}). ${cycleInfo.phase.tagline}.` : "";
@@ -83,9 +86,9 @@ export function AICoachPanel({ measurements, goals, workoutPlan, cycleInfo, show
 
 Build me a personalised weekly workout structure and daily nutrition targets. Give practical food suggestions. End with what I will achieve and a motivating note.`);
       const cleaned = result.replace(/\*\*(.*?)\*\*/g, "$1").replace(/\*(.*?)\*/g, "$1").trim();
-      setPlan(cleaned); save("ai-plan", cleaned);
+      setPlan(cleaned);
       showToast("Your plan is ready! ✨");
-    } catch(e) { setError("Could not generate plan. Make sure the backend is running."); }
+    } catch { setError("Could not generate plan. Make sure the backend is running."); }
     setLoading(false);
   };
 
@@ -232,11 +235,11 @@ Build me a personalised weekly workout structure and daily nutrition targets. Gi
         {loading ? <><div className="spin"/>Crafting your plan...</> : "✨ Generate my plan"}
       </button>
 
-      {plan && (
+      {plan && !loading && (
         <div style={{marginBottom:16}}>
           {formatPlan(plan)}
           <div style={{fontSize:11,color:C.textSoft,textAlign:"center",marginTop:8,lineHeight:1.6}}>Suggestions only. Adjust based on how you feel your body knows best.</div>
-          <button className="btn btn-ghost" style={{width:"100%",marginTop:10}} onClick={()=>{setPlan(null);save("ai-plan",null);}}>Clear and start over</button>
+          <button className="btn btn-ghost" style={{width:"100%",marginTop:10}} onClick={()=>setPlan(null)}>Clear and start over</button>
         </div>
       )}
     </div>

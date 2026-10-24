@@ -3,7 +3,7 @@ import { C, ACCENT } from "../theme";
 import { ALL_WORKOUTS, DIFF_COLOR } from "../data/workouts";
 import { SwipeToDelete } from "../components/SwipeToDelete";
 import { AICoachPanel } from "../components/AICoachPanel";
-import type { CycleInfo, Goals, LoggableWorkout, Measurements, Schedule, ScheduledWorkout, Setter, ShowToast, Workout, WorkoutLogEntry, WorkoutLogForm } from "../types";
+import type { CycleInfo, LoggableWorkout, Measurements, Schedule, ScheduledWorkout, Setter, ShowToast, Workout, WorkoutLogEntry, WorkoutLogForm } from "../types";
 
 type WorkoutsTab = "schedule" | "browse" | "ai" | "history";
 
@@ -14,17 +14,28 @@ interface WorkoutsPageProps {
   setSchedule: Setter<Schedule>;
   workoutLog: WorkoutLogEntry[];
   setWorkoutLog: Setter<WorkoutLogEntry[]>;
-  /** The saved AI coach plan text (from localStorage "ai-plan"), or null. */
+  /** The saved AI coach plan text (App state, persisted under "ai-plan"), or null. */
   aiPlan: string | null;
+  setAiPlan: Setter<string | null>;
   measurements: Measurements;
-  goals: Goals;
   cycleInfo: CycleInfo | null;
   showToast: ShowToast;
 }
 
+/** The Schedule / Browse / AI Coach / History switcher at the top of the Workouts tab. */
+function TabRow({ tab, setTab }: { tab: WorkoutsTab; setTab: (tab: WorkoutsTab) => void }) {
+  return (
+    <div className="row" style={{gap:6,marginBottom:16,background:C.bgDeep,borderRadius:14,padding:5}}>
+      {([["schedule","Schedule"],["browse","Browse"],["ai","AI Coach"],["history","History"]] as const).map(([v,l])=>(
+        <button key={v} onClick={()=>setTab(v)} style={{flex:1,padding:"7px 0",borderRadius:10,border:"none",cursor:"pointer",background:tab===v?C.white:"transparent",color:tab===v?"#7050B0":C.textSoft,fontWeight:800,fontSize:13,fontFamily:"Nunito",boxShadow:tab===v?`0 1px 6px ${C.shadow}`:"none",transition:"all .15s"}}>{l}</button>
+      ))}
+    </div>
+  );
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
 // ─── WORKOUTS ─────────────────────────────────────────────────────────────────
-export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedule, workoutLog, setWorkoutLog, aiPlan, measurements, goals, cycleInfo, showToast }: WorkoutsPageProps) {
+export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedule, workoutLog, setWorkoutLog, aiPlan, setAiPlan, measurements, cycleInfo, showToast }: WorkoutsPageProps) {
   const [tab, setTab] = useState<WorkoutsTab>("schedule");
   const [logModal, setLogModal] = useState<LoggableWorkout | null>(null);
   const [logForm, setLogForm] = useState<WorkoutLogForm>({ sets:"", reps:"", weight:"", notes:"", duration:"" });
@@ -51,18 +62,10 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
     showToast(`${logModal.emoji||"🏋️"} Workout logged!`);
   };
 
-  const TabRow = () => (
-    <div className="row" style={{gap:6,marginBottom:16,background:C.bgDeep,borderRadius:14,padding:5}}>
-      {([["schedule","Schedule"],["browse","Browse"],["ai","AI Coach"],["history","History"]] as const).map(([v,l])=>(
-        <button key={v} onClick={()=>setTab(v)} style={{flex:1,padding:"7px 0",borderRadius:10,border:"none",cursor:"pointer",background:tab===v?C.white:"transparent",color:tab===v?"#7050B0":C.textSoft,fontWeight:800,fontSize:13,fontFamily:"Nunito",boxShadow:tab===v?`0 1px 6px ${C.shadow}`:"none",transition:"all .15s"}}>{l}</button>
-      ))}
-    </div>
-  );
-
   return (
     <div className="scroll" style={{padding:"24px 24px 40px"}}>
       <div style={{fontSize:24,fontWeight:900,color:C.text,marginBottom:16}}>Workouts</div>
-      <TabRow/>
+      <TabRow tab={tab} setTab={setTab}/>
 
       {tab==="schedule" && (
         <div>
@@ -237,7 +240,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
       )}
 
 
-      {tab==="ai" && <AICoachPanel measurements={measurements} goals={goals} workoutPlan={workoutPlan} cycleInfo={cycleInfo} showToast={showToast}/>}
+      {tab==="ai" && <AICoachPanel measurements={measurements} cycleInfo={cycleInfo} plan={aiPlan} setPlan={setAiPlan} showToast={showToast}/>}
 
       {logModal&&<div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setLogModal(null)}><div className="modal">
         <div className="modal-handle"/>

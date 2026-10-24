@@ -16,16 +16,15 @@ function resultField(body: unknown): unknown {
  */
 export async function callAI(endpoint: string, prompt: string): Promise<string> {
   let result: unknown;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 60000);
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 60000);
     const res = await fetch(`${API}${endpoint}`, {
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body: JSON.stringify({ prompt }),
       signal: controller.signal,
     });
-    clearTimeout(timeout);
     if (!res.ok) {
       const err: unknown = await res.json().catch(()=>({}));
       const detail = errorDetail(err);
@@ -36,8 +35,11 @@ export async function callAI(endpoint: string, prompt: string): Promise<string> 
     const name = e instanceof Error ? e.name : undefined;
     const message = e instanceof Error ? e.message : undefined;
     console.error("callAI error:", endpoint, message);
-    if (name === "AbortError") throw new Error("Request timed out. Please try again.");
-    throw new Error(message || "Request failed");
+    if (name === "AbortError") throw new Error("Request timed out. Please try again.", { cause: e });
+    throw new Error(message || "Request failed", { cause: e });
+  } finally {
+    // Also clear the timer when fetch / reading the body throws.
+    clearTimeout(timeout);
   }
   // The callers only ever use the result as a string. A missing / non-string result
   // used to surface as a TypeError in the caller; keep it a TypeError here.

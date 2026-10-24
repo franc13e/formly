@@ -12,7 +12,7 @@ import { NutritionPage } from "./pages/NutritionPage";
 import { BodyPage } from "./pages/BodyPage";
 import { WorkoutsPage } from "./pages/WorkoutsPage";
 import { SettingsPage } from "./pages/SettingsPage";
-import type { Goals, Measurements, NutritionTotals, PeriodEntry, Schedule, TabId, WeightEntry, Workout, WorkoutLogEntry } from "./types";
+import type { Measurements, PeriodEntry, Schedule, TabId, WeightEntry, Workout, WorkoutLogEntry } from "./types";
 
 // ══════════════════════════════════════════════════════════════════════════════
 // ─── ROOT APP ─────────────────────────────────────────────────────────────────
@@ -22,9 +22,6 @@ export default function App() {
   const [tab,setTab]=useState<TabId>("home");
   const [onboarded,setOnboarded]=useState<boolean>(()=>load("onboarded",false));
   const [userName,setUserName]=useState<string>(()=>load("user-name",""));
-  const todayKey=new Date().toISOString().slice(0,10);
-  const [nutrition,setNutrition]=useState<NutritionTotals>(()=>load("nutrition-"+new Date().toISOString().slice(0,10),{protein:0,carbs:0,fats:0,sugar:0,fiber:0}));
-  const [goals,setGoals]=useState<Goals>(()=>load("goals",{protein:150,carbs:200,fats:65,sugar:30,fiber:25,calories:2000}));
   const [measurements,setMeasurements]=useState<Measurements>(()=>load("measurements",{}));
   const [workoutPlan,setWorkoutPlan]=useState<Workout[]>(()=>load("workout-plan",[]));
   const [schedule,setSchedule]=useState<Schedule>(()=>load("schedule",{}));
@@ -33,14 +30,13 @@ export default function App() {
   const [periodStart,setPeriodStart]=useState<string>(()=>load("period-start",""));
   const [periodHistory,setPeriodHistory]=useState<PeriodEntry[]>(()=>load("period-history",[]));
   const [cycleLength,setCycleLength]=useState<number>(()=>load("cycle-length",28));
+  const [aiPlan,setAiPlan]=useState<string | null>(()=>load<string | null>("ai-plan",null));
   const [toast,showToast]=useToast();
 
   const cycleInfo=getCycleInfo(periodStart,cycleLength);
 
   useEffect(()=>{save("onboarded",onboarded);},[onboarded]);
   useEffect(()=>{save("user-name",userName);},[userName]);
-  useEffect(()=>{save("nutrition-"+todayKey,nutrition);},[nutrition,todayKey]);
-  useEffect(()=>{save("goals",goals);},[goals]);
   useEffect(()=>{save("measurements",measurements);},[measurements]);
   useEffect(()=>{save("workout-plan",workoutPlan);},[workoutPlan]);
   useEffect(()=>{save("schedule",schedule);},[schedule]);
@@ -49,6 +45,7 @@ export default function App() {
   useEffect(()=>{save("period-start",periodStart);},[periodStart]);
   useEffect(()=>{save("period-history",periodHistory);},[periodHistory]);
   useEffect(()=>{save("cycle-length",cycleLength);},[cycleLength]);
+  useEffect(()=>{save("ai-plan",aiPlan);},[aiPlan]);
 
   const finishOnboard=(name: string,pStart: string,cLen: number)=>{
     if(name){setUserName(name);save("user-name",name);}
@@ -82,10 +79,10 @@ export default function App() {
           </div>}
         </div>
         <div className="desktop-content">
-        {tab==="home"&&<Dashboard nutrition={nutrition} goals={goals} measurements={measurements} workoutPlan={workoutPlan} schedule={schedule} weightHistory={weightHistory} cycleInfo={cycleInfo} workoutLog={workoutLog} userName={userName}/>}
+        {tab==="home"&&<Dashboard schedule={schedule} weightHistory={weightHistory} cycleInfo={cycleInfo} workoutLog={workoutLog} userName={userName}/>}
         {tab==="nutrition"&&<NutritionPage cycleInfo={cycleInfo} showToast={showToast}/>}
         {tab==="body"&&<BodyPage measurements={measurements} setMeasurements={setMeasurements} weightHistory={weightHistory} setWeightHistory={setWeightHistory} cycleInfo={cycleInfo} periodStart={periodStart} setPeriodStart={setPeriodStart} periodHistory={periodHistory} setPeriodHistory={setPeriodHistory} cycleLength={cycleLength} setCycleLength={setCycleLength} showToast={showToast}/>}
-        {tab==="workouts"&&<WorkoutsPage workoutPlan={workoutPlan} setWorkoutPlan={setWorkoutPlan} schedule={schedule} setSchedule={setSchedule} workoutLog={workoutLog} setWorkoutLog={setWorkoutLog} aiPlan={load<string | null>("ai-plan",null)} measurements={measurements} goals={goals} cycleInfo={cycleInfo} showToast={showToast}/>}
+        {tab==="workouts"&&<WorkoutsPage workoutPlan={workoutPlan} setWorkoutPlan={setWorkoutPlan} schedule={schedule} setSchedule={setSchedule} workoutLog={workoutLog} setWorkoutLog={setWorkoutLog} aiPlan={aiPlan} setAiPlan={setAiPlan} measurements={measurements} cycleInfo={cycleInfo} showToast={showToast}/>}
         {tab==="settings"&&<SettingsPage userName={userName} setUserName={setUserName} showToast={showToast}/>}
         <nav className="bottom-nav">
           {TABS.map(t=>(

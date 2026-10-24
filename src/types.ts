@@ -8,20 +8,6 @@ export type ShowToast = (message: string) => void;
 
 // ─── Nutrition ────────────────────────────────────────────────────────────────
 
-/** Daily macro totals, persisted under "nutrition-YYYY-MM-DD". */
-export interface NutritionTotals {
-  protein: number;
-  carbs: number;
-  fats: number;
-  sugar: number;
-  fiber: number;
-}
-
-/** Daily macro targets, persisted under "goals". */
-export interface Goals extends NutritionTotals {
-  calories: number;
-}
-
 /** A free-text food diary entry, persisted under "food-diary". */
 export interface FoodLogEntry {
   text: string;
@@ -137,12 +123,6 @@ export type ScheduleDay = ScheduledWorkout[] | "rest";
 
 /** Persisted under "schedule": YYYY-MM-DD → day. Days with nothing planned are absent. */
 export type Schedule = Partial<Record<string, ScheduleDay>>;
-
-/**
- * Older id-based schedule shape (YYYY-MM-DD → workout ids) used only by the
- * unused `WeekCalendar` component. It is NOT compatible with `Schedule`.
- */
-export type WorkoutIdSchedule = Partial<Record<string, number[]>>;
 
 /** Anything that can be opened in the "log workout" modal: a library `Workout` or a `ScheduledWorkout`. */
 export interface LoggableWorkout {

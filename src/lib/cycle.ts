@@ -13,7 +13,8 @@ const DAY_MS = 1000*60*60*24;
 /**
  * Works out where `today` falls in the cycle that started on `periodStart` (YYYY-MM-DD).
  * Returns null when there is no start date, or when it is in the future or more than
- * two cycle lengths ago.
+ * two cycle lengths ago. `nextPeriodDate`/`daysUntilNext` refer to the end of the current
+ * cycle, i.e. periodStart + (cycleIndex+1)*cycleLength.
  */
 export function getCycleInfo(periodStart: string, cycleLength=28): CycleInfo | null {
   if (!periodStart) return null;
@@ -25,8 +26,11 @@ export function getCycleInfo(periodStart: string, cycleLength=28): CycleInfo | n
   if (dayOfCycle<1||dayOfCycle>cycleLength*2) return null;
   const d=((dayOfCycle-1)%cycleLength)+1;
   const phase: PhaseId=d<=5?"menstrual":d<=13?"follicular":d<=16?"ovulation":"luteal";
+  // Count from the start of the current cycle (the displayed day wraps after cycleLength
+  // days), so the countdown keeps working in the second cycle instead of going negative.
+  const cycleIndex=Math.floor((dayOfCycle-1)/cycleLength);
   const nextPeriod=new Date(start);
-  nextPeriod.setDate(start.getDate()+cycleLength);
+  nextPeriod.setDate(start.getDate()+(cycleIndex+1)*cycleLength);
   const daysUntilNext=Math.ceil((nextPeriod.getTime()-today.getTime())/DAY_MS);
   return {phase:PHASES[phase],dayOfCycle:d,cycleLength,daysUntilNext,nextPeriodDate:nextPeriod.toISOString().slice(0,10)};
 }

@@ -33,6 +33,17 @@ interface MeasurementField {
   unit: string;
 }
 
+/** The Cycle / Body / Insights switcher at the top of the Body tab. */
+function SubTabs({ subTab, setSubTab }: { subTab: BodySubTab; setSubTab: (tab: BodySubTab) => void }) {
+  return (
+    <div style={{display:"flex",borderBottom:`2px solid ${C.border}`}}>
+      {([["cycle","Cycle"],["measurements","Body"],["insights","Insights"]] as const).map(([v,l])=>(
+        <button key={v} onClick={()=>setSubTab(v)} style={{flex:1,padding:"10px 0",border:"none",background:"transparent",cursor:"pointer",fontFamily:"Nunito",fontWeight:800,fontSize:14,color:subTab===v?"#7050B0":C.textSoft,borderBottom:subTab===v?"2px solid #7050B0":"2px solid transparent",marginBottom:-2,transition:"all .15s"}}>{l}</button>
+      ))}
+    </div>
+  );
+}
+
 export function BodyPage({ measurements, setMeasurements, weightHistory, setWeightHistory, cycleInfo, periodStart, setPeriodStart, periodHistory, setPeriodHistory, cycleLength, setCycleLength, showToast }: BodyPageProps) {
   const [subTab,setSubTab]=useState<BodySubTab>("cycle");
   const [modal,setModal]=useState<BodyModal|null>(null);
@@ -66,20 +77,12 @@ export function BodyPage({ measurements, setMeasurements, weightHistory, setWeig
   const prevWeight=weightHistory.length>1?weightHistory[weightHistory.length-2]?.weight:null;
   const weightDiff=latestWeight&&prevWeight?(latestWeight-prevWeight).toFixed(1):null;
 
-  const SubTabs=()=>(
-    <div style={{display:"flex",borderBottom:`2px solid ${C.border}`}}>
-      {([["cycle","Cycle"],["measurements","Body"],["insights","Insights"]] as const).map(([v,l])=>(
-        <button key={v} onClick={()=>setSubTab(v)} style={{flex:1,padding:"10px 0",border:"none",background:"transparent",cursor:"pointer",fontFamily:"Nunito",fontWeight:800,fontSize:14,color:subTab===v?"#7050B0":C.textSoft,borderBottom:subTab===v?"2px solid #7050B0":"2px solid transparent",marginBottom:-2,transition:"all .15s"}}>{l}</button>
-      ))}
-    </div>
-  );
-
   return (
     <div className="scroll" style={{paddingBottom:90}}>
       <div style={{padding:"24px 24px 0",background:C.bg}}>
         <div className="row" style={{marginBottom:2}}><span style={{fontSize:26}}>🌸</span><div style={{fontSize:24,fontWeight:900,color:C.text}}>Body</div></div>
         <div style={{fontSize:13,color:C.textSoft,fontWeight:500,marginBottom:14}}>Your body, your cycle, your context</div>
-        <SubTabs/>
+        <SubTabs subTab={subTab} setSubTab={setSubTab}/>
       </div>
       <div style={{padding:"16px 16px 0"}}>
 

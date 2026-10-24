@@ -12,6 +12,17 @@ interface NutritionPageProps {
   showToast: ShowToast;
 }
 
+/** The This Phase / My Goal / Diary switcher at the top of the Nutrition tab. */
+function SubTabs({ subTab, setSubTab }: { subTab: NutritionSubTab; setSubTab: (tab: NutritionSubTab) => void }) {
+  return (
+    <div style={{display:"flex",borderBottom:`2px solid ${C.border}`}}>
+      {([["cycle","This Phase"],["goals","My Goal"],["diary","Diary"]] as const).map(([v,l]) => (
+        <button key={v} onClick={() => setSubTab(v)} style={{flex:1,padding:"10px 0",border:"none",background:"transparent",cursor:"pointer",fontFamily:"Nunito",fontWeight:800,fontSize:14,color:subTab===v?"#7050B0":C.textSoft,borderBottom:subTab===v?"2px solid #7050B0":"2px solid transparent",marginBottom:-2,transition:"all .15s"}}>{l}</button>
+      ))}
+    </div>
+  );
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
 // ─── NUTRITION ────────────────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
@@ -52,20 +63,12 @@ export function NutritionPage({ cycleInfo, showToast }: NutritionPageProps) {
   const phaseFoods = phase ? CYCLE_FOODS[phase.id] : null;
   const goalFoods = selectedGoal ? GOAL_FOODS[selectedGoal] : null;
 
-  const SubTabs = () => (
-    <div style={{display:"flex",borderBottom:`2px solid ${C.border}`}}>
-      {([["cycle","This Phase"],["goals","My Goal"],["diary","Diary"]] as const).map(([v,l]) => (
-        <button key={v} onClick={() => setSubTab(v)} style={{flex:1,padding:"10px 0",border:"none",background:"transparent",cursor:"pointer",fontFamily:"Nunito",fontWeight:800,fontSize:14,color:subTab===v?"#7050B0":C.textSoft,borderBottom:subTab===v?"2px solid #7050B0":"2px solid transparent",marginBottom:-2,transition:"all .15s"}}>{l}</button>
-      ))}
-    </div>
-  );
-
   return (
     <div className="scroll" style={{paddingBottom:90}}>
       <div style={{padding:"24px 24px 0",background:C.bg}}>
         <div className="row" style={{marginBottom:2}}><span style={{fontSize:26}}>🥗</span><div style={{fontSize:24,fontWeight:900,color:C.text,marginLeft:8}}>Nutrition</div></div>
         <div style={{fontSize:13,color:C.textSoft,fontWeight:500,marginBottom:14}}>Food insights for your cycle and goals</div>
-        <SubTabs/>
+        <SubTabs subTab={subTab} setSubTab={setSubTab}/>
       </div>
 
       <div style={{padding:"16px 16px 0"}}>

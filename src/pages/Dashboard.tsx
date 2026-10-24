@@ -2,13 +2,9 @@ import { C, ACCENT } from "../theme";
 import { CYCLE_FOODS } from "../data/nutrition";
 import { PhaseBadge } from "../components/PhaseBadge";
 import { WeightChart } from "../components/WeightChart";
-import type { CycleInfo, Goals, Measurements, NutritionTotals, Schedule, WeightEntry, Workout, WorkoutLogEntry } from "../types";
+import type { CycleInfo, Schedule, WeightEntry, WorkoutLogEntry } from "../types";
 
 interface DashboardProps {
-  nutrition: NutritionTotals;
-  goals: Goals;
-  measurements: Measurements;
-  workoutPlan: Workout[];
   schedule: Schedule;
   weightHistory: WeightEntry[];
   cycleInfo: CycleInfo | null;
@@ -19,7 +15,7 @@ interface DashboardProps {
 // ══════════════════════════════════════════════════════════════════════════════
 // ─── DASHBOARD ────────────────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
-export function Dashboard({ nutrition, goals, measurements, workoutPlan, schedule, weightHistory, cycleInfo, workoutLog, userName }: DashboardProps) {
+export function Dashboard({ schedule, weightHistory, cycleInfo, workoutLog, userName }: DashboardProps) {
   const today = new Date().toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"});
   const todayStr = new Date().toISOString().slice(0,10);
   const todaySchedule = schedule[todayStr]||[];

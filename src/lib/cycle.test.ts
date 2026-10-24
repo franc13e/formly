@@ -72,23 +72,39 @@ describe("getCycleInfo", () => {
     expect(info?.daysUntilNext).toBe(6);
   });
 
-  it("counts days until the next period from the logged start", () => {
+  it("counts days until the next period from the logged start in the first cycle", () => {
     expect(getCycleInfo(startForDay(1))?.daysUntilNext).toBe(28);
     expect(getCycleInfo(startForDay(10))?.daysUntilNext).toBe(19);
     expect(getCycleInfo(startForDay(28))?.daysUntilNext).toBe(1);
   });
 
-  it("does not roll the next period forward in the second cycle (existing behaviour)", () => {
-    // nextPeriod is always periodStart + cycleLength, so it goes to 0 / negative once a
-    // cycle has passed without logging a new period. The UI shows "soon" for <= 0.
-    expect(getCycleInfo(startForDay(29))?.daysUntilNext).toBe(0);
-    expect(getCycleInfo(startForDay(40))?.daysUntilNext).toBe(-11);
+  it("rolls the next period forward in the second cycle", () => {
+    // Once a cycle has passed without logging a new period, the countdown restarts from
+    // the start of the current (second) cycle instead of hitting 0 and going negative.
+    expect(getCycleInfo(startForDay(29))?.daysUntilNext).toBe(28);
+    expect(getCycleInfo(startForDay(40))?.daysUntilNext).toBe(17);
+    expect(getCycleInfo(startForDay(56))?.daysUntilNext).toBe(1);
+    expect(getCycleInfo(startForDay(31), 30)?.daysUntilNext).toBe(30);
+    expect(getCycleInfo(startForDay(60), 30)?.daysUntilNext).toBe(1);
+  });
+
+  it("never reports a non-positive countdown while a cycle is shown", () => {
+    for (let day = 1; day <= 56; day++) {
+      expect(getCycleInfo(startForDay(day), 28)?.daysUntilNext).toBe(28 - ((day - 1) % 28));
+    }
   });
 
   it("reports the next period date as start + cycleLength (via toISOString)", () => {
     const start = startForDay(10);
     const [y, m, d] = start.split("-").map(Number);
     const expected = new Date(y, m - 1, d + 28, 12).toISOString().slice(0, 10);
+    expect(getCycleInfo(start)?.nextPeriodDate).toBe(expected);
+  });
+
+  it("reports the next period date as start + 2 * cycleLength in the second cycle", () => {
+    const start = startForDay(40);
+    const [y, m, d] = start.split("-").map(Number);
+    const expected = new Date(y, m - 1, d + 56, 12).toISOString().slice(0, 10);
     expect(getCycleInfo(start)?.nextPeriodDate).toBe(expected);
   });
 
