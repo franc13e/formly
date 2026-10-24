@@ -8,6 +8,14 @@ Formly is a mobile-first fitness app that combines workout logging, nutrition tr
 
 ---
 
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/home.png" width="240" alt="Home with cycle phase, today's workouts and weight trend">
+  <img src="docs/screenshots/nutrition.png" width="240" alt="Cycle-phase nutrition guidance">
+  <img src="docs/screenshots/body.png" width="240" alt="Cycle wheel and phase insights">
+</p>
+
 ## Features
 
 - **Workout logging**: log workouts by type (cardio, strength, etc.), add notes and PRs, mark rest days, and swipe or tap to delete
