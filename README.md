@@ -1,10 +1,12 @@
 # Formly — AI Fitness & Nutrition Tracker for Women
 
+[![CI](https://github.com/franc13e/formly/actions/workflows/ci.yml/badge.svg)](https://github.com/franc13e/formly/actions/workflows/ci.yml)
+
 Formly is a mobile-first fitness app that combines workout logging, nutrition tracking and optional menstrual-cycle tracking, with AI coaching that adapts to where you are in your cycle.
 
 **Live demo:** https://formly-teal.vercel.app
 
-**Tech Stack:** React 19 · Vite · FastAPI · Groq LLM API · Vercel (frontend + serverless API)
+**Tech Stack:** React 19 · TypeScript · Vite · Vitest · FastAPI · Groq LLM API · Vercel (frontend + serverless API)
 
 ---
 
@@ -32,12 +34,23 @@ Formly is a mobile-first fitness app that combines workout logging, nutrition tr
 ```
 formly/
 ├── src/
-│   ├── App.jsx          # Main app: screens, state and UI
-│   └── main.jsx         # React entry point
-├── main.py              # FastAPI backend (AI endpoints)
-├── requirements.txt     # Python dependencies
-├── package.json         # Frontend dependencies
-└── vercel.json          # Vercel deployment config
+│   ├── main.tsx          # React entry point
+│   ├── App.tsx           # Root component: app state, persistence, navigation
+│   ├── types.ts          # Shared domain types
+│   ├── theme.ts          # Design tokens and global CSS
+│   ├── vite-env.d.ts     # Vite / import.meta.env types
+│   ├── pages/            # Onboarding, Dashboard, Nutrition, Body, Workouts, Settings
+│   ├── components/       # Shared UI: icons, charts, rings, cycle wheel, AI coach panel
+│   ├── data/             # Static data: workouts, foods, coach options, tabs
+│   ├── hooks/            # useToast
+│   └── lib/              # API client, localStorage helpers, cycle engine (+ unit tests)
+├── api/index.py          # Vercel serverless entry for the FastAPI app
+├── main.py               # FastAPI backend (AI endpoints)
+├── requirements.txt      # Python dependencies
+├── package.json          # Frontend dependencies and scripts
+├── tsconfig.json         # TypeScript config (strict)
+├── vite.config.ts        # Vite + Vitest config
+└── vercel.json           # Vercel deployment config
 ```
 
 ## API Endpoints
@@ -66,6 +79,14 @@ uvicorn main:app --reload
 ```bash
 npm install
 npm run dev
+```
+
+Checks:
+
+```bash
+npm run typecheck   # TypeScript (strict), no emit
+npm test            # Vitest unit tests
+npm run build       # typecheck + production build to dist/
 ```
 
 > In development, Vite proxies `/api` to the backend on port 8000. In production, Vercel serves the FastAPI app from `api/index.py` on the same domain, so set `GROQ_API_KEY` in the Vercel project.
