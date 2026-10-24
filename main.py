@@ -21,6 +21,7 @@ app.add_middleware(
 GROQ_KEY = os.getenv("GROQ_API_KEY", "")
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 MODEL = "openai/gpt-oss-20b"
+REASONING_HEADROOM = 600
 
 
 class PromptRequest(BaseModel):
@@ -43,7 +44,15 @@ async def call_groq(prompt: str, system: str = "", max_tokens: int = 800, temper
         res = await client.post(
             GROQ_URL,
             headers={"Authorization": f"Bearer {GROQ_KEY}", "Content-Type": "application/json"},
-            json={"model": MODEL, "messages": messages, "max_tokens": max_tokens, "temperature": temperature},
+            json={
+                "model": MODEL,
+                "messages": messages,
+                # gpt-oss is a reasoning model: its hidden reasoning counts toward the
+                # token limit, so keep reasoning short and leave headroom for the answer.
+                "reasoning_effort": "low",
+                "max_tokens": max_tokens + REASONING_HEADROOM,
+                "temperature": temperature,
+            },
         )
 
     if res.status_code != 200:
