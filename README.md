@@ -2,7 +2,7 @@
 
 Formly is a mobile-first fitness app that combines workout logging, nutrition tracking and optional menstrual-cycle tracking, with AI coaching that adapts to where you are in your cycle.
 
-**Live demo:** https://formly-coral-psi.vercel.app
+**Live demo:** https://formly-teal.vercel.app
 
 **Tech Stack:** React 19 · Vite · FastAPI · Groq LLM API · Vercel (frontend) · Railway (backend)
 
