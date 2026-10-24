@@ -16,11 +16,23 @@ export function load<T>(key: string, fallback: T): T {
   }
 }
 
+type SaveListener = (key: string) => void;
+const saveListeners = new Set<SaveListener>();
+
+/** Subscribe to successful `save` calls (used for cloud sync). Returns an unsubscribe function. */
+export function onSave(listener: SaveListener): () => void {
+  saveListeners.add(listener);
+  return () => {
+    saveListeners.delete(listener);
+  };
+}
+
 /** JSON-serialises `value` into `localStorage[key]`; silently ignores storage errors (quota, private mode). */
 export function save(key: string, value: unknown): void {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch {
-    // ignore
+    return;
   }
+  saveListeners.forEach((listener) => listener(key));
 }

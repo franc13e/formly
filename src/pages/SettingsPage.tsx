@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { C, ACCENT } from "../theme";
 import { save } from "../lib/storage";
+import { useAuth } from "../auth/AuthContext";
 import type { Setter, ShowToast } from "../types";
 
 interface SettingsPageProps {
@@ -11,6 +12,7 @@ interface SettingsPageProps {
 
 export function SettingsPage({ userName, setUserName, showToast }: SettingsPageProps) {
   const [localName, setLocalName] = useState(userName || "");
+  const auth = useAuth();
 
   return (
     <div className="scroll" style={{padding:"24px 24px 40px"}}>
@@ -28,6 +30,25 @@ export function SettingsPage({ userName, setUserName, showToast }: SettingsPageP
           <button className="btn btn-primary btn-sm" style={{flexShrink:0,marginBottom:1}} onClick={()=>{setUserName(localName);save("user-name",localName);showToast("Name saved ✓");}}>Save</button>
         </div>
       </div>
+
+      {/* Account */}
+      {auth.mode !== "local" && (
+        <div className="card" style={{marginBottom:14}}>
+          <div className="sec-title">Account</div>
+          {auth.mode === "account" ? (
+            <>
+              <div style={{fontSize:13,color:C.textMid,fontWeight:600,marginBottom:4}}>Signed in as {auth.email}</div>
+              <div style={{fontSize:12,color:C.textSoft,fontWeight:500,lineHeight:1.6,marginBottom:12}}>Your data syncs automatically across your devices.</div>
+              <button className="btn btn-ghost btn-sm" onClick={()=>{void auth.signOut();}}>Sign out</button>
+            </>
+          ) : (
+            <>
+              <div style={{fontSize:12,color:C.textSoft,fontWeight:500,lineHeight:1.6,marginBottom:12}}>You're using Formly without an account, so your data only lives in this browser. Create an account to back it up and sync it across devices — your current data comes with you.</div>
+              <button className="btn btn-primary btn-sm" onClick={auth.startSignIn}>Sign in or create account</button>
+            </>
+          )}
+        </div>
+      )}
 
       {/* About */}
       <div className="card" style={{marginBottom:14,background:`linear-gradient(135deg,${C.lavender},${C.rose})`,border:"none"}}>
@@ -68,8 +89,14 @@ export function SettingsPage({ userName, setUserName, showToast }: SettingsPageP
       {/* Data */}
       <div className="card">
         <div className="sec-title">Data and privacy</div>
-        <div style={{fontSize:13,color:C.textSoft,fontWeight:500,lineHeight:1.6,marginBottom:14}}>Everything is stored locally in your browser. Nothing leaves your device except prompts sent to the AI backend when you use AI features.</div>
-        <button className="btn btn-ghost btn-sm" style={{color:"#C05070",borderColor:C.roseDeep}} onClick={()=>{if(window.confirm("Clear all app data? This cannot be undone.")){localStorage.clear();window.location.reload();}}}>Clear all data</button>
+        <div style={{fontSize:13,color:C.textSoft,fontWeight:500,lineHeight:1.6,marginBottom:14}}>{auth.mode === "account"
+          ? "Your data is stored in this browser and synced to your account, where only you can access it. Prompts are sent to the AI backend when you use AI features."
+          : "Everything is stored locally in your browser. Nothing leaves your device except prompts sent to the AI backend when you use AI features."}</div>
+        <button className="btn btn-ghost btn-sm" style={{color:"#C05070",borderColor:C.roseDeep}} onClick={()=>{
+          const msg = auth.mode === "account" ? "Delete all your data from this device and your account? This cannot be undone." : "Clear all app data? This cannot be undone.";
+          if(!window.confirm(msg)) return;
+          void auth.deleteCloudData().then(()=>{localStorage.clear();window.location.reload();}, ()=>showToast("Couldn't delete cloud data — try again"));
+        }}>Clear all data</button>
       </div>
     </div>
   );

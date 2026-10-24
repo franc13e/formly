@@ -26,3 +26,18 @@ def test_ai_routes_fail_clearly_without_key():
 
 def test_prompt_is_required():
     assert client.post("/api/nutrition", json={}).status_code == 422
+
+
+def test_config_is_empty_without_supabase(monkeypatch):
+    for name in ("SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_ANON_KEY", "NEXT_PUBLIC_SUPABASE_ANON_KEY"):
+        monkeypatch.delenv(name, raising=False)
+    assert client.get("/api/config").json() == {"supabaseUrl": None, "supabaseAnonKey": None}
+
+
+def test_config_reads_vercel_integration_names(monkeypatch):
+    monkeypatch.setenv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co")
+    monkeypatch.setenv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "public-anon-key")
+    assert client.get("/api/config").json() == {
+        "supabaseUrl": "https://example.supabase.co",
+        "supabaseAnonKey": "public-anon-key",
+    }

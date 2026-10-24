@@ -6,7 +6,7 @@ Formly is a mobile-first fitness app that combines workout logging, nutrition tr
 
 **Live demo:** https://formly-teal.vercel.app
 
-**Tech Stack:** React 19 · TypeScript · Vite · Vitest · FastAPI · Groq LLM API · Vercel (frontend + serverless API)
+**Tech Stack:** React 19 · TypeScript · Vite · Vitest · FastAPI · Groq LLM API · Supabase (auth + Postgres) · Vercel (frontend + serverless API)
 
 ---
 
@@ -27,7 +27,8 @@ Formly is a mobile-first fitness app that combines workout logging, nutrition tr
 - **Body measurements**: track weight and measurements over time with supportive, non-judgemental AI feedback
 - **Goal suggestions**: AI recommendations for which nutrients to prioritise for your goals
 - **Responsive layout**: bottom navigation on mobile, sidebar layout on desktop
-- **Local-first**: your data stays in the browser (localStorage)
+- **Optional accounts**: sign up with email to back up and sync your data across devices, or continue without an account and keep everything in the browser
+- **Local-first**: the app works offline from localStorage; signed-in users' data is synced to Supabase in the background
 
 ## Project Structure
 
@@ -43,7 +44,9 @@ formly/
 │   ├── components/       # Shared UI: icons, charts, rings, cycle wheel, AI coach panel
 │   ├── data/             # Static data: workouts, foods, coach options, tabs
 │   ├── hooks/            # useToast
-│   └── lib/              # API client, localStorage helpers, cycle engine (+ unit tests)
+│   ├── auth/             # Sign-in screen, auth gate and account context
+│   └── lib/              # API client, storage, cloud sync, Supabase client, cycle engine (+ unit tests)
+├── supabase/schema.sql   # user_state table + row-level security policies
 ├── api/index.py          # Vercel serverless entry for the FastAPI app
 ├── main.py               # FastAPI backend (AI endpoints)
 ├── requirements.txt      # Python dependencies
@@ -52,6 +55,16 @@ formly/
 ├── vite.config.ts        # Vite + Vitest config
 └── vercel.json           # Vercel deployment config
 ```
+
+## Accounts & Sync
+
+Accounts are optional and use **Supabase Auth**. Each user's app data is stored as one row in a `user_state` table protected by **row-level security**, so users can only read and write their own data ([schema](supabase/schema.sql)).
+
+- On sign-in, cloud data replaces the local copy; a brand-new account is seeded from the current local data, so guest progress carries over.
+- Every change is saved locally first and synced in the background (debounced, and flushed when the tab is hidden).
+- Without Supabase configured, the app runs fully local, exactly as before. The Supabase SDK is lazy-loaded, so local-only visitors don't download it.
+
+The frontend reads the public Supabase URL and anon key from `GET /api/config`, which picks them up from the Vercel ↔ Supabase integration's environment variables.
 
 ## API Endpoints
 
@@ -62,6 +75,7 @@ formly/
 | `POST` | `/api/body-insight` | Cycle-aware feedback on body measurements |
 | `POST` | `/api/health-check` | Feedback on health goals |
 | `POST` | `/api/suggest-goals` | Nutrient priorities for the user's goals |
+| `GET` | `/api/config` | Public Supabase URL and anon key (if accounts are enabled) |
 | `GET` | `/api/health` | Health check |
 
 ## Running Locally

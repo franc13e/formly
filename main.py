@@ -68,6 +68,26 @@ async def call_groq(prompt: str, system: str = "", max_tokens: int = 800, temper
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 
+def _first_env(*names: str) -> str:
+    for name in names:
+        value = os.getenv(name, "").strip()
+        if value:
+            return value
+    return ""
+
+
+@app.get("/api/config")
+async def public_config():
+    """Public client config. The Supabase URL and anon/publishable key are meant to be
+    exposed to browsers; access is enforced by row-level security in the database."""
+    url = _first_env("SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_URL")
+    key = _first_env(
+        "SUPABASE_ANON_KEY", "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+        "SUPABASE_PUBLISHABLE_KEY", "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+    )
+    return {"supabaseUrl": url or None, "supabaseAnonKey": key or None}
+
+
 @app.get("/health")
 @app.get("/api/health")
 async def health():
