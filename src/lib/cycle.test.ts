@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getCycleInfo, PHASES } from "./cycle";
+import { clampCycleLength, getCycleInfo, PHASES } from "./cycle";
 
 // "Today" is pinned to mid-July so that no test range crosses a DST change
 // (getCycleInfo works in local time and floors whole-day differences).
@@ -110,5 +110,23 @@ describe("getCycleInfo", () => {
 
   it("returns null for an unparseable date string instead of crashing", () => {
     expect(getCycleInfo("not-a-date")).toBeNull();
+  });
+});
+
+describe("clampCycleLength", () => {
+  it("keeps supported lengths and clamps the rest", () => {
+    expect(clampCycleLength(28)).toBe(28);
+    expect(clampCycleLength(2)).toBe(21);
+    expect(clampCycleLength(400)).toBe(40);
+    expect(clampCycleLength(Number.NaN)).toBe(28);
+  });
+
+  it("is applied by getCycleInfo so bad saved values can't break the cycle maths", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 9, 24, 12));
+    const info = getCycleInfo("2026-10-20", 2);
+    expect(info?.cycleLength).toBe(21);
+    expect(info?.dayOfCycle).toBe(5);
+    vi.useRealTimers();
   });
 });

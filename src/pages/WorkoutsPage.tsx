@@ -4,6 +4,7 @@ import { ALL_WORKOUTS, DIFF_COLOR } from "../data/workouts";
 import { SwipeToDelete } from "../components/SwipeToDelete";
 import { AICoachPanel } from "../components/AICoachPanel";
 import type { CycleInfo, LoggableWorkout, Measurements, Schedule, ScheduledWorkout, Setter, ShowToast, Workout, WorkoutLogEntry, WorkoutLogForm } from "../types";
+import { localDateKey } from "../lib/date";
 
 type WorkoutsTab = "schedule" | "browse" | "ai" | "history";
 
@@ -41,14 +42,14 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
   const [logForm, setLogForm] = useState<WorkoutLogForm>({ sets:"", reps:"", weight:"", notes:"", duration:"" });
   const [customInput, setCustomInput] = useState("");
   const [pickingDay, setPickingDay] = useState<string | null>(null);
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = localDateKey();
   const completedToday = new Set((workoutLog||[]).filter(e=>e.date===todayStr).map(e=>e.name));
 
   const DAYS = Array.from({length:7}, (_,i) => {
     const d = new Date();
     const monday = d.getDate() - ((d.getDay()+6)%7);
     d.setDate(monday + i);
-    return { date: d.toISOString().slice(0,10), label:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][i], num: d.getDate() };
+    return { date: localDateKey(d), label:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][i], num: d.getDate() };
   });
 
   const addToDay = (date: string, item: ScheduledWorkout) => setSchedule(s => ({ ...s, [date]: [...(Array.isArray(s[date])?s[date]:[]), item] }));

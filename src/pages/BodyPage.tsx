@@ -8,6 +8,8 @@ import { PhaseBadge } from "../components/PhaseBadge";
 import { WeightChart } from "../components/WeightChart";
 import { MeasurementRings } from "../components/MeasurementRings";
 import type { CycleInfo, MeasurementKey, Measurements, PeriodEntry, Setter, ShowToast, WeightEntry } from "../types";
+import { localDateKey } from "../lib/date";
+import { CycleLengthInput } from "../components/CycleLengthInput";
 
 type BodySubTab = "cycle" | "measurements" | "insights";
 type BodyModal = "cycle-setup" | "update";
@@ -55,7 +57,7 @@ export function BodyPage({ measurements, setMeasurements, weightHistory, setWeig
 
   const save_m=()=>{
     setMeasurements(form);
-    if(form.weight){setWeightHistory(h=>{const today=new Date().toISOString().slice(0,10);return [...h.filter(x=>x.date!==today),{date:today,weight:parseFloat(String(form.weight))}].sort((a,b)=>a.date.localeCompare(b.date));});}
+    if(form.weight){setWeightHistory(h=>{const today=localDateKey();return [...h.filter(x=>x.date!==today),{date:today,weight:parseFloat(String(form.weight))}].sort((a,b)=>a.date.localeCompare(b.date));});}
     setModal(null);showToast("Measurements saved ✓");
   };
 
@@ -184,7 +186,7 @@ export function BodyPage({ measurements, setMeasurements, weightHistory, setWeig
         <div className="modal-handle"/><div className="modal-title">🌸 Your cycle</div>
         <div style={{fontSize:13,color:C.textSoft,fontWeight:500,lineHeight:1.6,marginBottom:18}}>We only need two things. Your data stays on your device and is never shared.</div>
         <div style={{marginBottom:14}}><label className="label">First day of your last period</label><input className="input" type="date" value={periodStart||""} onChange={e=>setPeriodStart(e.target.value)}/></div>
-        <div style={{marginBottom:20}}><label className="label">Average cycle length (days)</label><input className="input" type="number" min="21" max="40" value={cycleLength||28} onChange={e=>setCycleLength(parseInt(e.target.value)||28)}/><div style={{fontSize:11,color:C.textSoft,marginTop:5,fontWeight:600}}>Most cycles are 21-35 days. The average is 28.</div></div>
+        <div style={{marginBottom:20}}><label className="label">Average cycle length (days)</label><CycleLengthInput value={cycleLength} onChange={setCycleLength}/><div style={{fontSize:11,color:C.textSoft,marginTop:5,fontWeight:600}}>Most cycles are 21-35 days. The average is 28.</div></div>
         <button className="btn btn-primary" style={{width:"100%"}} onClick={()=>{if(periodStart){setPeriodHistory(h=>{const already=h.find(x=>x.date===periodStart);if(already)return h;return[...h,{date:periodStart}].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,12);});}setModal(null);showToast("Cycle logged 🌸");}}>Save</button>
       </div></div>}
 

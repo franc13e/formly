@@ -4,6 +4,7 @@ import { callAI } from "../lib/api";
 import { load, save } from "../lib/storage";
 import { CYCLE_FOODS, GOAL_FOODS } from "../data/nutrition";
 import type { CycleInfo, FoodLogEntry, ShowToast } from "../types";
+import { localDateKey } from "../lib/date";
 
 type NutritionSubTab = "cycle" | "goals" | "diary";
 
@@ -54,7 +55,7 @@ export function NutritionPage({ cycleInfo, showToast }: NutritionPageProps) {
 
   const addEntry = () => {
     if (!newEntry.trim()) return;
-    setFoodLog(l => [{ text: newEntry.trim(), time: new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}), date: new Date().toISOString().slice(0,10), id: Date.now() }, ...l]);
+    setFoodLog(l => [{ text: newEntry.trim(), time: new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}), date: localDateKey(), id: Date.now() }, ...l]);
     setNewEntry("");
     showToast("Added to diary");
   };
@@ -205,7 +206,7 @@ export function NutritionPage({ cycleInfo, showToast }: NutritionPageProps) {
               Object.entries(foodLog.reduce<Record<string, FoodLogEntry[]>>((acc,e)=>{const d=e.date||"Today";if(!acc[d])acc[d]=[];acc[d].push(e);return acc;},{})).sort(([a],[b])=>b.localeCompare(a)).map(([date,entries])=>(
                 <div key={date} style={{marginBottom:16}}>
                   <div style={{fontSize:12,fontWeight:800,color:C.textMid,marginBottom:8}}>
-                    {date===new Date().toISOString().slice(0,10)?"Today":new Date(date+"T12:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})}
+                    {date===localDateKey()?"Today":new Date(date+"T12:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})}
                   </div>
                   {entries.map(e=>(
                     <div key={e.id} className="card" style={{marginBottom:8,padding:"10px 14px"}}>

@@ -1,4 +1,5 @@
 import type { CycleInfo, Phase, PhaseId } from "../types";
+import { localDateKey } from "./date";
 
 // ─── Cycle engine ─────────────────────────────────────────────────────────────
 export const PHASES: Record<PhaseId, Phase> = {
@@ -16,8 +17,19 @@ const DAY_MS = 1000*60*60*24;
  * two cycle lengths ago. `nextPeriodDate`/`daysUntilNext` refer to the end of the current
  * cycle, i.e. periodStart + (cycleIndex+1)*cycleLength.
  */
-export function getCycleInfo(periodStart: string, cycleLength=28): CycleInfo | null {
+/** Supported cycle lengths (days); values outside this range are clamped. */
+export const MIN_CYCLE_LENGTH = 21;
+export const MAX_CYCLE_LENGTH = 40;
+
+export function clampCycleLength(value: number): number {
+  if (!Number.isFinite(value)) return 28;
+  return Math.min(MAX_CYCLE_LENGTH, Math.max(MIN_CYCLE_LENGTH, Math.round(value)));
+}
+
+export function getCycleInfo(periodStart: string, rawCycleLength=28): CycleInfo | null {
   if (!periodStart) return null;
+  // Guards against out-of-range values saved by older versions of the input.
+  const cycleLength=clampCycleLength(rawCycleLength);
   const start=new Date(periodStart+"T12:00:00"), today=new Date();
   // Corrupted or hand-edited storage shouldn't crash the app: treat it as "not set".
   if (Number.isNaN(start.getTime())) return null;
@@ -32,5 +44,5 @@ export function getCycleInfo(periodStart: string, cycleLength=28): CycleInfo | n
   const nextPeriod=new Date(start);
   nextPeriod.setDate(start.getDate()+(cycleIndex+1)*cycleLength);
   const daysUntilNext=Math.ceil((nextPeriod.getTime()-today.getTime())/DAY_MS);
-  return {phase:PHASES[phase],dayOfCycle:d,cycleLength,daysUntilNext,nextPeriodDate:nextPeriod.toISOString().slice(0,10)};
+  return {phase:PHASES[phase],dayOfCycle:d,cycleLength,daysUntilNext,nextPeriodDate:localDateKey(nextPeriod)};
 }

@@ -3,6 +3,7 @@ import { CYCLE_FOODS } from "../data/nutrition";
 import { PhaseBadge } from "../components/PhaseBadge";
 import { WeightChart } from "../components/WeightChart";
 import type { CycleInfo, Schedule, WeightEntry, WorkoutLogEntry } from "../types";
+import { localDateKey } from "../lib/date";
 
 interface DashboardProps {
   schedule: Schedule;
@@ -17,7 +18,7 @@ interface DashboardProps {
 // ══════════════════════════════════════════════════════════════════════════════
 export function Dashboard({ schedule, weightHistory, cycleInfo, workoutLog, userName }: DashboardProps) {
   const today = new Date().toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"});
-  const todayStr = new Date().toISOString().slice(0,10);
+  const todayStr = localDateKey();
   const todaySchedule = schedule[todayStr]||[];
   const isRestDay = todaySchedule === "rest";
   const todayScheduledItems = Array.isArray(todaySchedule) ? todaySchedule : [];
@@ -25,7 +26,7 @@ export function Dashboard({ schedule, weightHistory, cycleInfo, workoutLog, user
   const todayLoggedWorkouts = (workoutLog||[]).filter(e=>e.date===todayStr);
   const greet=()=>{const h=new Date().getHours();return h<12?"Good morning ☀️":h<17?"Good afternoon 🌤️":"Good evening 🌙";};
   const weekStreak = (() => {
-    const days = Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-i);return d.toISOString().slice(0,10);});
+    const days = Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-i);return localDateKey(d);});
     return days.filter(d=>(workoutLog||[]).some(e=>e.date===d)).length;
   })();
 

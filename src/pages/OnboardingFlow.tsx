@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { C } from "../theme";
+import { CycleLengthInput } from "../components/CycleLengthInput";
 
 interface OnboardingFlowProps {
   /** Called on the last step. `periodStart` is "" when cycle tracking was declined or skipped. */
@@ -62,7 +63,7 @@ export function OnboardingFlow({ onDone }: OnboardingFlowProps) {
         </div>}
         {step===3&&<div style={{display:"flex",flexDirection:"column",gap:14}}>
           <div><label className="label">First day of your last period</label><input className="input" type="date" value={pStart} onChange={e=>setPStart(e.target.value)} style={{fontSize:15}}/></div>
-          <div><label className="label">Average cycle length (days)</label><input className="input" type="number" min="21" max="40" value={cLen} onChange={e=>setCLen(parseInt(e.target.value)||28)}/><div style={{fontSize:11,color:C.textSoft,marginTop:5,fontWeight:600}}>Most cycles are 21-35 days. The average is 28.</div></div>
+          <div><label className="label">Average cycle length (days)</label><CycleLengthInput value={cLen} onChange={setCLen}/><div style={{fontSize:11,color:C.textSoft,marginTop:5,fontWeight:600}}>Most cycles are 21-35 days. The average is 28.</div></div>
           <button className="btn btn-ghost btn-sm" style={{alignSelf:"flex-start"}} onClick={()=>setStep(4)}>Skip for now</button>
         </div>}
         {step===4&&<div style={{display:"flex",flexDirection:"column",gap:10}}>
