@@ -4,12 +4,9 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
+    // Local dev: forward AI requests to the FastAPI backend (uvicorn main:app)
     proxy: {
-      '/gemini': {
-        target: 'https://generativelanguage.googleapis.com',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/gemini/, ''),
-      }
-    }
-  }
+      '/api': 'http://localhost:8000',
+    },
+  },
 })

@@ -4,7 +4,7 @@ Formly is a mobile-first fitness app that combines workout logging, nutrition tr
 
 **Live demo:** https://formly-teal.vercel.app
 
-**Tech Stack:** React 19 · Vite · FastAPI · Groq LLM API · Vercel (frontend) · Railway (backend)
+**Tech Stack:** React 19 · Vite · FastAPI · Groq LLM API · Vercel (frontend + serverless API)
 
 ---
 
@@ -49,7 +49,7 @@ formly/
 | `POST` | `/api/body-insight` | Cycle-aware feedback on body measurements |
 | `POST` | `/api/health-check` | Feedback on health goals |
 | `POST` | `/api/suggest-goals` | Nutrient priorities for the user's goals |
-| `GET` | `/health` | Health check |
+| `GET` | `/api/health` | Health check |
 
 ## Running Locally
 
@@ -68,4 +68,4 @@ npm install
 npm run dev
 ```
 
-> Point the `API` constant in `src/App.jsx` at `http://localhost:8000` when running the backend locally.
+> In development, Vite proxies `/api` to the backend on port 8000. In production, Vercel serves the FastAPI app from `api/index.py` on the same domain, so set `GROQ_API_KEY` in the Vercel project.

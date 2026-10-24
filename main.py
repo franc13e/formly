@@ -60,6 +60,7 @@ async def call_groq(prompt: str, system: str = "", max_tokens: int = 800, temper
 # ── Routes ────────────────────────────────────────────────────────────────────
 
 @app.get("/health")
+@app.get("/api/health")
 async def health():
     return {"status": "ok", "groq_key_set": bool(GROQ_KEY)}
 

@@ -38,7 +38,8 @@ const ACCENT = {
 };
 
 // ─── Backend helper ───────────────────────────────────────────────────────────
-const API = "https://formly-production-fd25.up.railway.app";
+// Same-origin by default (Vercel serves the FastAPI app under /api); override with VITE_API_URL.
+const API = import.meta.env.VITE_API_URL || "";
 async function callAI(endpoint, prompt) {
   try {
     const controller = new AbortController();
@@ -57,7 +58,7 @@ async function callAI(endpoint, prompt) {
     return (await res.json()).result;
   } catch(e) {
     console.error("callAI error:", endpoint, e.message);
-    if (e.name === "AbortError") throw new Error("Request timed out. The server may be waking up — try again in 30 seconds.");
+    if (e.name === "AbortError") throw new Error("Request timed out. Please try again.");
     throw new Error(e.message || "Request failed");
   }
 }
