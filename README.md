@@ -1,4 +1,4 @@
-# Formly — AI Fitness & Nutrition Tracker for Women
+# Formly: AI Fitness & Nutrition Tracker for Women
 
 [![CI](https://github.com/franc13e/formly/actions/workflows/ci.yml/badge.svg)](https://github.com/franc13e/formly/actions/workflows/ci.yml)
 
