@@ -10,7 +10,8 @@ ReactDOM.createRoot(root).render(
   </AuthGate>,
 )
 
-if ('serviceWorker' in navigator) {
+// Dev server modules shouldn't end up in the offline cache
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
   })
