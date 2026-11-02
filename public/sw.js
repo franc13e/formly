@@ -1,4 +1,4 @@
-const CACHE = "formly-v2";
+const CACHE = "formly-v3";
 const SHELL = ["/", "/manifest.json", "/favicon.svg", "/icon-192.png", "/icon-512.png", "/apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
