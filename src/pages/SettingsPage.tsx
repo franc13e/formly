@@ -2,6 +2,7 @@ import { useState } from "react";
 import { C, ACCENT } from "../theme";
 import { save } from "../lib/storage";
 import { useAuth } from "../auth/AuthContext";
+import { Glyph } from "../components/Glyph";
 import type { Setter, ShowToast } from "../types";
 
 interface SettingsPageProps {
@@ -52,7 +53,7 @@ export function SettingsPage({ userName, setUserName, showToast }: SettingsPageP
 
       {/* About */}
       <div className="card" style={{marginBottom:14,background:`linear-gradient(135deg,${C.lavender},${C.rose})`,border:"none"}}>
-        <div style={{fontSize:18,fontWeight:900,color:C.text,marginBottom:8}}>🌸 About Formly</div>
+        <div style={{fontSize:18,fontWeight:900,color:C.text,marginBottom:8}}><Glyph emoji="🌸" chip={false} size={18}/> About Formly</div>
         <div style={{fontSize:13,color:C.textMid,fontWeight:500,lineHeight:1.8}}>
           Formly is a women-forward fitness app built around how your body works across your cycle. Understand your energy, plan your workouts, and learn what your body needs at each phase.
         </div>
@@ -69,7 +70,7 @@ export function SettingsPage({ userName, setUserName, showToast }: SettingsPageP
           {emoji:"✨",title:"AI Coach",desc:"Generates personalised workout and nutrition plans that account for your cycle phase, fitness goal, activity level, and any personal context you share like injuries or preferences."},
         ].map(f=>(
           <div key={f.title} className="row" style={{padding:"12px 0",borderTop:`1px solid ${C.border}`,alignItems:"flex-start",gap:12}}>
-            <span style={{fontSize:22,flexShrink:0}}>{f.emoji}</span>
+            <Glyph emoji={f.emoji} size={16}/>
             <div>
               <div style={{fontWeight:800,fontSize:14,marginBottom:3}}>{f.title}</div>
               <div style={{fontSize:12,color:C.textSoft,fontWeight:500,lineHeight:1.6}}>{f.desc}</div>

@@ -2,6 +2,7 @@ import { C, ACCENT } from "../theme";
 import { CYCLE_FOODS } from "../data/nutrition";
 import { PhaseBadge } from "../components/PhaseBadge";
 import { WeightChart } from "../components/WeightChart";
+import { Glyph } from "../components/Glyph";
 import type { CycleInfo, Schedule, WeightEntry, WorkoutLogEntry } from "../types";
 import { localDateKey } from "../lib/date";
 
@@ -24,7 +25,8 @@ export function Dashboard({ schedule, weightHistory, cycleInfo, workoutLog, user
   const todayScheduledItems = Array.isArray(todaySchedule) ? todaySchedule : [];
   const completedToday = (workoutLog||[]).filter(e=>e.date===todayStr).length;
   const todayLoggedWorkouts = (workoutLog||[]).filter(e=>e.date===todayStr);
-  const greet=()=>{const h=new Date().getHours();return h<12?"Good morning ☀️":h<17?"Good afternoon 🌤️":"Good evening 🌙";};
+  const greet=():[string,string]=>{const h=new Date().getHours();return h<12?["Good morning","☀️"]:h<17?["Good afternoon","🌤️"]:["Good evening","🌙"];};
+  const [greeting, greetEmoji] = greet();
   const weekStreak = (() => {
     const days = Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-i);return localDateKey(d);});
     return days.filter(d=>(workoutLog||[]).some(e=>e.date===d)).length;
@@ -35,22 +37,22 @@ export function Dashboard({ schedule, weightHistory, cycleInfo, workoutLog, user
       <style>{`@media(min-width:768px){.home-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}.home-full{grid-column:1/-1;}}`}</style>
       <div style={{marginBottom:cycleInfo?10:16}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-          <div style={{fontSize:22,fontWeight:900,color:C.text}}>{greet()}{userName?`, ${userName}`:""}</div>
+          <div style={{fontSize:22,fontWeight:900,color:C.text}}>{greeting}{userName?`, ${userName}`:""} <Glyph emoji={greetEmoji} chip={false} size={20}/></div>
         </div>
         <div className="row-between" style={{marginTop:2}}>
           <div style={{fontSize:13,color:C.textSoft,fontWeight:500}}>{today}</div>
-          {weekStreak>0&&<div style={{fontSize:12,fontWeight:700,color:ACCENT.carbs.text}}>🔥 {weekStreak} day{weekStreak>1?"s":""} this week</div>}
+          {weekStreak>0&&<div style={{fontSize:12,fontWeight:700,color:ACCENT.carbs.text}}><Glyph emoji="🔥" chip={false} size={13}/> {weekStreak} day{weekStreak>1?"s":""} this week</div>}
         </div>
       </div>
       {cycleInfo&&<div style={{marginBottom:10}}><PhaseBadge cycleInfo={cycleInfo}/></div>}
       {cycleInfo && (
         <div className="card" style={{marginBottom:14,background:cycleInfo.phase.bg,border:`1.5px solid ${cycleInfo.phase.color}`}}>
           <div style={{fontWeight:800,fontSize:13,color:cycleInfo.phase.textColor,marginBottom:8}}>
-            {cycleInfo.phase.emoji} What to eat this phase
+            <Glyph emoji={cycleInfo.phase.emoji} chip={false} size={14} color={cycleInfo.phase.textColor}/> What to eat this phase
           </div>
           {CYCLE_FOODS[cycleInfo.phase.id].eat.slice(0,3).map((item,i)=>(
             <div key={i} className="row" style={{gap:8,padding:"4px 0",alignItems:"flex-start"}}>
-              <span style={{fontSize:14,flexShrink:0}}>{item.emoji}</span>
+              <Glyph emoji={item.emoji} chip={false} size={14} color={cycleInfo.phase.textColor}/>
               <span style={{fontSize:12,color:cycleInfo.phase.textColor,fontWeight:600,opacity:.9}}>{item.food}</span>
             </div>
           ))}
@@ -65,14 +67,14 @@ export function Dashboard({ schedule, weightHistory, cycleInfo, workoutLog, user
         </div>
         {isRestDay
           ? <div style={{textAlign:"center",padding:"16px 0"}}>
-              <div style={{fontSize:28,marginBottom:6}}>🌿</div>
+              <div style={{marginBottom:6}}><Glyph emoji="🌿" size={20}/></div>
               <div style={{fontWeight:700,fontSize:14,color:C.text}}>Rest day</div>
               <div style={{fontSize:12,color:C.textSoft,marginTop:4}}>Recovery is part of the plan. Enjoy it.</div>
             </div>
           : todayLoggedWorkouts.length > 0
             ? todayLoggedWorkouts.map(e=>(
                 <div key={e.id} className="row" style={{padding:"8px 0",borderTop:`1px solid ${C.border}`,gap:10}}>
-                  <span style={{fontSize:22}}>{e.emoji||"🏋️"}</span>
+                  <Glyph emoji={e.emoji||"🏋️"} size={16}/>
                   <div style={{flex:1}}>
                     <div style={{fontWeight:700,fontSize:14}}>{e.name}</div>
                     <div style={{fontSize:12,color:C.textSoft,fontWeight:500}}>{e.sets&&`${e.sets} sets`}{e.reps&&` × ${e.reps} reps`}{e.weight&&` @ ${e.weight}kg`}</div>
@@ -83,7 +85,7 @@ export function Dashboard({ schedule, weightHistory, cycleInfo, workoutLog, user
             : todayScheduledItems.length > 0
               ? todayScheduledItems.map((item,i)=>(
                   <div key={i} className="row" style={{padding:"8px 0",borderTop:`1px solid ${C.border}`,gap:10}}>
-                    <span style={{fontSize:22}}>{item.emoji||"🏋️"}</span>
+                    <Glyph emoji={item.emoji||"🏋️"} size={16}/>
                     <div style={{flex:1}}>
                       <div style={{fontWeight:700,fontSize:14}}>{item.name}</div>
                       <div style={{fontSize:12,color:C.textSoft,fontWeight:500}}>{item.detail||""}</div>
@@ -92,7 +94,7 @@ export function Dashboard({ schedule, weightHistory, cycleInfo, workoutLog, user
                   </div>
                 ))
               : <div style={{textAlign:"center",padding:"16px 0",color:C.textSoft,fontSize:13,fontWeight:600}}>
-                  Nothing scheduled today 🌿<br/><span style={{fontSize:12}}>Head to Workouts to build your plan</span>
+                  Nothing scheduled today <Glyph emoji="🌿" chip={false} size={13}/><br/><span style={{fontSize:12}}>Head to Workouts to build your plan</span>
                 </div>
         }
       </div>

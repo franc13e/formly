@@ -1,5 +1,6 @@
 import { C } from "../theme";
 import type { CycleInfo, PhaseId } from "../types";
+import { glyphFor } from "./glyphs";
 
 interface PhaseWheelProps {
   cycleInfo: CycleInfo | null;
@@ -20,7 +21,7 @@ export function PhaseWheel({ cycleInfo, size=200 }: PhaseWheelProps) {
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
       {phases.map(p=><path key={p.id} d={arcPath(p.start,p.end,r,innerR)} fill={p.color} opacity={cycleInfo?.phase?.id===p.id?1:.35}/>)}
-      {phases.map(p=>{const a=toAngle((p.start+p.end)/2),labelR=(r+innerR)/2;return <text key={p.id} x={cx+labelR*Math.cos(a)} y={cy+labelR*Math.sin(a)+5} textAnchor="middle" fontSize={size*.09} fontFamily="Nunito">{p.label}</text>;})}
+      {phases.map(p=>{const a=toAngle((p.start+p.end)/2),labelR=(r+innerR)/2,s=size*.09,[PhaseIcon]=glyphFor(p.label);return <PhaseIcon key={p.id} x={cx+labelR*Math.cos(a)-s/2} y={cy+labelR*Math.sin(a)-s/2} size={s} color={C.text} strokeWidth={2} aria-hidden="true"/>;})}
       {cycleInfo&&<circle cx={dotX} cy={dotY} r={size*.045} fill={cycleInfo.phase.color} stroke="white" strokeWidth={2} className="pulse-dot" style={{transformOrigin:`${dotX}px ${dotY}px`}}/>}
       <text x={cx} y={cy-8} textAnchor="middle" fill={C.textMid} fontSize={size*.09} fontWeight={800} fontFamily="Nunito">{cycleInfo?`Day ${cycleInfo.dayOfCycle}`:"Log"}</text>
       <text x={cx} y={cy+8} textAnchor="middle" fill={C.textSoft} fontSize={size*.07} fontFamily="Nunito">{cycleInfo?"of cycle":"period"}</text>

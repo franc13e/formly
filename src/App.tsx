@@ -6,6 +6,7 @@ import { useToast } from "./hooks/useToast";
 import { TABS } from "./data/tabs";
 import { Icon } from "./components/Icon";
 import { Icons } from "./components/icons";
+import { Glyph } from "./components/Glyph";
 import { OnboardingFlow } from "./pages/OnboardingFlow";
 import { Dashboard } from "./pages/Dashboard";
 import { NutritionPage } from "./pages/NutritionPage";
@@ -74,7 +75,7 @@ export default function App() {
           ))}
           <div style={{flex:1}}/>
           {cycleInfo&&<div style={{margin:"0 16px 16px",background:cycleInfo.phase.bg,borderRadius:14,padding:"12px 14px",border:`1.5px solid ${cycleInfo.phase.color}`}}>
-            <div style={{fontSize:12,fontWeight:800,color:cycleInfo.phase.textColor}}>{cycleInfo.phase.emoji} {cycleInfo.phase.label} phase</div>
+            <div style={{fontSize:12,fontWeight:800,color:cycleInfo.phase.textColor}}><Glyph emoji={cycleInfo.phase.emoji} chip={false} size={13} color={cycleInfo.phase.textColor}/> {cycleInfo.phase.label} phase</div>
             <div style={{fontSize:11,color:cycleInfo.phase.textColor,opacity:.8,marginTop:2,fontWeight:500}}>Day {cycleInfo.dayOfCycle} of {cycleInfo.cycleLength}</div>
           </div>}
         </div>

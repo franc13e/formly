@@ -5,6 +5,7 @@ import { load, save } from "../lib/storage";
 import { PHASES } from "../lib/cycle";
 import { PhaseWheel } from "../components/PhaseWheel";
 import { PhaseBadge } from "../components/PhaseBadge";
+import { Glyph } from "../components/Glyph";
 import { WeightChart } from "../components/WeightChart";
 import { MeasurementRings } from "../components/MeasurementRings";
 import type { CycleInfo, MeasurementKey, Measurements, PeriodEntry, Setter, ShowToast, WeightEntry } from "../types";
@@ -82,7 +83,7 @@ export function BodyPage({ measurements, setMeasurements, weightHistory, setWeig
   return (
     <div className="scroll" style={{paddingBottom:90}}>
       <div style={{padding:"24px 24px 0",background:C.bg}}>
-        <div className="row" style={{marginBottom:2}}><span style={{fontSize:26}}>🌸</span><div style={{fontSize:24,fontWeight:900,color:C.text}}>Body</div></div>
+        <div className="row" style={{marginBottom:2}}><Glyph emoji="🌸" size={16}/><div style={{fontSize:24,fontWeight:900,color:C.text,marginLeft:8}}>Body</div></div>
         <div style={{fontSize:13,color:C.textSoft,fontWeight:500,marginBottom:14}}>Your body, your cycle, your context</div>
         <SubTabs subTab={subTab} setSubTab={setSubTab}/>
       </div>
@@ -90,7 +91,7 @@ export function BodyPage({ measurements, setMeasurements, weightHistory, setWeig
 
         {subTab==="cycle"&&<div>
           {!periodStart?<div className="card" style={{textAlign:"center",padding:"28px 20px",marginBottom:14}}>
-            <div style={{fontSize:40,marginBottom:10}}>🌸</div>
+            <div style={{marginBottom:10}}><Glyph emoji="🌸" size={24}/></div>
             <div style={{fontWeight:900,fontSize:16,marginBottom:6}}>Track your cycle</div>
             <div style={{fontSize:13,color:C.textSoft,fontWeight:500,lineHeight:1.6,marginBottom:18}}>Log when your last period started and we'll tell you what phase you're in, what to expect, and how to work with your body.</div>
             <button className="btn btn-primary" style={{width:"100%"}} onClick={()=>setModal("cycle-setup")}>Log my last period</button>
@@ -98,7 +99,7 @@ export function BodyPage({ measurements, setMeasurements, weightHistory, setWeig
             <div className="card" style={{marginBottom:14,display:"flex",flexDirection:"column",alignItems:"center",gap:12}}>
               <PhaseWheel cycleInfo={cycleInfo} size={200}/>
               {cycleInfo&&<div style={{width:"100%",background:cycleInfo.phase.bg,borderRadius:14,padding:"12px 14px",border:`1.5px solid ${cycleInfo.phase.color}`}}>
-                <div style={{fontWeight:900,fontSize:15,color:cycleInfo.phase.textColor,marginBottom:4}}>{cycleInfo.phase.emoji} {cycleInfo.phase.label} phase</div>
+                <div style={{fontWeight:900,fontSize:15,color:cycleInfo.phase.textColor,marginBottom:4}}><Glyph emoji={cycleInfo.phase.emoji} chip={false} size={15} color={cycleInfo.phase.textColor}/> {cycleInfo.phase.label} phase</div>
                 <div style={{fontSize:13,color:cycleInfo.phase.textColor,fontWeight:500,lineHeight:1.6,opacity:.9}}>{cycleInfo.phase.body}</div>
                 <div style={{marginTop:10,display:"flex",gap:8}}>
                   <div style={{flex:1,background:"white",borderRadius:10,padding:"8px 10px",opacity:.85}}><div style={{fontSize:10,fontWeight:800,color:cycleInfo.phase.textColor,marginBottom:2}}>ENERGY</div><div style={{fontSize:11,color:C.textMid,fontWeight:600,lineHeight:1.4}}>{cycleInfo.phase.energy}</div></div>
@@ -107,22 +108,22 @@ export function BodyPage({ measurements, setMeasurements, weightHistory, setWeig
               </div>}
             </div>
             {weightDiff&&cycleInfo&&<div className="card" style={{marginBottom:14,background:cycleInfo.phase.bg,border:`1.5px solid ${cycleInfo.phase.color}`}}>
-              <div style={{fontWeight:800,fontSize:13,color:cycleInfo.phase.textColor,marginBottom:6}}>⚖️ About your weight right now</div>
+              <div style={{fontWeight:800,fontSize:13,color:cycleInfo.phase.textColor,marginBottom:6}}><Glyph emoji="⚖️" chip={false} size={14} color={cycleInfo.phase.textColor}/> About your weight right now</div>
               <div style={{fontSize:13,color:cycleInfo.phase.textColor,fontWeight:500,lineHeight:1.6,opacity:.9}}>{cycleInfo.phase.weight}</div>
               {Math.abs(Number(weightDiff))>=.5&&<div style={{marginTop:8,fontSize:12,fontWeight:700,color:cycleInfo.phase.textColor,opacity:.75}}>Your log shows a {Number(weightDiff)>0?"+":""}{weightDiff} kg change since your last entry.</div>}
             </div>}
-            {cycleInfo&&<div className="card" style={{marginBottom:14}}><div style={{fontWeight:800,fontSize:13,color:C.textMid,marginBottom:6}}>💭 Mood and mind</div><div style={{fontSize:13,color:C.textMid,fontWeight:500,lineHeight:1.6}}>{cycleInfo.phase.moodNote}</div></div>}
+            {cycleInfo&&<div className="card" style={{marginBottom:14}}><div style={{fontWeight:800,fontSize:13,color:C.textMid,marginBottom:6}}><Glyph emoji="💭" chip={false} size={14}/> Mood and mind</div><div style={{fontSize:13,color:C.textMid,fontWeight:500,lineHeight:1.6}}>{cycleInfo.phase.moodNote}</div></div>}
             {cycleInfo&&<div className="card" style={{marginBottom:14}}>
-              <div style={{fontWeight:800,fontSize:13,color:C.textMid,marginBottom:10}}>🏋️ Workouts this phase</div>
+              <div style={{fontWeight:800,fontSize:13,color:C.textMid,marginBottom:10}}><Glyph emoji="🏋️" chip={false} size={14}/> Workouts this phase</div>
               {cycleInfo.phase.workouts.map((w,i)=><div key={i} className="row" style={{padding:"5px 0",gap:8}}><span style={{color:cycleInfo.phase.color,fontWeight:900,flexShrink:0}}>→</span><span style={{fontSize:13,color:C.textMid,fontWeight:600}}>{w}</span></div>)}
               {cycleInfo.phase.avoid.length>0&&<div style={{marginTop:10,padding:"10px 12px",background:C.bgDeep,borderRadius:10}}><div style={{fontSize:11,fontWeight:800,color:C.textSoft,marginBottom:6}}>EASE OFF ON</div>{cycleInfo.phase.avoid.map((a,i)=><div key={i} style={{fontSize:12,color:C.textSoft,fontWeight:600,padding:"2px 0"}}>· {a}</div>)}</div>}
             </div>}
             {cycleInfo&&<div className="card" style={{marginBottom:14}}>
-              <div style={{fontWeight:800,fontSize:13,color:C.textMid,marginBottom:10}}>🥗 Nutrients to prioritise</div>
+              <div style={{fontWeight:800,fontSize:13,color:C.textMid,marginBottom:10}}><Glyph emoji="🥗" chip={false} size={14}/> Nutrients to prioritise</div>
               {cycleInfo.phase.foods.map((f,i)=><div key={i} className="row" style={{padding:"5px 0",gap:8}}><span style={{color:cycleInfo.phase.color,fontWeight:900,flexShrink:0}}>→</span><span style={{fontSize:13,color:C.textMid,fontWeight:600}}>{f}</span></div>)}
             </div>}
             {periodHistory&&periodHistory.length>1&&<div className="card" style={{marginBottom:14}}>
-              <div style={{fontWeight:800,fontSize:13,color:C.textMid,marginBottom:10}}>🗓 Period history</div>
+              <div style={{fontWeight:800,fontSize:13,color:C.textMid,marginBottom:10}}><Glyph emoji="🗓" chip={false} size={14}/> Period history</div>
               {(() => {
                 const entries = periodHistory.slice(0,6);
                 const lengths = entries.map((p,i,arr)=>arr[i+1]?Math.round((new Date(p.date).getTime()-new Date(arr[i+1].date).getTime())/(1000*60*60*24)):null).filter((n): n is number => Boolean(n));
@@ -133,7 +134,7 @@ export function BodyPage({ measurements, setMeasurements, weightHistory, setWeig
                 </>);
               })()}
             </div>}
-            <button className="btn btn-ghost" style={{width:"100%",marginBottom:14}} onClick={()=>setModal("cycle-setup")}>✏️ Update period date or cycle length</button>
+            <button className="btn btn-ghost" style={{width:"100%",marginBottom:14}} onClick={()=>setModal("cycle-setup")}><Glyph emoji="✏️" chip={false} size={15} color="currentColor"/>Update period date or cycle length</button>
           </>}
         </div>}
 
@@ -160,15 +161,15 @@ export function BodyPage({ measurements, setMeasurements, weightHistory, setWeig
           </div>}
           {/* Weight chart */}
           <div className="card" style={{marginBottom:14}}><div className="sec-title">Weight history</div><WeightChart history={weightHistory} cycleInfo={cycleInfo}/></div>
-          {cycleInfo&&<div style={{background:cycleInfo.phase.bg,borderRadius:18,padding:"14px 16px",border:`1.5px solid ${cycleInfo.phase.color}`,marginBottom:14}}><div style={{fontWeight:800,fontSize:12,color:cycleInfo.phase.textColor,marginBottom:6}}>{cycleInfo.phase.emoji} {cycleInfo.phase.label} phase context</div><div style={{fontSize:12,color:cycleInfo.phase.textColor,fontWeight:500,lineHeight:1.6,opacity:.9}}>{cycleInfo.phase.weight}</div></div>}
+          {cycleInfo&&<div style={{background:cycleInfo.phase.bg,borderRadius:18,padding:"14px 16px",border:`1.5px solid ${cycleInfo.phase.color}`,marginBottom:14}}><div style={{fontWeight:800,fontSize:12,color:cycleInfo.phase.textColor,marginBottom:6}}><Glyph emoji={cycleInfo.phase.emoji} chip={false} size={12} color={cycleInfo.phase.textColor}/> {cycleInfo.phase.label} phase context</div><div style={{fontSize:12,color:cycleInfo.phase.textColor,fontWeight:500,lineHeight:1.6,opacity:.9}}>{cycleInfo.phase.weight}</div></div>}
         </div>}
 
         {subTab==="insights"&&<div>
           {cycleInfo&&<PhaseBadge cycleInfo={cycleInfo}/>}
           <div className="card" style={{marginBottom:14}}>
-            <div style={{fontWeight:800,fontSize:14,color:C.textMid,marginBottom:4}}>✨ AI body insight</div>
+            <div style={{fontWeight:800,fontSize:14,color:C.textMid,marginBottom:4}}><Glyph emoji="✨" chip={false} size={15}/> AI body insight</div>
             <div style={{fontSize:12,color:C.textSoft,fontWeight:500,marginBottom:14,lineHeight:1.5}}>Get a warm, personalised explanation of what's going on in your body right now, taking into account your cycle phase, weight trend, and measurements.</div>
-            <button className="btn btn-primary" style={{width:"100%"}} onClick={generateInsight} disabled={aiLoading}>{aiLoading?<><div className="spin"/>Thinking about your body...</>:"✨ Get my insight"}</button>
+            <button className="btn btn-primary" style={{width:"100%"}} onClick={generateInsight} disabled={aiLoading}>{aiLoading?<><div className="spin"/>Thinking about your body...</>:<><Glyph emoji="✨" chip={false} size={16} color="currentColor"/>Get my insight</>}</button>
             {aiInsight&&<div style={{marginTop:14,background:C.lavender,borderRadius:14,padding:"14px 16px"}}>
               <div style={{fontSize:11,fontWeight:800,color:"#7050B0",marginBottom:8}}>YOUR INSIGHT</div>
               <div style={{fontSize:13,lineHeight:1.7,color:"#4030A0",fontWeight:500}}>{aiInsight}</div>
@@ -177,21 +178,21 @@ export function BodyPage({ measurements, setMeasurements, weightHistory, setWeig
           </div>
           <div style={{marginBottom:8}}>
             <div style={{fontSize:12,fontWeight:800,color:C.textMid,marginBottom:10}}>UNDERSTANDING YOUR CYCLE</div>
-            {Object.values(PHASES).map(p=><div key={p.id} style={{background:p.bg,borderRadius:18,padding:"14px 16px",marginBottom:10,border:`1.5px solid ${p.color}`,opacity:cycleInfo?.phase?.id===p.id?1:.7}}><div style={{fontWeight:900,fontSize:14,color:p.textColor,marginBottom:4}}>{p.emoji} {p.label} · {p.days}</div><div style={{fontSize:12,color:p.textColor,fontWeight:500,lineHeight:1.6,opacity:.9}}>{p.body}</div></div>)}
+            {Object.values(PHASES).map(p=><div key={p.id} style={{background:p.bg,borderRadius:18,padding:"14px 16px",marginBottom:10,border:`1.5px solid ${p.color}`,opacity:cycleInfo?.phase?.id===p.id?1:.7}}><div style={{fontWeight:900,fontSize:14,color:p.textColor,marginBottom:4}}><Glyph emoji={p.emoji} chip={false} size={14} color={p.textColor}/> {p.label} · {p.days}</div><div style={{fontSize:12,color:p.textColor,fontWeight:500,lineHeight:1.6,opacity:.9}}>{p.body}</div></div>)}
           </div>
         </div>}
       </div>
 
       {modal==="cycle-setup"&&<div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setModal(null)}><div className="modal">
-        <div className="modal-handle"/><div className="modal-title">🌸 Your cycle</div>
+        <div className="modal-handle"/><div className="modal-title"><Glyph emoji="🌸" chip={false} size={18}/> Your cycle</div>
         <div style={{fontSize:13,color:C.textSoft,fontWeight:500,lineHeight:1.6,marginBottom:18}}>We only need two things. Your data stays on your device and is never shared.</div>
         <div style={{marginBottom:14}}><label className="label">First day of your last period</label><input className="input" type="date" value={periodStart||""} onChange={e=>setPeriodStart(e.target.value)}/></div>
         <div style={{marginBottom:20}}><label className="label">Average cycle length (days)</label><CycleLengthInput value={cycleLength} onChange={setCycleLength}/><div style={{fontSize:11,color:C.textSoft,marginTop:5,fontWeight:600}}>Most cycles are 21-35 days. The average is 28.</div></div>
-        <button className="btn btn-primary" style={{width:"100%"}} onClick={()=>{if(periodStart){setPeriodHistory(h=>{const already=h.find(x=>x.date===periodStart);if(already)return h;return[...h,{date:periodStart}].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,12);});}setModal(null);showToast("Cycle logged 🌸");}}>Save</button>
+        <button className="btn btn-primary" style={{width:"100%"}} onClick={()=>{if(periodStart){setPeriodHistory(h=>{const already=h.find(x=>x.date===periodStart);if(already)return h;return[...h,{date:periodStart}].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,12);});}setModal(null);showToast("Cycle logged");}}>Save</button>
       </div></div>}
 
       {modal==="update"&&<div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setModal(null)}><div className="modal">
-        <div className="modal-handle"/><div className="modal-title">Update measurements 📏</div>
+        <div className="modal-handle"/><div className="modal-title">Update measurements <Glyph emoji="📏" chip={false} size={18}/></div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
           {fields.map(f=><div key={f.k}><label className="label">{f.label} ({f.unit})</label><input className="input" type="number" value={form[f.k]||""} onChange={e=>setForm(p=>({...p,[f.k]:e.target.value}))}/></div>)}
         </div>

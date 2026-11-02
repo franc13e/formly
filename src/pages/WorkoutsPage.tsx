@@ -2,6 +2,7 @@ import { useState } from "react";
 import { C, ACCENT } from "../theme";
 import { ALL_WORKOUTS, DIFF_COLOR } from "../data/workouts";
 import { SwipeToDelete } from "../components/SwipeToDelete";
+import { Glyph } from "../components/Glyph";
 import { AICoachPanel } from "../components/AICoachPanel";
 import type { CycleInfo, LoggableWorkout, Measurements, Schedule, ScheduledWorkout, Setter, ShowToast, Workout, WorkoutLogEntry, WorkoutLogForm } from "../types";
 import { localDateKey } from "../lib/date";
@@ -60,7 +61,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
     const entry = { workoutId: logModal.id||logModal.name, name: logModal.name, emoji: logModal.emoji||"🏋️", muscle: logModal.muscle||"", date: todayStr, time: new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}), sets:logForm.sets, reps:logForm.reps, weight:logForm.weight, duration:logForm.duration||logModal.duration||"", notes:logForm.notes, id:Date.now() };
     setWorkoutLog(l=>[entry,...(l||[])]);
     setLogModal(null); setLogForm({sets:"",reps:"",weight:"",notes:"",duration:""});
-    showToast(`${logModal.emoji||"🏋️"} Workout logged!`);
+    showToast("Workout logged!");
   };
 
   return (
@@ -72,7 +73,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
         <div>
           {aiPlan && (
             <div style={{background:`linear-gradient(135deg,${C.lavender},${C.rose})`,borderRadius:16,padding:"12px 14px",marginBottom:14,border:`1.5px solid ${C.lavenderDeep}`}}>
-              <div style={{fontSize:11,fontWeight:800,color:"#7050B0",marginBottom:2}}>✨ AI plan active</div>
+              <div style={{fontSize:11,fontWeight:800,color:"#7050B0",marginBottom:2}}><Glyph emoji="✨" chip={false} size={12} color="#7050B0"/> AI plan active</div>
               <div style={{fontSize:12,color:C.textMid,fontWeight:500}}>Tap any day to add workouts to your schedule.</div>
             </div>
           )}
@@ -100,7 +101,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
                 }}>
                   <div style={{fontSize:11,fontWeight:900,color:isPicking?"white":isToday?"#7050B0":C.text}}>{day.num}</div>
                   {items==="rest"
-                    ? <div style={{fontSize:9}}>🌿</div>
+                    ? <div><Glyph emoji="🌿" chip={false} size={11}/></div>
                     : items.length>0 && (
                       <div style={{display:"flex",flexWrap:"wrap",gap:2,justifyContent:"center"}}>
                         {items.slice(0,3).map((_,i)=>(
@@ -131,7 +132,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
                 {/* Workouts for this day */}
                 {items.map((item,idx)=>(
                   <div key={idx} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:C.bgDeep,borderRadius:12,marginBottom:8}}>
-                    <span style={{fontSize:20}}>{item.emoji||"🏋️"}</span>
+                    <Glyph emoji={item.emoji||"🏋️"} size={15}/>
                     <div style={{flex:1}}>
                       <div style={{fontWeight:700,fontSize:13}}>{item.name}</div>
                       {item.detail&&<div style={{fontSize:11,color:C.textSoft,fontWeight:500}}>{item.detail}</div>}
@@ -149,8 +150,8 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
                 <div style={{marginTop:8}}>
                   {/* Rest day toggle */}
                   <div className="row" style={{marginBottom:12,gap:8}}>
-                    <button onClick={()=>{setSchedule(s=>({...s,[pickingDay]:s[pickingDay]==="rest"?[]:"rest"}));showToast(schedule[pickingDay]==="rest"?"Rest day removed":"Rest day set 🌿");}} style={{padding:"7px 14px",borderRadius:99,border:`1.5px solid ${schedule[pickingDay]==="rest"?C.sageDeep:C.border}`,background:schedule[pickingDay]==="rest"?C.sage:"transparent",color:schedule[pickingDay]==="rest"?ACCENT.fiber.text:C.textSoft,fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"Nunito",transition:"all .15s"}}>
-                      🌿 {schedule[pickingDay]==="rest"?"Rest day set":"Mark as rest day"}
+                    <button onClick={()=>{setSchedule(s=>({...s,[pickingDay]:s[pickingDay]==="rest"?[]:"rest"}));showToast(schedule[pickingDay]==="rest"?"Rest day removed":"Rest day set");}} style={{padding:"7px 14px",borderRadius:99,border:`1.5px solid ${schedule[pickingDay]==="rest"?C.sageDeep:C.border}`,background:schedule[pickingDay]==="rest"?C.sage:"transparent",color:schedule[pickingDay]==="rest"?ACCENT.fiber.text:C.textSoft,fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"Nunito",transition:"all .15s"}}>
+                      <Glyph emoji="🌿" chip={false} size={13} color="currentColor"/> {schedule[pickingDay]==="rest"?"Rest day set":"Mark as rest day"}
                     </button>
                   </div>
                   {workoutPlan.length>0&&schedule[pickingDay]!=="rest"&&(
@@ -159,7 +160,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
                       <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
                         {workoutPlan.map(w=>(
                           <button key={w.id} onClick={()=>{addToDay(pickingDay,{name:w.name,emoji:w.emoji,detail:`${w.muscle} · ${w.duration}`});showToast("Added ✓");}} style={{padding:"5px 12px",borderRadius:99,border:`1.5px solid ${C.lavenderDeep}`,background:C.lavender,color:"#5040A0",fontWeight:700,fontSize:11,cursor:"pointer",fontFamily:"Nunito"}}>
-                            {w.emoji} {w.name}
+                            <Glyph emoji={w.emoji} chip={false} size={13}/> {w.name}
                           </button>
                         ))}
                       </div>
@@ -181,7 +182,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
       {tab==="browse" && (
         <div>
           {cycleInfo&&<div style={{background:cycleInfo.phase.bg,borderRadius:14,padding:"10px 14px",marginBottom:14,border:`1.5px solid ${cycleInfo.phase.color}`}}>
-            <div style={{fontSize:11,fontWeight:800,color:cycleInfo.phase.textColor,marginBottom:4}}>{cycleInfo.phase.emoji} Best for your {cycleInfo.phase.label.toLowerCase()} phase</div>
+            <div style={{fontSize:11,fontWeight:800,color:cycleInfo.phase.textColor,marginBottom:4}}><Glyph emoji={cycleInfo.phase.emoji} chip={false} size={12} color={cycleInfo.phase.textColor}/> Best for your {cycleInfo.phase.label.toLowerCase()} phase</div>
             <div style={{fontSize:12,color:cycleInfo.phase.textColor,fontWeight:500,opacity:.9}}>{cycleInfo.phase.workouts[0]} · {cycleInfo.phase.workouts[1]}</div>
           </div>}
           <div style={{display:"flex",flexDirection:"column",gap:10}}>
@@ -191,12 +192,12 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
               return(
                 <div key={w.id} className="workout-card">
                   <div className="row-between">
-                    <div className="row"><span style={{fontSize:24}}>{w.emoji}</span><div><div style={{fontWeight:800,fontSize:15}}>{w.name}</div><div style={{fontSize:12,color:C.textSoft,fontWeight:500}}>{w.muscle} · {w.duration}</div></div></div>
+                    <div className="row"><Glyph emoji={w.emoji} size={17}/><div><div style={{fontWeight:800,fontSize:15}}>{w.name}</div><div style={{fontSize:12,color:C.textSoft,fontWeight:500}}>{w.muscle} · {w.duration}</div></div></div>
                     <span style={{fontSize:11,fontWeight:700,padding:"3px 10px",borderRadius:99,background:dc.bg,color:dc.text}}>{w.difficulty}</span>
                   </div>
                   {w.achieve&&<div style={{fontSize:12,color:C.textMid,fontWeight:500,lineHeight:1.5,background:C.bgDeep,borderRadius:10,padding:"6px 10px"}}>{w.achieve}</div>}
                   <div className="row" style={{gap:8}}>
-                    <button className={`btn btn-sm ${inPlan?"btn-ghost":"btn-primary"}`} style={{flex:1}} onClick={()=>{if(inPlan){setWorkoutPlan(p=>p.filter(x=>x.id!==w.id));showToast("Removed");}else{setWorkoutPlan(p=>[...p,w]);showToast(`${w.emoji} Added!`);}}}>
+                    <button className={`btn btn-sm ${inPlan?"btn-ghost":"btn-primary"}`} style={{flex:1}} onClick={()=>{if(inPlan){setWorkoutPlan(p=>p.filter(x=>x.id!==w.id));showToast("Removed");}else{setWorkoutPlan(p=>[...p,w]);showToast("Added!");}}}>
                       {inPlan?"✓ In plan":"+ Add to plan"}
                     </button>
                     <button className="btn btn-sm" style={{flex:1,background:C.butter,color:ACCENT.carbs.text,border:"none"}} onClick={()=>{setLogModal(w);setLogForm({sets:"",reps:"",weight:"",notes:"",duration:""});}}>Log workout</button>
@@ -211,7 +212,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
       {tab==="history" && (
         <div>
           {(!workoutLog||workoutLog.length===0)
-            ?<div style={{textAlign:"center",padding:"40px 0",color:C.textSoft}}><div style={{fontSize:40,marginBottom:10}}>🌱</div><div style={{fontWeight:800,fontSize:15,color:C.text}}>Nothing logged yet</div><div style={{fontSize:13,marginTop:6,lineHeight:1.6}}>Every workout counts. Tap Log on any session to start tracking your progress.</div></div>
+            ?<div style={{textAlign:"center",padding:"40px 0",color:C.textSoft}}><div style={{marginBottom:10}}><Glyph emoji="🌱" size={24}/></div><div style={{fontWeight:800,fontSize:15,color:C.text}}>Nothing logged yet</div><div style={{fontSize:13,marginTop:6,lineHeight:1.6}}>Every workout counts. Tap Log on any session to start tracking your progress.</div></div>
             :Object.entries((workoutLog||[]).reduce<Record<string, WorkoutLogEntry[]>>((acc,e)=>{if(!acc[e.date])acc[e.date]=[];acc[e.date].push(e);return acc;},{})).sort(([a],[b])=>b.localeCompare(a)).map(([date,entries])=>(
               <div key={date} style={{marginBottom:18}}>
                 <div style={{fontSize:12,fontWeight:800,color:C.textMid,marginBottom:8}}>
@@ -221,7 +222,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
                 {entries.map(e=>(
                   <div key={e.id} className="card" style={{marginBottom:8,padding:"12px 14px"}}>
                     <div className="row" style={{gap:10}}>
-                      <span style={{fontSize:22}}>{e.emoji||"🏋️"}</span>
+                      <Glyph emoji={e.emoji||"🏋️"} size={16}/>
                       <div style={{flex:1}}>
                         <div style={{fontWeight:800,fontSize:14}}>{e.name}</div>
                         <div style={{fontSize:11,color:C.textSoft,marginTop:3}}>{e.duration}{e.sets?` · ${e.sets} sets`:""}{e.reps?` x ${e.reps} reps`:""}{e.weight?` @ ${e.weight}kg`:""}</div>
@@ -246,7 +247,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
       {logModal&&<div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setLogModal(null)}><div className="modal">
         <div className="modal-handle"/>
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
-          <span style={{fontSize:28}}>{logModal.emoji||"🏋️"}</span>
+          <Glyph emoji={logModal.emoji||"🏋️"} size={20}/>
           <div><div className="modal-title" style={{marginBottom:0}}>{logModal.name}</div><div style={{fontSize:12,color:C.textSoft,fontWeight:500}}>{logModal.muscle||""}{logModal.duration?` · ${logModal.duration}`:""}</div></div>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
@@ -255,7 +256,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
           ))}
         </div>
         <div style={{marginBottom:14}}><label className="label">Notes (optional)</label><input className="input" placeholder="How did it feel? Any PRs?" value={logForm.notes} onChange={e=>setLogForm(p=>({...p,notes:e.target.value}))}/></div>
-        {cycleInfo&&<div style={{background:cycleInfo.phase.bg,borderRadius:12,padding:"8px 12px",marginBottom:14,fontSize:12,fontWeight:600,color:cycleInfo.phase.textColor}}>{cycleInfo.phase.emoji} {cycleInfo.phase.label} phase: {cycleInfo.phase.workouts[0]}</div>}
+        {cycleInfo&&<div style={{background:cycleInfo.phase.bg,borderRadius:12,padding:"8px 12px",marginBottom:14,fontSize:12,fontWeight:600,color:cycleInfo.phase.textColor}}><Glyph emoji={cycleInfo.phase.emoji} chip={false} size={12} color={cycleInfo.phase.textColor}/> {cycleInfo.phase.label} phase: {cycleInfo.phase.workouts[0]}</div>}
         <div className="row" style={{gap:10}}><button className="btn btn-ghost" style={{flex:1}} onClick={()=>setLogModal(null)}>Cancel</button><button className="btn btn-primary" style={{flex:2}} onClick={logWorkout}>Save workout ✓</button></div>
       </div></div>}
     </div>

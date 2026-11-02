@@ -3,6 +3,7 @@ import { C, ACCENT } from "../theme";
 import { callAI } from "../lib/api";
 import { load, save } from "../lib/storage";
 import { CYCLE_FOODS, GOAL_FOODS } from "../data/nutrition";
+import { Glyph } from "../components/Glyph";
 import type { CycleInfo, FoodLogEntry, ShowToast } from "../types";
 import { localDateKey } from "../lib/date";
 
@@ -67,7 +68,7 @@ export function NutritionPage({ cycleInfo, showToast }: NutritionPageProps) {
   return (
     <div className="scroll" style={{paddingBottom:90}}>
       <div style={{padding:"24px 24px 0",background:C.bg}}>
-        <div className="row" style={{marginBottom:2}}><span style={{fontSize:26}}>🥗</span><div style={{fontSize:24,fontWeight:900,color:C.text,marginLeft:8}}>Nutrition</div></div>
+        <div className="row" style={{marginBottom:2}}><Glyph emoji="🥗" size={16}/><div style={{fontSize:24,fontWeight:900,color:C.text,marginLeft:8}}>Nutrition</div></div>
         <div style={{fontSize:13,color:C.textSoft,fontWeight:500,marginBottom:14}}>Food insights for your cycle and goals</div>
         <SubTabs subTab={subTab} setSubTab={setSubTab}/>
       </div>
@@ -79,14 +80,14 @@ export function NutritionPage({ cycleInfo, showToast }: NutritionPageProps) {
           <div>
             {!phase || !phaseFoods ? (
               <div className="card" style={{textAlign:"center",padding:"28px 20px"}}>
-                <div style={{fontSize:36,marginBottom:10}}>🌸</div>
+                <div style={{marginBottom:10}}><Glyph emoji="🌸" size={22}/></div>
                 <div style={{fontWeight:800,fontSize:16,marginBottom:8}}>Log your cycle first</div>
                 <div style={{fontSize:13,color:C.textSoft,lineHeight:1.6}}>Head to the Body tab and log your last period date to get personalised food insights for each phase of your cycle.</div>
               </div>
             ) : (
               <div>
                 <div style={{background:phase.bg,borderRadius:18,padding:"16px",marginBottom:14,border:`1.5px solid ${phase.color}`}}>
-                  <div style={{fontWeight:900,fontSize:16,color:phase.textColor,marginBottom:4}}>{phase.emoji} {phase.label} phase</div>
+                  <div style={{fontWeight:900,fontSize:16,color:phase.textColor,marginBottom:4}}><Glyph emoji={phase.emoji} chip={false} size={15} color={phase.textColor}/> {phase.label} phase</div>
                   <div style={{fontSize:13,color:phase.textColor,fontWeight:500,opacity:.9,lineHeight:1.6}}>Day {cycleInfo.dayOfCycle} of your cycle. Here is what your body benefits most from right now.</div>
                 </div>
 
@@ -94,7 +95,7 @@ export function NutritionPage({ cycleInfo, showToast }: NutritionPageProps) {
                   <div style={{fontWeight:800,fontSize:14,color:C.textMid,marginBottom:12}}>Foods to focus on</div>
                   {phaseFoods.eat.map((item, i) => (
                     <div key={i} style={{display:"flex",gap:12,padding:"10px 0",borderTop:i>0?`1px solid ${C.border}`:"none",alignItems:"flex-start"}}>
-                      <span style={{fontSize:22,flexShrink:0}}>{item.emoji}</span>
+                      <Glyph emoji={item.emoji} size={16}/>
                       <div>
                         <div style={{fontWeight:800,fontSize:13,marginBottom:2}}>{item.food}</div>
                         <div style={{fontSize:12,color:C.textSoft,fontWeight:500,lineHeight:1.5}}>{item.why}</div>
@@ -139,7 +140,7 @@ export function NutritionPage({ cycleInfo, showToast }: NutritionPageProps) {
                 <label className="label">Or describe your goal in your own words</label>
                 <textarea className="input" rows={2} placeholder="e.g. I want to build my glutes and feel stronger. I train 4x a week and prefer whole foods." value={customGoal} onChange={e=>setCustomGoal(e.target.value)} style={{resize:"none",lineHeight:1.6,marginBottom:8}}/>
                 <button className="btn btn-primary" style={{width:"100%"}} onClick={fetchAiGoalFoods} disabled={aiGoalLoading||(!selectedGoal&&!customGoal.trim())}>
-                  {aiGoalLoading?<><div className="spin"/>Getting your food focus...</>:"✨ Get personalised food suggestions"}
+                  {aiGoalLoading?<><div className="spin"/>Getting your food focus...</>:<><Glyph emoji="✨" chip={false} size={16} color="currentColor"/>Get personalised food suggestions</>}
                 </button>
               </div>
             </div>
@@ -166,7 +167,7 @@ export function NutritionPage({ cycleInfo, showToast }: NutritionPageProps) {
                 </div>
                 {cycleInfo && (
                   <div style={{background:cycleInfo.phase.bg,borderRadius:16,padding:"14px 16px",border:`1.5px solid ${cycleInfo.phase.color}`}}>
-                    <div style={{fontWeight:800,fontSize:12,color:cycleInfo.phase.textColor,marginBottom:6}}>{cycleInfo.phase.emoji} Combined with your {cycleInfo.phase.label.toLowerCase()} phase</div>
+                    <div style={{fontWeight:800,fontSize:12,color:cycleInfo.phase.textColor,marginBottom:6}}><Glyph emoji={cycleInfo.phase.emoji} chip={false} size={12} color={cycleInfo.phase.textColor}/> Combined with your {cycleInfo.phase.label.toLowerCase()} phase</div>
                     <div style={{fontSize:12,color:cycleInfo.phase.textColor,fontWeight:500,lineHeight:1.6,opacity:.9}}>
                       Your cycle phase affects how your body uses nutrients. Right now your body benefits from: {CYCLE_FOODS[cycleInfo.phase.id].eat.slice(0,2).map(f=>f.food.toLowerCase()).join(" and ")}.
                     </div>
@@ -177,7 +178,7 @@ export function NutritionPage({ cycleInfo, showToast }: NutritionPageProps) {
 
             {aiGoalFoods && (
               <div style={{marginTop:14,background:C.lavender,borderRadius:16,padding:"14px 16px"}}>
-                <div style={{fontSize:11,fontWeight:800,color:"#7050B0",marginBottom:8}}>✨ AI FOOD SUGGESTIONS</div>
+                <div style={{fontSize:11,fontWeight:800,color:"#7050B0",marginBottom:8}}><Glyph emoji="✨" chip={false} size={12} color="#7050B0"/> AI FOOD SUGGESTIONS</div>
                 <div style={{fontSize:13,lineHeight:1.7,color:"#4030A0",fontWeight:500,whiteSpace:"pre-wrap"}}>{aiGoalFoods}</div>
                 <button style={{marginTop:10,background:"none",border:"none",fontSize:11,color:"#9070C0",fontWeight:700,cursor:"pointer",fontFamily:"Nunito"}} onClick={()=>{setAiGoalFoods(null);save("ai-goal-foods",null);}}>Clear</button>
               </div>
@@ -198,7 +199,7 @@ export function NutritionPage({ cycleInfo, showToast }: NutritionPageProps) {
             </div>
             {foodLog.length===0 ? (
               <div style={{textAlign:"center",padding:"32px 0",color:C.textSoft}}>
-                <div style={{fontSize:32,marginBottom:8}}>🌿</div>
+                <div style={{marginBottom:8}}><Glyph emoji="🌿" size={20}/></div>
                 <div style={{fontWeight:700}}>Nothing logged yet</div>
                 <div style={{fontSize:12,marginTop:4}}>Add what you ate above</div>
               </div>

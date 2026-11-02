@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { C } from "../theme";
 import { CycleLengthInput } from "../components/CycleLengthInput";
+import { Glyph } from "../components/Glyph";
 
 interface OnboardingFlowProps {
   /** Called on the last step. `periodStart` is "" when cycle tracking was declined or skipped. */
@@ -46,7 +47,7 @@ export function OnboardingFlow({ onDone }: OnboardingFlowProps) {
         <div style={{fontSize:11,color:C.textSoft,fontWeight:600,marginTop:6}}>Step {curIdx+1} of {progressMap.length}</div>
       </div>
       <div style={{flex:1,display:"flex",flexDirection:"column",justifyContent:"center",gap:24}}>
-        <div style={{fontSize:56,textAlign:"center"}}>{s.emoji}</div>
+        <div style={{textAlign:"center"}}><Glyph emoji={s.emoji} size={34}/></div>
         <div>
           <div style={{fontFamily:"Nunito",fontWeight:900,fontSize:26,color:C.text,textAlign:"center",lineHeight:1.2,marginBottom:12}}>{s.title}</div>
           <div style={{fontSize:14,color:C.textSoft,fontWeight:500,textAlign:"center",lineHeight:1.7}}>{s.sub}</div>
@@ -55,7 +56,7 @@ export function OnboardingFlow({ onDone }: OnboardingFlowProps) {
         {step===2&&<div style={{display:"flex",flexDirection:"column",gap:10}}>
           {[{val:true,emoji:"🌸",label:"Yes, track my cycle",sub:"Get phase-aware insights, workouts and nutrition"},{val:false,emoji:"✦",label:"No thanks, skip this",sub:"You can always enable it later in the Body tab"}].map(opt=>(
             <button key={String(opt.val)} onClick={()=>setTrackCycle(opt.val)} style={{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",borderRadius:16,border:`2px solid ${trackCycle===opt.val?C.lavenderDeep:C.border}`,background:trackCycle===opt.val?C.lavender:C.white,cursor:"pointer",fontFamily:"Nunito",textAlign:"left",transition:"all .15s"}}>
-              <span style={{fontSize:24}}>{opt.emoji}</span>
+              <Glyph emoji={opt.emoji} size={18}/>
               <div><div style={{fontWeight:800,fontSize:14,color:trackCycle===opt.val?"#5040A0":C.text}}>{opt.label}</div><div style={{fontSize:12,color:C.textSoft,fontWeight:500,marginTop:2}}>{opt.sub}</div></div>
               <div style={{marginLeft:"auto",width:18,height:18,borderRadius:"50%",border:`2px solid ${trackCycle===opt.val?"#7050B0":C.border}`,background:trackCycle===opt.val?"#7050B0":"transparent",flexShrink:0}}/>
             </button>
@@ -68,13 +69,13 @@ export function OnboardingFlow({ onDone }: OnboardingFlowProps) {
         </div>}
         {step===4&&<div style={{display:"flex",flexDirection:"column",gap:10}}>
           {[{emoji:"🥗",text:"Get food insights for your cycle phase and fitness goals"},{emoji:"🏋️",text:"Plan and log workouts with cycle-aware suggestions"},{emoji:trackCycle?"🌙":"📏",text:trackCycle?"See what phase you're in and why your body feels the way it does":"Track your measurements and weight over time"},{emoji:"✨",text:"Get an AI workout plan"+(trackCycle?" tailored to your current cycle phase":"")}].map((item,i)=>(
-            <div key={i} className="row" style={{background:C.card,borderRadius:14,padding:"12px 14px",gap:12,border:`1px solid ${C.border}`}}><span style={{fontSize:22}}>{item.emoji}</span><span style={{fontSize:13,fontWeight:600,color:C.textMid}}>{item.text}</span></div>
+            <div key={i} className="row" style={{background:C.card,borderRadius:14,padding:"12px 14px",gap:12,border:`1px solid ${C.border}`}}><Glyph emoji={item.emoji} size={16}/><span style={{fontSize:13,fontWeight:600,color:C.textMid}}>{item.text}</span></div>
           ))}
         </div>}
       </div>
       <div style={{paddingBottom:"max(32px,env(safe-area-inset-bottom))",paddingTop:16}}>
         <button className="btn btn-primary" style={{width:"100%",fontSize:16,padding:16}} onClick={next} disabled={!canNext()}>
-          {step===4?`Let's go, ${name||"you"} 🌸`:"Continue →"}
+          {step===4?<>Let's go, {name||"you"} <Glyph emoji="🌸" chip={false} size={16} color="currentColor"/></>:"Continue →"}
         </button>
       </div>
     </div>

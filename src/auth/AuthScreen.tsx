@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { C, CSS } from "../theme";
+import { Glyph } from "../components/Glyph";
 
 interface AuthScreenProps {
   client: SupabaseClient;
@@ -52,7 +53,7 @@ export function AuthScreen({ client, onContinueAsGuest }: AuthScreenProps) {
       <style>{CSS}</style>
       <div className="shell">
         <div className="scroll" style={{ padding: "48px 24px 40px", maxWidth: 420, margin: "0 auto" }}>
-          <div style={{ fontSize: 40, marginBottom: 8 }}>🌸</div>
+          <div style={{ marginBottom: 8 }}><Glyph emoji="🌸" size={26} /></div>
           <div style={{ fontSize: 28, fontWeight: 900, color: C.text }}>
             {mode === "sign-in" ? "Welcome back" : "Create your account"}
           </div>

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { CSS, C } from "../theme";
+import { Glyph } from "../components/Glyph";
 import { getSupabase } from "../lib/supabase";
 import { clearAppData, deleteRemoteState, pullOrSeed, startAutoSync } from "../lib/sync";
 import { AuthContext, type AuthContextValue } from "./AuthContext";
@@ -163,7 +164,7 @@ function Splash({ text, children }: { text: string; children?: ReactNode }) {
       <style>{CSS}</style>
       <div className="shell">
         <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24, textAlign: "center" }}>
-          <div style={{ fontSize: 40 }}>🌸</div>
+          <div><Glyph emoji="🌸" size={26} /></div>
           <div style={{ marginTop: 12, fontSize: 15, fontWeight: 700, color: C.textMid }}>{text}</div>
           {children}
         </div>
