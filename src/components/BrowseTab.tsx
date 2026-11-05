@@ -31,6 +31,8 @@ interface BrowseTabProps {
   onLog: (w: Workout) => void;
   onGuide: (w: Workout) => void;
   onCreateWorkout: () => void;
+  /** Saves an exercise typed in from the session builder as one of your workouts. */
+  onAddCustomWorkout: (w: Workout) => void;
   onEditWorkout: (w: Workout) => void;
   onDeleteWorkout: (id: number) => void;
 }
@@ -57,7 +59,7 @@ function CreateButton({ title, hint, onClick }: { title: string; hint: string; o
 }
 
 /** Browse: phase picks, then exercises by muscle group or ready-made and your own sessions. */
-export function BrowseTab({ library, customWorkouts, cycleInfo, workoutPlan, setWorkoutPlan, schedule, setSchedule, today, showToast, onLog, onGuide, onCreateWorkout, onEditWorkout, onDeleteWorkout }: BrowseTabProps) {
+export function BrowseTab({ library, customWorkouts, cycleInfo, workoutPlan, setWorkoutPlan, schedule, setSchedule, today, showToast, onLog, onGuide, onCreateWorkout, onAddCustomWorkout, onEditWorkout, onDeleteWorkout }: BrowseTabProps) {
   const [view, setView] = useState<BrowseView>("exercises");
   const [muscle, setMuscle] = useState<string>("All");
   const [adding, setAdding] = useState<AddTarget | null>(null);
@@ -266,7 +268,7 @@ export function BrowseTab({ library, customWorkouts, cycleInfo, workoutPlan, set
             today={today} schedule={schedule} onPick={pickDay} onClose={()=>setAdding(null)}/>
         );
       })()}
-      {builder&&<SessionBuilder initial={builder.initial} pool={pool} customIds={customIds} onSave={saveSession} onClose={()=>setBuilder(null)}/>}
+      {builder&&<SessionBuilder initial={builder.initial} pool={pool} customIds={customIds} onSave={saveSession} onClose={()=>setBuilder(null)} onAddExercise={onAddCustomWorkout}/>}
     </div>
   );
 }

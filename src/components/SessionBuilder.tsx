@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { ChevronDown, ChevronUp, Plus, Search, X } from "lucide-react";
 import { C } from "../theme";
-import { WORKOUT_ICONS } from "../data/workouts";
+import { WORKOUT_ICONS, WORKOUT_MUSCLE_GROUPS } from "../data/workouts";
 import { Glyph } from "./Glyph";
 import { WorkoutThumb } from "./WorkoutThumb";
-import { filterWorkouts, focusFrom, formatMinutes, moveBy, sessionTotals, sessionWorkouts, workoutDetail, MUSCLE_FILTERS } from "../lib/sessions";
+import { defaultMuscleFor, filterWorkouts, findByName, focusFrom, formatMinutes, moveBy, quickExercise, sessionTotals, sessionWorkouts, workoutDetail, MUSCLE_FILTERS } from "../lib/sessions";
 import type { Workout, WorkoutSession } from "../types";
 
 interface SessionBuilderProps {
@@ -17,18 +17,25 @@ interface SessionBuilderProps {
   /** Called with the finished session; a new one has an empty id for the caller to fill. */
   onSave: (session: WorkoutSession) => void;
   onClose: () => void;
+  /** Saves an exercise you typed in yourself to your custom workouts (so it gets its own logs and shows under "Yours"). */
+  onAddExercise: (workout: Workout) => void;
 }
 
 const smallBtn = { background:C.white, border:`1.5px solid ${C.border}`, color:C.textMid, cursor:"pointer", width:30, height:30, borderRadius:10, display:"inline-flex", alignItems:"center", justifyContent:"center", padding:0, flexShrink:0 } as const;
 
 /** Bottom sheet for building a session: name, icon, then exercises picked from the library and your own, in order. */
-export function SessionBuilder({ initial, pool, customIds, onSave, onClose }: SessionBuilderProps) {
+export function SessionBuilder({ initial, pool: basePool, customIds: baseCustomIds, onSave, onClose, onAddExercise }: SessionBuilderProps) {
   const [name, setName] = useState(initial?.name ?? "");
   const [emoji, setEmoji] = useState(initial?.emoji ?? "🏋️");
   const [focus, setFocus] = useState(initial?.focus ?? "");
-  const [ids, setIds] = useState<number[]>(() => initial ? sessionWorkouts(initial, pool).map(w => w.id) : []);
+  const [ids, setIds] = useState<number[]>(() => initial ? sessionWorkouts(initial, basePool).map(w => w.id) : []);
   const [query, setQuery] = useState("");
   const [muscle, setMuscle] = useState<string>("All");
+  // Exercises typed in here, kept locally too so they appear at once.
+  const [added, setAdded] = useState<Workout[]>([]);
+  const [newEx, setNewEx] = useState<{ name: string; muscle: string } | null>(null);
+  const pool = [...basePool, ...added.filter(a => !basePool.some(w => w.id === a.id))];
+  const customIds = new Set([...baseCustomIds, ...added.map(a => a.id)]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -44,6 +51,22 @@ export function SessionBuilder({ initial, pool, customIds, onSave, onClose }: Se
     : filterWorkouts(pool, muscle, query);
   const canSave = name.trim().length > 0 && ids.length > 0;
   const toggle = (id: number) => setIds(list => list.includes(id) ? list.filter(x => x !== id) : [...list, id]);
+
+  const openNew = () => setNewEx({ name: query.trim(), muscle: defaultMuscleFor(muscle) });
+  const existing = newEx ? findByName(pool, newEx.name) : undefined;
+  const addNew = () => {
+    if (!newEx || !newEx.name.trim()) return;
+    if (existing) {
+      // Already in the library or yours: just put it in the session.
+      setIds(list => list.includes(existing.id) ? list : [...list, existing.id]);
+    } else {
+      const w = quickExercise(newEx.name, newEx.muscle, Date.now());
+      setAdded(list => [...list, w]);
+      setIds(list => [...list, w.id]);
+      onAddExercise(w);
+    }
+    setNewEx(null); setQuery("");
+  };
 
   const save = () => {
     if (!canSave) return;
@@ -116,8 +139,30 @@ export function SessionBuilder({ initial, pool, customIds, onSave, onClose }: Se
             <button key={m} type="button" className="chip" aria-pressed={on} onClick={()=>setMuscle(m)} style={{padding:"5px 12px",fontSize:11,background:on?C.petal:C.white,color:on?C.text:C.textMid,borderColor:on?C.petal:C.border}}>{m}</button>
           );})}
         </div>
+        {newEx
+          ? <div style={{background:C.rose,border:`1.5px solid ${C.roseDeep}`,borderRadius:14,padding:12,marginBottom:10}}>
+              <div style={{fontSize:12,fontWeight:700,color:C.text,marginBottom:8}}>Add your own exercise</div>
+              <label className="label" htmlFor="sb-new-name">Exercise name</label>
+              <input id="sb-new-name" className="input" placeholder="e.g. Cable kickback" value={newEx.name} autoFocus
+                onChange={e=>setNewEx({...newEx,name:e.target.value})} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();addNew();}}} style={{marginBottom:8}}/>
+              <label className="label" htmlFor="sb-new-muscle">Muscle group</label>
+              <select id="sb-new-muscle" className="input" value={newEx.muscle} onChange={e=>setNewEx({...newEx,muscle:e.target.value})} style={{marginBottom:8}}>
+                {WORKOUT_MUSCLE_GROUPS.map(m=><option key={m}>{m}</option>)}
+              </select>
+              {existing&&<div style={{fontSize:11,color:C.textMid,fontWeight:600,marginBottom:8}}>"{existing.name}" is already in the list, so it will be added as is.</div>}
+              <div className="row" style={{gap:8}}>
+                <button type="button" className="btn btn-ghost btn-sm" style={{flex:1}} onClick={()=>setNewEx(null)}>Cancel</button>
+                <button type="button" className="btn btn-primary btn-sm" style={{flex:2}} disabled={!newEx.name.trim()} onClick={addNew}>Add to session</button>
+              </div>
+              <div style={{fontSize:11,color:C.textSoft,fontWeight:500,marginTop:8}}>It's saved under "Yours" with its own logs. Add a time or notes later in Browse.</div>
+            </div>
+          : <button type="button" onClick={openNew}
+              style={{display:"flex",alignItems:"center",gap:8,width:"100%",textAlign:"left",padding:"9px 10px",marginBottom:10,borderRadius:12,border:`1.5px dashed ${C.roseDeep}`,background:C.white,cursor:"pointer",fontFamily:"DM Sans",fontSize:13,fontWeight:700,color:C.accentInk}}>
+              <Plus size={15} aria-hidden="true"/>
+              {query.trim()&&!findByName(pool,query)?`Add "${query.trim()}" as your own exercise`:"Can't find it? Add your own exercise"}
+            </button>}
         <div style={{display:"flex",flexDirection:"column",gap:6,maxHeight:280,overflowY:"auto"}}>
-          {shown.length===0&&<div style={{fontSize:12,color:C.textSoft,fontWeight:500,padding:"6px 2px"}}>No exercises match.</div>}
+          {shown.length===0&&<div style={{fontSize:12,color:C.textSoft,fontWeight:500,padding:"6px 2px"}}>No exercises match. Add it as your own above.</div>}
           {shown.map(w=>{const on=ids.includes(w.id);return(
             <button key={w.id} type="button" aria-pressed={on} onClick={()=>toggle(w.id)}
               style={{display:"flex",alignItems:"center",gap:10,width:"100%",textAlign:"left",padding:"6px 8px",borderRadius:12,border:`1.5px solid ${on?C.roseDeep:C.border}`,background:on?C.rose:C.white,cursor:"pointer",fontFamily:"DM Sans"}}>

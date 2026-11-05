@@ -1,4 +1,5 @@
 import type { Schedule, ScheduledWorkout, Workout, WorkoutSession } from "../types";
+import { suggestWorkoutEmoji } from "./workouts";
 
 // ─── Workout sessions: totals, adding to the schedule, grouping a day ───────
 
@@ -124,4 +125,22 @@ export function filterWorkouts(list: Workout[], muscle: string, query = ""): Wor
   return list.filter(w =>
     (muscle === "All" || w.muscle === muscle)
     && (!q || `${w.name} ${w.muscle} ${w.tags.join(" ")}`.toLowerCase().includes(q)));
+}
+
+/** A muscle-chip value ("All", "Yours", or a group) to use as the default group for a new exercise. */
+export function defaultMuscleFor(chip: string): string {
+  return chip === "All" || chip === "Yours" ? "Full body" : chip;
+}
+
+/** A library entry with the same name (ignoring case and spacing), so typing "squat" doesn't make a duplicate "Squat". */
+export function findByName(pool: Workout[], name: string): Workout | undefined {
+  const key = name.trim().replace(/\s+/g, " ").toLowerCase();
+  return key ? pool.find(w => w.name.trim().replace(/\s+/g, " ").toLowerCase() === key) : undefined;
+}
+
+/** A custom exercise made straight from the session builder: just a name and a muscle group. */
+export function quickExercise(name: string, muscle: string, id: number): Workout {
+  const tidy = name.trim().replace(/\s+/g, " ");
+  const clean = tidy.charAt(0).toUpperCase() + tidy.slice(1);
+  return { id, name: clean, emoji: suggestWorkoutEmoji(clean, muscle), muscle, difficulty: "Beginner", duration: "", tags: [muscle.toLowerCase()], achieve: "" };
 }

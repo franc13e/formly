@@ -60,7 +60,7 @@ export const CSS = `
     .modal{border-radius:18px !important;margin:auto;max-width:520px !important;}
     .modal-overlay{align-items:center !important;}
   }
-  @media(max-width:767px){.desktop-sidebar{display:none;}}
+  @media(max-width:767px){.desktop-sidebar{display:none;}.scroll{padding-bottom:calc(112px + env(safe-area-inset-bottom)) !important;}}
   .scroll{flex:1;overflow-y:auto;padding-bottom:110px;}
   .card{background:${C.card};border-radius:22px;box-shadow:0 6px 20px ${C.shadow};padding:18px;}
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;font-weight:700;transition:transform .1s;border-radius:50px;}

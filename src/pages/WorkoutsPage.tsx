@@ -336,7 +336,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
         <BrowseTab library={ALL_WORKOUTS} customWorkouts={customWorkouts} cycleInfo={cycleInfo}
           workoutPlan={workoutPlan} setWorkoutPlan={setWorkoutPlan} schedule={schedule} setSchedule={setSchedule}
           today={todayStr} showToast={showToast} onLog={openLog} onGuide={setGuideFor}
-          onCreateWorkout={()=>setCustomModal({initial:null})} onEditWorkout={w=>setCustomModal({initial:w})} onDeleteWorkout={deleteCustomWorkout}/>
+          onCreateWorkout={()=>setCustomModal({initial:null})} onAddCustomWorkout={w=>setCustomWorkouts(list=>list.some(x=>x.id===w.id)?list:[w,...list])} onEditWorkout={w=>setCustomModal({initial:w})} onDeleteWorkout={deleteCustomWorkout}/>
       )}
 
       {tab==="history" && (

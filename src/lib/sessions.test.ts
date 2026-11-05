@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Schedule, Workout, WorkoutSession } from "../types";
 import {
   addItemsToDay, addSessionToSchedule, durationMinutes, filterWorkouts, focusFrom, formatMinutes, groupDayItems, moveBy,
-  sanitizeSessions, sessionTotals, sessionWorkouts, toScheduled,
+  sanitizeSessions, sessionTotals, sessionWorkouts, toScheduled, defaultMuscleFor, findByName, quickExercise,
 } from "./sessions";
 
 const w = (id: number, name: string, muscle: string, duration: string, tags: string[] = []): Workout =>
@@ -112,5 +112,27 @@ describe("focusFrom / filterWorkouts / sanitizeSessions", () => {
     expect(sanitizeSessions(null)).toEqual([]);
     expect(sanitizeSessions([glute, { id: 1 }, { id: "s-1", name: "X", workoutIds: ["a"] }, { id: "s-2", name: "Y", workoutIds: [1] }]))
       .toEqual([glute, { id: "s-2", name: "Y", workoutIds: [1], emoji: "🏋️", focus: "" }]);
+  });
+});
+
+describe("your own exercises in the session builder", () => {
+  const pool = [w(1, "Hip Thrust", "Glutes", "15 min"), w(2, "Plank", "Core", "5 min")];
+
+  it("finds an existing exercise by name regardless of case and spacing", () => {
+    expect(findByName(pool, "  hip   thrust ")?.id).toBe(1);
+    expect(findByName(pool, "Cable kickback")).toBeUndefined();
+    expect(findByName(pool, "   ")).toBeUndefined();
+  });
+
+  it("makes a tidy custom exercise from a typed name", () => {
+    const x = quickExercise("  cable   kickback ", "Glutes", 1700000000000);
+    expect(x).toMatchObject({ id: 1700000000000, name: "Cable kickback", muscle: "Glutes", difficulty: "Beginner", duration: "", tags: ["glutes"] });
+    expect(x.emoji).toBeTruthy();
+  });
+
+  it("defaults the group to the chip you were browsing", () => {
+    expect(defaultMuscleFor("Back")).toBe("Back");
+    expect(defaultMuscleFor("All")).toBe("Full body");
+    expect(defaultMuscleFor("Yours")).toBe("Full body");
   });
 });
