@@ -54,7 +54,7 @@ export function AuthScreen({ client, onContinueAsGuest }: AuthScreenProps) {
       <div className="shell">
         <div className="scroll" style={{ padding: "48px 24px 40px", maxWidth: 420, margin: "0 auto" }}>
           <div style={{ marginBottom: 8 }}><Glyph emoji="🌸" size={26} /></div>
-          <div style={{ fontSize: 28, fontWeight: 900, color: C.text }}>
+          <div className="h-display" style={{ fontSize: 32, color: C.text }}>
             {mode === "sign-in" ? "Welcome back" : "Create your account"}
           </div>
           <div style={{ fontSize: 14, color: C.textSoft, fontWeight: 500, margin: "6px 0 24px", lineHeight: 1.6 }}>

@@ -40,11 +40,11 @@ export function MonthCalendar({ selected, onSelect, renderDay, initialMonth }: M
     <div>
       <div className="row-between" style={{ marginBottom: 10 }}>
         <button style={navBtn} onClick={() => shift(-1)} aria-label="Previous month"><ChevronLeft size={18} /></button>
-        <div style={{ fontWeight: 900, fontSize: 15, color: C.text }}>{month.toLocaleDateString("en-US", { month: "long", year: "numeric" })}</div>
+        <div style={{ fontWeight:700, fontSize: 15, color: C.text }}>{month.toLocaleDateString("en-US", { month: "long", year: "numeric" })}</div>
         <button style={navBtn} onClick={() => shift(1)} aria-label="Next month"><ChevronRight size={18} /></button>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 4, marginBottom: 4 }}>
-        {WEEKDAYS.map((d, i) => <div key={i} style={{ textAlign: "center", fontSize: 10, fontWeight: 800, color: C.textSoft, padding: "2px 0" }}>{d}</div>)}
+        {WEEKDAYS.map((d, i) => <div key={i} style={{ textAlign: "center", fontSize: 10, fontWeight:600, color: C.textSoft, padding: "2px 0" }}>{d}</div>)}
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 4 }}>
         {Array.from({ length: lead }, (_, i) => <div key={`b${i}`} />)}
@@ -56,11 +56,11 @@ export function MonthCalendar({ selected, onSelect, renderDay, initialMonth }: M
             <button key={date} onClick={() => onSelect?.(date)} aria-label={new Date(date + "T12:00").toLocaleDateString("en-US", { month: "long", day: "numeric" })} aria-pressed={isSel}
               style={{
                 minHeight: 46, borderRadius: 10, padding: "5px 2px", display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
-                cursor: onSelect ? "pointer" : "default", fontFamily: "Nunito",
+                cursor: onSelect ? "pointer" : "default", fontFamily: "DM Sans",
                 border: isSel ? "2px solid #B5506E" : look.border ?? `1.5px solid ${isToday ? C.lavenderDeep : C.border}`,
                 background: look.background ?? (isToday ? C.lavender : C.white),
               }}>
-              <span style={{ fontSize: 11, fontWeight: 900, color: look.textColor ?? (isToday ? "#B5506E" : C.text) }}>{i + 1}</span>
+              <span style={{ fontSize: 11, fontWeight:700, color: look.textColor ?? (isToday ? "#B5506E" : C.text) }}>{i + 1}</span>
               {look.content}
             </button>
           );

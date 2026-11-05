@@ -57,14 +57,14 @@ export function CustomWorkoutModal({ initial, onSave, onClose }: CustomWorkoutMo
         <div className="label" id="cw-diff">Difficulty</div>
         <div className="row" role="radiogroup" aria-labelledby="cw-diff" style={{gap:6}}>
           {DIFFICULTIES.map(d=>{const dc=DIFF_COLOR[d],on=difficulty===d;return(
-            <button key={d} type="button" role="radio" aria-checked={on} onClick={()=>setDifficulty(d)} style={{flex:1,padding:"7px 0",borderRadius:99,border:`1.5px solid ${on?dc.text:C.border}`,background:on?dc.bg:C.white,color:on?dc.text:C.textSoft,fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"Nunito",transition:"all .15s"}}>{d}</button>
+            <button key={d} type="button" role="radio" aria-checked={on} onClick={()=>setDifficulty(d)} style={{flex:1,padding:"7px 0",borderRadius:99,border:`1.5px solid ${on?dc.text:C.border}`,background:on?dc.bg:C.white,color:on?dc.text:C.textSoft,fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"DM Sans",transition:"all .15s"}}>{d}</button>
           );})}
         </div>
       </div>
       <div style={{marginBottom:12}}>
         <div className="row-between" style={{marginBottom:5}}>
           <div className="label" id="cw-icon" style={{marginBottom:0}}>Icon</div>
-          {pickedEmoji&&pickedEmoji!==suggested&&<button type="button" onClick={()=>setPickedEmoji(null)} style={{background:"none",border:"none",color:"#B5506E",fontWeight:700,fontSize:11,cursor:"pointer",fontFamily:"Nunito"}}>Use suggested</button>}
+          {pickedEmoji&&pickedEmoji!==suggested&&<button type="button" onClick={()=>setPickedEmoji(null)} style={{background:"none",border:"none",color:"#B5506E",fontWeight:700,fontSize:11,cursor:"pointer",fontFamily:"DM Sans"}}>Use suggested</button>}
         </div>
         <div role="radiogroup" aria-labelledby="cw-icon" style={{display:"grid",gridTemplateColumns:"repeat(8,1fr)",gap:6}}>
           {WORKOUT_ICONS.map(([e,label])=>{const on=emoji===e;return(

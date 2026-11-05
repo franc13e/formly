@@ -81,13 +81,13 @@ export function FoodChat({ cycleInfo }: FoodChatProps) {
     <div>
       <div className="row-between" style={{marginBottom:12}}>
         <div>
-          <div style={{fontWeight:800,fontSize:14,color:C.textMid}}>Ask your food coach</div>
+          <div style={{fontWeight:600,fontSize:14,color:C.textMid}}>Ask your food coach</div>
           <div style={{fontSize:12,color:C.textSoft,fontWeight:500,marginTop:2}}>
             {cycleInfo ? <>Answers tuned to your {cycleInfo.phase.label.toLowerCase()} phase (day {cycleInfo.dayOfCycle})</> : "Log your cycle in Body for phase-aware answers"}
           </div>
         </div>
         {messages.length > 0 && (
-          <button onClick={clear} style={{display:"inline-flex",alignItems:"center",gap:4,background:"none",border:"none",fontSize:11,color:"#B5506E",fontWeight:700,cursor:"pointer",fontFamily:"Nunito",flexShrink:0}}>
+          <button onClick={clear} style={{display:"inline-flex",alignItems:"center",gap:4,background:"none",border:"none",fontSize:11,color:"#B5506E",fontWeight:700,cursor:"pointer",fontFamily:"DM Sans",flexShrink:0}}>
             <Trash2 size={13} aria-hidden="true"/> Clear chat
           </button>
         )}
@@ -96,7 +96,7 @@ export function FoodChat({ cycleInfo }: FoodChatProps) {
       {messages.length === 0 && !loading ? (
         <div className="card" style={{marginBottom:14,textAlign:"center",padding:"22px 18px"}}>
           <div style={{marginBottom:10}}><Glyph emoji="🥗" size={20}/></div>
-          <div style={{fontWeight:800,fontSize:15,marginBottom:6}}>What's on your plate?</div>
+          <div style={{fontWeight:600,fontSize:15,marginBottom:6}}>What's on your plate?</div>
           <div style={{fontSize:12,color:C.textSoft,fontWeight:500,lineHeight:1.6,marginBottom:14}}>
             Ask anything about food, cravings, hydration or eating for your goals.
             {goal && <> I'll keep your goal in mind: <span style={{color:C.textMid,fontWeight:700}}>{goal}</span>.</>}
@@ -119,7 +119,7 @@ export function FoodChat({ cycleInfo }: FoodChatProps) {
             <div style={{alignSelf:"flex-start",display:"flex",alignItems:"center",gap:8,fontSize:12,color:"#C05070",fontWeight:600}}>
               <span>Couldn't get a reply: {error}</span>
               {canRetry && (
-                <button onClick={() => void request(messages)} style={{display:"inline-flex",alignItems:"center",gap:4,background:"none",border:"none",color:PURPLE,fontWeight:800,fontSize:12,cursor:"pointer",fontFamily:"Nunito"}}>
+                <button onClick={() => void request(messages)} style={{display:"inline-flex",alignItems:"center",gap:4,background:"none",border:"none",color:PURPLE,fontWeight:600,fontSize:12,cursor:"pointer",fontFamily:"DM Sans"}}>
                   <RotateCcw size={12} aria-hidden="true"/> Retry
                 </button>
               )}

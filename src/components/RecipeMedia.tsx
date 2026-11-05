@@ -5,6 +5,7 @@ import { tiktokSearchUrl, youtubeSearchUrl } from "../lib/recipeLinks";
 import { glyphFor, TONES } from "./glyphs";
 import { Glyph } from "./Glyph";
 import type { RecipePhoto } from "../types";
+import { CURATED_PHOTOS } from "../data/recipePhotos";
 
 const creditLink = { color: C.textMid, fontWeight: 700, textDecoration: "underline" } as const;
 const SOURCE_HOME: Record<RecipePhoto["source"], string> = { Pexels: "https://www.pexels.com", Openverse: "https://openverse.org" };
@@ -32,8 +33,8 @@ export function PhotoCredit({ photo }: { photo: RecipePhoto }) {
  * Looks up `photoQuery` when given (a short dish name searches better), otherwise `name`; alt text uses `name`.
  * Shows the recipe's glyph on a tinted block while loading, when there's no photo, or if the image fails.
  */
-export function RecipePhotoView({ name, photoQuery, emoji, variant }: { name: string; photoQuery?: string; emoji: string; variant: "hero" | "thumb" }) {
-  const { photo } = useRecipePhoto(photoQuery?.trim() || name);
+export function RecipePhotoView({ name, photoQuery, recipeId, emoji, variant }: { name: string; photoQuery?: string; recipeId?: string; emoji: string; variant: "hero" | "thumb" }) {
+  const { photo } = useRecipePhoto(photoQuery?.trim() || name, recipeId ? CURATED_PHOTOS[recipeId] : undefined);
   const [loadedUrl, setLoadedUrl] = useState<string | null>(null);
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
   const tone = TONES[glyphFor(emoji)[1]];
@@ -80,7 +81,7 @@ function TikTokLogo() {
   );
 }
 
-const pill = {display:"inline-flex",alignItems:"center",gap:6,padding:"7px 14px",borderRadius:50,border:`1.5px solid ${C.border}`,background:C.white,color:C.text,fontSize:12,fontWeight:700,fontFamily:"Nunito",textDecoration:"none"} as const;
+const pill = {display:"inline-flex",alignItems:"center",gap:6,padding:"7px 14px",borderRadius:50,border:`1.5px solid ${C.border}`,background:C.white,color:C.text,fontSize:12,fontWeight:700,fontFamily:"DM Sans",textDecoration:"none"} as const;
 
 /** "YouTube" and "TikTok" pill links that search for "<name> recipe" videos. */
 export function RecipeVideoLinks({ name }: { name: string }) {

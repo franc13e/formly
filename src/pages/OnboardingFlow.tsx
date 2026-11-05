@@ -49,15 +49,15 @@ export function OnboardingFlow({ onDone }: OnboardingFlowProps) {
       <div style={{flex:1,display:"flex",flexDirection:"column",justifyContent:"center",gap:24}}>
         <div style={{textAlign:"center"}}><Glyph emoji={s.emoji} size={34}/></div>
         <div>
-          <div style={{fontFamily:"Nunito",fontWeight:900,fontSize:26,color:C.text,textAlign:"center",lineHeight:1.2,marginBottom:12}}>{s.title}</div>
+          <div className="h-display" style={{fontSize:30,color:C.text,textAlign:"center",lineHeight:1.15,marginBottom:12}}>{s.title}</div>
           <div style={{fontSize:14,color:C.textSoft,fontWeight:500,textAlign:"center",lineHeight:1.7}}>{s.sub}</div>
         </div>
         {step===1&&<input className="input" placeholder="Your name" value={name} autoFocus onChange={e=>setName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&canNext()&&next()} style={{fontSize:16,textAlign:"center",padding:"14px"}}/>}
         {step===2&&<div style={{display:"flex",flexDirection:"column",gap:10}}>
           {[{val:true,emoji:"🌸",label:"Yes, track my cycle",sub:"Get phase-aware insights, workouts and nutrition"},{val:false,emoji:"✦",label:"No thanks, skip this",sub:"You can always enable it later in the Body tab"}].map(opt=>(
-            <button key={String(opt.val)} onClick={()=>setTrackCycle(opt.val)} style={{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",borderRadius:16,border:`2px solid ${trackCycle===opt.val?C.lavenderDeep:C.border}`,background:trackCycle===opt.val?C.lavender:C.white,cursor:"pointer",fontFamily:"Nunito",textAlign:"left",transition:"all .15s"}}>
+            <button key={String(opt.val)} onClick={()=>setTrackCycle(opt.val)} style={{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",borderRadius:16,border:`2px solid ${trackCycle===opt.val?C.lavenderDeep:C.border}`,background:trackCycle===opt.val?C.lavender:C.white,cursor:"pointer",fontFamily:"DM Sans",textAlign:"left",transition:"all .15s"}}>
               <Glyph emoji={opt.emoji} size={18}/>
-              <div><div style={{fontWeight:800,fontSize:14,color:trackCycle===opt.val?"#8E3A55":C.text}}>{opt.label}</div><div style={{fontSize:12,color:C.textSoft,fontWeight:500,marginTop:2}}>{opt.sub}</div></div>
+              <div><div style={{fontWeight:600,fontSize:14,color:trackCycle===opt.val?"#8E3A55":C.text}}>{opt.label}</div><div style={{fontSize:12,color:C.textSoft,fontWeight:500,marginTop:2}}>{opt.sub}</div></div>
               <div style={{marginLeft:"auto",width:18,height:18,borderRadius:"50%",border:`2px solid ${trackCycle===opt.val?"#B5506E":C.border}`,background:trackCycle===opt.val?"#B5506E":"transparent",flexShrink:0}}/>
             </button>
           ))}

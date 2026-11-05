@@ -127,7 +127,7 @@ Build me a personalised weekly workout structure and daily nutrition targets. Gi
       return (
         <div key={i} style={{marginBottom:12}}>
           {headerLabel && (
-            <div style={{fontSize:11,fontWeight:900,color:C.textMid,letterSpacing:"1px",marginBottom:8,paddingLeft:2}}>
+            <div style={{fontSize:11,fontWeight:700,color:C.textMid,letterSpacing:"1px",marginBottom:8,paddingLeft:2}}>
               {headerLabel.toUpperCase()}
             </div>
           )}
@@ -142,10 +142,10 @@ Build me a personalised weekly workout structure and daily nutrition targets. Gi
               return acc;
             }, []).map((day, di) => (
               <div key={di} style={{background:bg,borderRadius:14,padding:"12px 14px",marginBottom:8}}>
-                <div style={{fontWeight:800,fontSize:13,color:C.text,marginBottom:6}}>{day.title}</div>
+                <div style={{fontWeight:600,fontSize:13,color:C.text,marginBottom:6}}>{day.title}</div>
                 {day.items.map((item, ii) => (
                   <div key={ii} className="row" style={{gap:6,padding:"2px 0",alignItems:"flex-start"}}>
-                    <span style={{color:C.lavenderDeep,fontWeight:900,flexShrink:0,marginTop:2}}>·</span>
+                    <span style={{color:C.lavenderDeep,fontWeight:700,flexShrink:0,marginTop:2}}>·</span>
                     <span style={{fontSize:12.5,color:C.textMid,fontWeight:500,lineHeight:1.6}}>{item}</span>
                   </div>
                 ))}
@@ -155,7 +155,7 @@ Build me a personalised weekly workout structure and daily nutrition targets. Gi
             <div style={{background:bg,borderRadius:14,padding:"12px 14px"}}>
               {bodyLines.map((line, li) => (
                 <div key={li} className="row" style={{gap:6,padding:"2px 0",alignItems:"flex-start"}}>
-                  {line.startsWith("-") && <span style={{color:C.lavenderDeep,fontWeight:900,flexShrink:0,marginTop:2}}>·</span>}
+                  {line.startsWith("-") && <span style={{color:C.lavenderDeep,fontWeight:700,flexShrink:0,marginTop:2}}>·</span>}
                   <span style={{fontSize:13,color:C.text,fontWeight:line.startsWith("-")?500:600,lineHeight:1.7}}>{line.replace(/^-\s*/,"")}</span>
                 </div>
               ))}
@@ -171,8 +171,8 @@ Build me a personalised weekly workout structure and daily nutrition targets. Gi
       {cycleInfo && (
         <div style={{marginBottom:14}}>
           <PhaseBadge cycleInfo={cycleInfo} compact/>
-          <div style={{marginTop:10,background:cycleInfo.phase.bg,borderRadius:14,padding:"12px 14px",border:`1.5px solid ${cycleInfo.phase.color}`}}>
-            <div style={{fontWeight:800,fontSize:12,color:cycleInfo.phase.textColor,marginBottom:6}}>
+          <div style={{marginTop:10,background:C.card,borderRadius:14,padding:"12px 14px",boxShadow:`0 6px 20px ${C.shadow}`}}>
+            <div style={{fontWeight:600,fontSize:12,color:cycleInfo.phase.textColor,marginBottom:6}}>
               How this phase affects your plan
             </div>
             <div style={{fontSize:12,color:cycleInfo.phase.textColor,fontWeight:500,lineHeight:1.6,opacity:.9}}>
@@ -188,9 +188,9 @@ Build me a personalised weekly workout structure and daily nutrition targets. Gi
       <div className="card" style={{marginBottom:14}}>
         <div className="sec-title">Your goal</div>
         {GOAL_CARDS.map(g => { const sel = goalId === g.id; return (
-          <button key={g.id} onClick={() => setGoalId(g.id)} style={{width:"100%",display:"flex",alignItems:"center",gap:12,background:sel?C.lavender:C.bgDeep,border:`1.5px solid ${sel?C.lavenderDeep:C.border}`,borderRadius:14,padding:"11px 14px",marginBottom:7,cursor:"pointer",textAlign:"left",fontFamily:"Nunito",transition:"all .15s"}}>
+          <button key={g.id} onClick={() => setGoalId(g.id)} style={{width:"100%",display:"flex",alignItems:"center",gap:12,background:sel?C.lavender:C.bgDeep,border:`1.5px solid ${sel?C.lavenderDeep:C.border}`,borderRadius:14,padding:"11px 14px",marginBottom:7,cursor:"pointer",textAlign:"left",fontFamily:"DM Sans",transition:"all .15s"}}>
             <Glyph emoji={g.emoji} size={17}/>
-            <div style={{flex:1}}><div style={{fontWeight:800,fontSize:14,color:sel?"#8E3A55":C.text}}>{g.label}</div><div style={{fontSize:11,color:C.textSoft,fontWeight:500}}>{g.sub}</div></div>
+            <div style={{flex:1}}><div style={{fontWeight:600,fontSize:14,color:sel?"#8E3A55":C.text}}>{g.label}</div><div style={{fontSize:11,color:C.textSoft,fontWeight:500}}>{g.sub}</div></div>
             <div style={{width:16,height:16,borderRadius:"50%",border:`2px solid ${sel?"#B5506E":C.border}`,background:sel?"#B5506E":"transparent",flexShrink:0}}/>
           </button>
         );})}
@@ -199,10 +199,10 @@ Build me a personalised weekly workout structure and daily nutrition targets. Gi
       <div className="card" style={{marginBottom:14}}>
         <div className="sec-title">Activity level</div>
         {ACTIVITY_OPTIONS.map(a => { const sel = activityId === a.id; return (
-          <button key={a.id} onClick={() => setActivityId(a.id)} style={{width:"100%",display:"flex",alignItems:"center",gap:10,background:sel?C.lavender:C.bgDeep,border:`1.5px solid ${sel?C.lavenderDeep:C.border}`,borderRadius:12,padding:"10px 12px",marginBottom:6,cursor:"pointer",textAlign:"left",fontFamily:"Nunito",transition:"all .15s"}}>
+          <button key={a.id} onClick={() => setActivityId(a.id)} style={{width:"100%",display:"flex",alignItems:"center",gap:10,background:sel?C.lavender:C.bgDeep,border:`1.5px solid ${sel?C.lavenderDeep:C.border}`,borderRadius:12,padding:"10px 12px",marginBottom:6,cursor:"pointer",textAlign:"left",fontFamily:"DM Sans",transition:"all .15s"}}>
             <div style={{width:14,height:14,borderRadius:"50%",border:`2px solid ${sel?"#B5506E":C.border}`,background:sel?"#B5506E":"transparent",flexShrink:0}}/>
             <Glyph emoji={a.emoji} size={14}/>
-            <div><span style={{fontWeight:800,fontSize:13,color:sel?"#8E3A55":C.text}}>{a.label}</span><span style={{fontSize:11,color:C.textSoft}}> · {a.sub}</span></div>
+            <div><span style={{fontWeight:600,fontSize:13,color:sel?"#8E3A55":C.text}}>{a.label}</span><span style={{fontSize:11,color:C.textSoft}}> · {a.sub}</span></div>
           </button>
         );})}
       </div>

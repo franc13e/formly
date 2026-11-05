@@ -4,20 +4,18 @@ import {
   Moon, Mountain, Pencil, PersonStanding, Ruler, Salad, Scale, Soup, Sparkle, Sparkles, Sprout, Sun, Target,
   TreeDeciduous, TrendingUp, Waves, Wheat, Wind, Zap, Plus, type LucideIcon,
 } from "lucide-react";
-import { C, ACCENT } from "../theme";
+import { C } from "../theme";
 
 // ─── Glyphs: the app's emoji concepts drawn as line icons ────────────────────
 // Data (workouts, foods, phases, saved schedules) still stores the emoji, so
 // existing localStorage keeps working; the `Glyph` component maps it to an icon.
 export type Tone = "lavender" | "rose" | "sage" | "butter" | "peach" | "sky";
 
+// Every tone renders the same soft rose chip: one accent keeps screens calm. The tone
+// names stay so data and callers don't change, and a palette can be reintroduced later.
+const ROSE_CHIP = { bg: "#FBEFF2", fg: C.accentInk };
 export const TONES: Record<Tone, { bg: string; fg: string }> = {
-  lavender: { bg: C.lavender, fg: ACCENT.sugar.text },
-  rose:     { bg: C.rose,     fg: ACCENT.protein.text },
-  sage:     { bg: C.sage,     fg: ACCENT.fiber.text },
-  butter:   { bg: C.butter,   fg: ACCENT.carbs.text },
-  peach:    { bg: C.peach,    fg: ACCENT.fats.text },
-  sky:      { bg: C.sky,      fg: ACCENT.water.text },
+  lavender: ROSE_CHIP, rose: ROSE_CHIP, sage: ROSE_CHIP, butter: ROSE_CHIP, peach: ROSE_CHIP, sky: ROSE_CHIP,
 };
 
 const GLYPHS: Record<string, [LucideIcon, Tone]> = {

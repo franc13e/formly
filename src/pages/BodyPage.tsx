@@ -8,7 +8,10 @@ import { PhaseBadge } from "../components/PhaseBadge";
 import { Glyph } from "../components/Glyph";
 import { WeightChart } from "../components/WeightChart";
 import { MeasurementRings } from "../components/MeasurementRings";
-import type { CycleInfo, MeasurementKey, Measurements, PeriodEntry, Setter, ShowToast, WeightEntry } from "../types";
+import { MeasurementHistoryCard } from "../components/MeasurementHistoryCard";
+import { bleedEnds, flowOn, periodSlot, withCurrentStart } from "../lib/periodFlow";
+import { deleteValue, snapshotFrom, upsertSnapshot } from "../lib/measurementHistory";
+import type { CycleInfo, FlowLevel, MeasurementKey, MeasurementSnapshot, Measurements, PeriodEntry, Setter, ShowToast, WeightEntry } from "../types";
 import { localDateKey } from "../lib/date";
 import { CycleLengthInput } from "../components/CycleLengthInput";
 import { MonthCalendar, type DayLook } from "../components/MonthCalendar";
@@ -19,8 +22,11 @@ type BodyModal = "cycle-setup" | "update";
 interface BodyPageProps {
   measurements: Measurements;
   setMeasurements: Setter<Measurements>;
+  /** Dated measurement snapshots, oldest first. */
+  measurementHistory: MeasurementSnapshot[];
+  setMeasurementHistory: Setter<MeasurementSnapshot[]>;
+  /** Weigh-ins derived from the measurement history, oldest first. */
   weightHistory: WeightEntry[];
-  setWeightHistory: Setter<WeightEntry[]>;
   cycleInfo: CycleInfo | null;
   periodStart: string;
   setPeriodStart: Setter<string>;
@@ -40,6 +46,8 @@ interface BodyPageProps {
   setPeriodLengthSetting: Setter<number>;
   /** Records the given YYYY-MM-DD as the last day of the period it falls in. */
   logPeriodEnd: (date: string) => void;
+  /** Records the flow on a day; null = no flow (ends the period, or removes it on its first day). */
+  logPeriodFlow: (date: string, level: FlowLevel | null) => void;
   showToast: ShowToast;
 }
 
@@ -52,18 +60,39 @@ interface MeasurementField {
   unit: string;
 }
 
+const FLOW_OPTIONS: { v: FlowLevel | null; label: string }[] = [{ v: "light", label: "Light" }, { v: "medium", label: "Medium" }, { v: "heavy", label: "Heavy" }, { v: null, label: "No flow" }];
+const FLOW_DOTS: Record<FlowLevel, number> = { light: 1, medium: 2, heavy: 3 };
+
+/** Light / Medium / Heavy (/ No flow) segmented control for one calendar day. */
+function FlowPicker({ value, onPick, allowNone }: { value: FlowLevel | undefined; onPick: (level: FlowLevel | null) => void; allowNone: boolean }) {
+  const options = allowNone ? FLOW_OPTIONS : FLOW_OPTIONS.filter(o => o.v);
+  return (
+    <div role="group" aria-label="Flow" style={{ display: "flex", background: C.white, borderRadius: 10, padding: 3, gap: 3, border: `1.5px solid ${C.border}` }}>
+      {options.map(o => {
+        const on = o.v !== null && o.v === value;
+        return (
+          <button key={o.label} aria-pressed={on} onClick={() => onPick(o.v)}
+            style={{ flex: 1, border: "none", borderRadius: 8, padding: "6px 4px", cursor: "pointer", fontFamily: "Nunito", fontSize: 12, fontWeight:600, background: on ? PHASES.menstrual.color : "transparent", color: on ? C.text : C.textMid }}>
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 /** The Cycle / Body / Insights switcher at the top of the Body tab. */
 function SubTabs({ subTab, setSubTab }: { subTab: BodySubTab; setSubTab: (tab: BodySubTab) => void }) {
   return (
     <div style={{display:"flex",borderBottom:`2px solid ${C.border}`}}>
       {([["cycle","Cycle"],["measurements","Body"],["insights","Insights"]] as const).map(([v,l])=>(
-        <button key={v} onClick={()=>setSubTab(v)} style={{flex:1,padding:"10px 0",border:"none",background:"transparent",cursor:"pointer",fontFamily:"Nunito",fontWeight:800,fontSize:14,color:subTab===v?"#B5506E":C.textSoft,borderBottom:subTab===v?"2px solid #B5506E":"2px solid transparent",marginBottom:-2,transition:"all .15s"}}>{l}</button>
+        <button key={v} onClick={()=>setSubTab(v)} style={{flex:1,padding:"10px 0",border:"none",background:"transparent",cursor:"pointer",fontFamily:"DM Sans",fontWeight:600,fontSize:14,color:subTab===v?"#B5506E":C.textSoft,borderBottom:subTab===v?"2px solid #B5506E":"2px solid transparent",marginBottom:-2,transition:"all .15s"}}>{l}</button>
       ))}
     </div>
   );
 }
 
-export function BodyPage({ measurements, setMeasurements, weightHistory, setWeightHistory, cycleInfo, periodStart, setPeriodStart, periodHistory, setPeriodHistory, cycleLength, setCycleLength, starts, stats, logPeriodStart, periodLength, periodLengthSetting, setPeriodLengthSetting, logPeriodEnd, showToast }: BodyPageProps) {
+export function BodyPage({ measurements, setMeasurements, measurementHistory, setMeasurementHistory, weightHistory, cycleInfo, periodStart, setPeriodStart, periodHistory, setPeriodHistory, cycleLength, setCycleLength, starts, stats, logPeriodStart, periodLength, periodLengthSetting, setPeriodLengthSetting, logPeriodEnd, logPeriodFlow, showToast }: BodyPageProps) {
   const [subTab,setSubTab]=useState<BodySubTab>("cycle");
   const [modal,setModal]=useState<BodyModal|null>(null);
   const [form,setForm]=useState<Measurements>({});
@@ -79,7 +108,9 @@ export function BodyPage({ measurements, setMeasurements, weightHistory, setWeig
     showToast("Period removed");
   };
 
-  const ends=Object.fromEntries(periodHistory.filter(p=>p.end).map(p=>[p.date,p.end as string]));
+  const periodList=withCurrentStart(periodHistory,periodStart);
+  // Logged ends, plus open periods whose recorded flow ran past the typical length.
+  const ends=bleedEnds(periodList,periodLength.length);
   const dayInfo=(date: string)=>cycleDayOn(date,starts,stats.length,periodLength.length,ends);
   // The period an "ended" tap would close: the latest logged start on or before the day,
   // still open and recent enough to plausibly be the same period.
@@ -95,17 +126,25 @@ export function BodyPage({ measurements, setMeasurements, weightHistory, setWeig
   const cycleLook=(date: string): DayLook=>{
     const info=dayInfo(date);
     if(!info)return {};
-    if(info.loggedPeriod)return {background:PHASES.menstrual.color,border:`1.5px solid ${PHASES.menstrual.color}`,textColor:"white",content:<Glyph emoji="💧" chip={false} size={9} color="white"/>};
+    if(info.loggedPeriod){
+      // Solid period colour; 1-3 small dots for light / medium / heavy when recorded.
+      const level=flowOn(periodList,date);
+      const dots=level?<span aria-label={`${level} flow`} style={{display:"flex",gap:2,marginTop:2}}>{Array.from({length:FLOW_DOTS[level]},(_,i)=><span key={i} style={{width:4,height:4,borderRadius:"50%",background:C.white}}/>)}</span>:undefined;
+      return {background:PHASES.menstrual.color,border:`1.5px solid ${PHASES.menstrual.color}`,textColor:"white",content:dots};
+    }
     if(info.predictedPeriod)return {background:PHASES.menstrual.bg,border:`1.5px dashed ${PHASES.menstrual.color}`,textColor:PHASES.menstrual.textColor};
-    const p=PHASES[info.phase];
-    return {background:p.bg,border:`1.5px solid ${info.phase==="ovulation"?p.color:p.bg}`,textColor:p.textColor,content:info.phase==="ovulation"?<Glyph emoji="☀️" chip={false} size={9} color={p.textColor}/>:undefined};
+    // Only period and ovulation days carry colour; the rest of the month stays plain.
+    if(info.phase!=="ovulation")return {};
+    const p=PHASES.ovulation;
+    return {background:"#FFFBF2",border:`1.5px solid ${p.color}`,textColor:p.textColor,content:<Glyph emoji="☀️" chip={false} size={9} color={p.textColor}/>};
   };
 
   const fields: MeasurementField[]=[{k:"weight",label:"Weight",unit:"kg"},{k:"height",label:"Height",unit:"cm"},{k:"waist",label:"Waist",unit:"cm"},{k:"hips",label:"Hips",unit:"cm"},{k:"bust",label:"Bust / Chest",unit:"cm"},{k:"glutes",label:"Glutes",unit:"cm"},{k:"thighs",label:"Thighs",unit:"cm"},{k:"arms",label:"Arms",unit:"cm"}];
 
   const save_m=()=>{
     setMeasurements(form);
-    if(form.weight){setWeightHistory(h=>{const today=localDateKey();return [...h.filter(x=>x.date!==today),{date:today,weight:parseFloat(String(form.weight))}].sort((a,b)=>a.date.localeCompare(b.date));});}
+    // One snapshot per day: saving again today replaces today's. The weight log is derived from it.
+    setMeasurementHistory(h=>upsertSnapshot(h,snapshotFrom(form,localDateKey())));
     setModal(null);showToast("Measurements saved ✓");
   };
 
@@ -130,7 +169,7 @@ export function BodyPage({ measurements, setMeasurements, weightHistory, setWeig
   return (
     <div className="scroll" style={{paddingBottom:90}}>
       <div style={{padding:"24px 24px 0",background:C.bg}}>
-        <div className="row" style={{marginBottom:2}}><Glyph emoji="🌸" size={16}/><div style={{fontSize:24,fontWeight:900,color:C.text,marginLeft:8}}>Body</div></div>
+        <div className="row" style={{marginBottom:2}}><div className="h-display" style={{fontSize:32,color:C.text}}>Body</div></div>
         <div style={{fontSize:13,color:C.textSoft,fontWeight:500,marginBottom:14}}>Your body, your cycle, your context</div>
         <SubTabs subTab={subTab} setSubTab={setSubTab}/>
       </div>
@@ -139,29 +178,29 @@ export function BodyPage({ measurements, setMeasurements, weightHistory, setWeig
         {subTab==="cycle"&&<div>
           {!periodStart?<div className="card" style={{textAlign:"center",padding:"28px 20px",marginBottom:14}}>
             <div style={{marginBottom:10}}><Glyph emoji="🌸" size={24}/></div>
-            <div style={{fontWeight:900,fontSize:16,marginBottom:6}}>Track your cycle</div>
+            <div style={{fontWeight:700,fontSize:16,marginBottom:6}}>Track your cycle</div>
             <div style={{fontSize:13,color:C.textSoft,fontWeight:500,lineHeight:1.6,marginBottom:18}}>Log when your last period started and we'll tell you what phase you're in, what to expect, and how to work with your body.</div>
             <button className="btn btn-primary" style={{width:"100%"}} onClick={()=>setModal("cycle-setup")}>Log my last period</button>
           </div>:<>
             <div className="card" style={{marginBottom:14,display:"flex",flexDirection:"column",alignItems:"center",gap:12}}>
               <PhaseWheel cycleInfo={cycleInfo} size={200}/>
-              {cycleInfo&&<div style={{width:"100%",background:cycleInfo.phase.bg,borderRadius:14,padding:"12px 14px",border:`1.5px solid ${cycleInfo.phase.color}`}}>
-                <div style={{fontWeight:900,fontSize:15,color:cycleInfo.phase.textColor,marginBottom:4}}><Glyph emoji={cycleInfo.phase.emoji} chip={false} size={15} color={cycleInfo.phase.textColor}/> {cycleInfo.phase.label} phase</div>
-                <div style={{fontSize:13,color:cycleInfo.phase.textColor,fontWeight:500,lineHeight:1.6,opacity:.9}}>{cycleInfo.phase.body}</div>
+              {cycleInfo&&<div style={{width:"100%",background:C.bgDeep,borderRadius:14,padding:"12px 14px"}}>
+                <div style={{fontWeight:700,fontSize:15,color:cycleInfo.phase.textColor,marginBottom:4}}><Glyph emoji={cycleInfo.phase.emoji} chip={false} size={15} color={cycleInfo.phase.textColor}/> {cycleInfo.phase.label} phase</div>
+                <div style={{fontSize:13,color:C.textMid,fontWeight:400,lineHeight:1.6}}>{cycleInfo.phase.body}</div>
                 <div style={{marginTop:10,display:"flex",gap:8}}>
-                  <div style={{flex:1,background:"white",borderRadius:10,padding:"8px 10px",opacity:.85}}><div style={{fontSize:10,fontWeight:800,color:cycleInfo.phase.textColor,marginBottom:2}}>ENERGY</div><div style={{fontSize:11,color:C.textMid,fontWeight:600,lineHeight:1.4}}>{cycleInfo.phase.energy}</div></div>
-                  <div style={{flex:1,background:"white",borderRadius:10,padding:"8px 10px",opacity:.85}}><div style={{fontSize:10,fontWeight:800,color:cycleInfo.phase.textColor,marginBottom:2}}>NEXT PERIOD</div><div style={{fontSize:11,color:C.textMid,fontWeight:600}}>{cycleInfo.daysLate>0?`${cycleInfo.daysLate} day${cycleInfo.daysLate>1?"s":""} late`:cycleInfo.daysUntilNext>0?`~${cycleInfo.daysUntilNext} days`:"very soon"}</div></div>
+                  <div style={{flex:1,background:C.white,borderRadius:10,padding:"8px 10px"}}><div style={{fontSize:10,fontWeight:600,color:C.textSoft,letterSpacing:".06em",marginBottom:2}}>ENERGY</div><div style={{fontSize:11,color:C.textMid,fontWeight:600,lineHeight:1.4}}>{cycleInfo.phase.energy}</div></div>
+                  <div style={{flex:1,background:C.white,borderRadius:10,padding:"8px 10px"}}><div style={{fontSize:10,fontWeight:600,color:C.textSoft,letterSpacing:".06em",marginBottom:2}}>NEXT PERIOD</div><div style={{fontSize:11,color:C.textMid,fontWeight:600}}>{cycleInfo.daysLate>0?`${cycleInfo.daysLate} day${cycleInfo.daysLate>1?"s":""} late`:cycleInfo.daysUntilNext>0?`~${cycleInfo.daysUntilNext} days`:"very soon"}</div></div>
                 </div>
               </div>}
             </div>
             {cycleInfo&&<div className="card" style={{marginBottom:14}}>
-              <div style={{fontWeight:800,fontSize:13,color:C.textMid,marginBottom:6}}><Glyph emoji="📅" chip={false} size={14}/> Next period</div>
+              <div style={{fontWeight:600,fontSize:13,color:C.textMid,marginBottom:6}}><Glyph emoji="📅" chip={false} size={14}/> Next period</div>
               {cycleInfo.daysLate>0
-                ?<div style={{fontSize:18,fontWeight:900,color:ACCENT.protein.text}}>{cycleInfo.daysLate} day{cycleInfo.daysLate>1?"s":""} late <span style={{fontSize:12,fontWeight:600,color:C.textSoft}}>· expected {fmtDay(cycleInfo.nextPeriodDate)}</span></div>
-                :<div style={{fontSize:18,fontWeight:900,color:C.text}}>Likely {fmtDay(addDays(cycleInfo.nextPeriodDate,-stats.spread))} – {fmtDay(addDays(cycleInfo.nextPeriodDate,stats.spread))}</div>}
+                ?<div style={{fontSize:18,fontWeight:700,color:ACCENT.protein.text}}>{cycleInfo.daysLate} day{cycleInfo.daysLate>1?"s":""} late <span style={{fontSize:12,fontWeight:600,color:C.textSoft}}>· expected {fmtDay(cycleInfo.nextPeriodDate)}</span></div>
+                :<div style={{fontSize:18,fontWeight:700,color:C.text}}>Likely {fmtDay(addDays(cycleInfo.nextPeriodDate,-stats.spread))} – {fmtDay(addDays(cycleInfo.nextPeriodDate,stats.spread))}</div>}
               <div style={{fontSize:12,color:C.textSoft,fontWeight:500,lineHeight:1.6,marginTop:4}}>
                 {stats.cyclesLogged>0
-                  ?`Based on your last ${stats.cyclesLogged} cycle${stats.cyclesLogged>1?"s":""}: about ${stats.length} days, usually within ±${stats.spread}.`
+                  ?`Based on ${stats.cyclesLogged>1?`your last ${stats.cyclesLogged} cycles`:"your last cycle"}: about ${stats.length} days, usually within ±${stats.spread}.`
                   :`Using your ${stats.length}-day setting. Log each period when it starts and Formly learns your real rhythm, so predictions get sharper.`}
                 {" "}{periodLength.logged>0
                   ?`Your periods last about ${periodLength.length} days.`
@@ -174,7 +213,7 @@ export function BodyPage({ measurements, setMeasurements, weightHistory, setWeig
               {openPeriodFor(today)&&<button className="btn btn-ghost btn-sm" style={{width:"100%",marginTop:8}} onClick={()=>{logPeriodEnd(today);showToast("Period end logged");}}>My period ended today</button>}
             </div>}
             <div className="card" style={{marginBottom:14}}>
-              <div style={{fontWeight:800,fontSize:13,color:C.textMid,marginBottom:10}}><Glyph emoji="🗓" chip={false} size={14}/> Your month</div>
+              <div style={{fontWeight:600,fontSize:13,color:C.textMid,marginBottom:10}}><Glyph emoji="🗓" chip={false} size={14}/> Your month</div>
               <MonthCalendar selected={calDay} onSelect={setCalDay} renderDay={cycleLook}/>
               <div className="row" style={{gap:12,flexWrap:"wrap",marginTop:10,fontSize:11,fontWeight:700,color:C.textSoft}}>
                 <span className="row" style={{gap:5}}><span style={{width:12,height:12,borderRadius:4,background:PHASES.menstrual.color}}/>Period</span>
@@ -185,39 +224,46 @@ export function BodyPage({ measurements, setMeasurements, weightHistory, setWeig
                 const info=dayInfo(calDay);
                 const openForDay=openPeriodFor(calDay);
                 const isStart=starts.includes(calDay);
+                const slot=periodSlot(periodHistory,periodStart,calDay,periodLength.length);
+                const level=flowOn(periodList,calDay);
+                const pickFlow=(l: FlowLevel|null)=>{logPeriodFlow(calDay,l);if(!l&&!isStart)showToast("Period end logged");};
                 return (
                   <div style={{marginTop:12,padding:"10px 12px",background:C.bgDeep,borderRadius:12}}>
-                    <div style={{fontWeight:800,fontSize:13,color:C.text}}>{fmtDay(calDay,{weekday:"short",month:"short",day:"numeric"})}</div>
+                    <div style={{fontWeight:600,fontSize:13,color:C.text}}>{fmtDay(calDay,{weekday:"short",month:"short",day:"numeric"})}</div>
                     <div style={{fontSize:12,color:C.textSoft,fontWeight:600,marginTop:2}}>
-                      {info?`Day ${info.dayOfCycle} · ${PHASES[info.phase].label}${info.future?" (predicted)":""}${info.loggedPeriod?" · period":info.predictedPeriod?" · predicted period":""}`:"Before your first logged period"}
+                      {info?`Day ${info.dayOfCycle} · ${PHASES[info.phase].label}${info.future?" (predicted)":""}${info.loggedPeriod?` · period${level?` · ${level} flow`:""}`:info.predictedPeriod?" · predicted period":""}`:"Before your first logged period"}
                     </div>
-                    {calDay<=today&&<div className="row" style={{gap:8,marginTop:8}}>
+                    {calDay<=today&&slot.kind!=="outside"&&<div style={{marginTop:8}}>
+                      <div style={{fontSize:11,fontWeight:600,color:C.textSoft,marginBottom:4}}>{slot.kind==="inside"?"FLOW":"STILL BLEEDING? FLOW"}</div>
+                      <FlowPicker value={level} onPick={pickFlow} allowNone={slot.kind==="inside"||!slot.entry.end}/>
+                    </div>}
+                    {calDay<=today&&<div className="row" style={{gap:8,marginTop:8,flexWrap:"wrap"}}>
                       {isStart
                         ?<button className="btn btn-ghost btn-sm" onClick={()=>removePeriodStart(calDay)}>Remove this period</button>
-                        :<button className="btn btn-primary btn-sm" onClick={()=>{logPeriodStart(calDay);showToast("Period logged");}}>Period started this day</button>}
+                        :slot.kind!=="inside"&&<button className="btn btn-primary btn-sm" onClick={()=>{logPeriodStart(calDay);showToast("Period logged");}}>Period started this day</button>}
                       {openForDay&&<button className="btn btn-ghost btn-sm" onClick={()=>{logPeriodEnd(calDay);showToast("Period end logged");}}>Period ended this day</button>}
                     </div>}
                   </div>
                 );
               })()}
             </div>
-            {weightDiff&&cycleInfo&&<div className="card" style={{marginBottom:14,background:cycleInfo.phase.bg,border:`1.5px solid ${cycleInfo.phase.color}`}}>
-              <div style={{fontWeight:800,fontSize:13,color:cycleInfo.phase.textColor,marginBottom:6}}><Glyph emoji="⚖️" chip={false} size={14} color={cycleInfo.phase.textColor}/> About your weight right now</div>
+            {weightDiff&&cycleInfo&&<div className="card" style={{marginBottom:14,background:C.card,border:"none",boxShadow:`0 6px 20px ${C.shadow}`}}>
+              <div style={{fontWeight:600,fontSize:13,color:cycleInfo.phase.textColor,marginBottom:6}}><Glyph emoji="⚖️" chip={false} size={14} color={cycleInfo.phase.textColor}/> About your weight right now</div>
               <div style={{fontSize:13,color:cycleInfo.phase.textColor,fontWeight:500,lineHeight:1.6,opacity:.9}}>{cycleInfo.phase.weight}</div>
               {Math.abs(Number(weightDiff))>=.5&&<div style={{marginTop:8,fontSize:12,fontWeight:700,color:cycleInfo.phase.textColor,opacity:.75}}>Your log shows a {Number(weightDiff)>0?"+":""}{weightDiff} kg change since your last entry.</div>}
             </div>}
-            {cycleInfo&&<div className="card" style={{marginBottom:14}}><div style={{fontWeight:800,fontSize:13,color:C.textMid,marginBottom:6}}><Glyph emoji="💭" chip={false} size={14}/> Mood and mind</div><div style={{fontSize:13,color:C.textMid,fontWeight:500,lineHeight:1.6}}>{cycleInfo.phase.moodNote}</div></div>}
+            {cycleInfo&&<div className="card" style={{marginBottom:14}}><div style={{fontWeight:600,fontSize:13,color:C.textMid,marginBottom:6}}><Glyph emoji="💭" chip={false} size={14}/> Mood and mind</div><div style={{fontSize:13,color:C.textMid,fontWeight:500,lineHeight:1.6}}>{cycleInfo.phase.moodNote}</div></div>}
             {cycleInfo&&<div className="card" style={{marginBottom:14}}>
-              <div style={{fontWeight:800,fontSize:13,color:C.textMid,marginBottom:10}}><Glyph emoji="🏋️" chip={false} size={14}/> Workouts this phase</div>
-              {cycleInfo.phase.workouts.map((w,i)=><div key={i} className="row" style={{padding:"5px 0",gap:8}}><span style={{color:cycleInfo.phase.color,fontWeight:900,flexShrink:0}}>→</span><span style={{fontSize:13,color:C.textMid,fontWeight:600}}>{w}</span></div>)}
-              {cycleInfo.phase.avoid.length>0&&<div style={{marginTop:10,padding:"10px 12px",background:C.bgDeep,borderRadius:10}}><div style={{fontSize:11,fontWeight:800,color:C.textSoft,marginBottom:6}}>EASE OFF ON</div>{cycleInfo.phase.avoid.map((a,i)=><div key={i} style={{fontSize:12,color:C.textSoft,fontWeight:600,padding:"2px 0"}}>· {a}</div>)}</div>}
+              <div style={{fontWeight:600,fontSize:13,color:C.textMid,marginBottom:10}}><Glyph emoji="🏋️" chip={false} size={14}/> Workouts this phase</div>
+              {cycleInfo.phase.workouts.map((w,i)=><div key={i} className="row" style={{padding:"5px 0",gap:8}}><span style={{color:cycleInfo.phase.color,fontWeight:700,flexShrink:0}}>→</span><span style={{fontSize:13,color:C.textMid,fontWeight:600}}>{w}</span></div>)}
+              {cycleInfo.phase.avoid.length>0&&<div style={{marginTop:10,padding:"10px 12px",background:C.bgDeep,borderRadius:10}}><div style={{fontSize:11,fontWeight:600,color:C.textSoft,marginBottom:6}}>EASE OFF ON</div>{cycleInfo.phase.avoid.map((a,i)=><div key={i} style={{fontSize:12,color:C.textSoft,fontWeight:600,padding:"2px 0"}}>· {a}</div>)}</div>}
             </div>}
             {cycleInfo&&<div className="card" style={{marginBottom:14}}>
-              <div style={{fontWeight:800,fontSize:13,color:C.textMid,marginBottom:10}}><Glyph emoji="🥗" chip={false} size={14}/> Nutrients to prioritise</div>
-              {cycleInfo.phase.foods.map((f,i)=><div key={i} className="row" style={{padding:"5px 0",gap:8}}><span style={{color:cycleInfo.phase.color,fontWeight:900,flexShrink:0}}>→</span><span style={{fontSize:13,color:C.textMid,fontWeight:600}}>{f}</span></div>)}
+              <div style={{fontWeight:600,fontSize:13,color:C.textMid,marginBottom:10}}><Glyph emoji="🥗" chip={false} size={14}/> Nutrients to prioritise</div>
+              {cycleInfo.phase.foods.map((f,i)=><div key={i} className="row" style={{padding:"5px 0",gap:8}}><span style={{color:cycleInfo.phase.color,fontWeight:700,flexShrink:0}}>→</span><span style={{fontSize:13,color:C.textMid,fontWeight:600}}>{f}</span></div>)}
             </div>}
             {periodHistory&&periodHistory.length>1&&<div className="card" style={{marginBottom:14}}>
-              <div style={{fontWeight:800,fontSize:13,color:C.textMid,marginBottom:10}}><Glyph emoji="🗓" chip={false} size={14}/> Period history</div>
+              <div style={{fontWeight:600,fontSize:13,color:C.textMid,marginBottom:10}}><Glyph emoji="🗓" chip={false} size={14}/> Period history</div>
               {(() => {
                 const entries = periodHistory.slice(0,6);
                 const lengths = entries.map((p,i,arr)=>arr[i+1]?Math.round((new Date(p.date).getTime()-new Date(arr[i+1].date).getTime())/(1000*60*60*24)):null).filter((n): n is number => Boolean(n));
@@ -246,7 +292,7 @@ export function BodyPage({ measurements, setMeasurements, weightHistory, setWeig
             {([{k:"weight",label:"Weight",unit:"kg"},{k:"height",label:"Height",unit:"cm"}] as const).map(f=>(
               <div key={f.k} className="card" style={{padding:"14px"}}>
                 <div style={{fontSize:11,color:C.textSoft,fontWeight:700,marginBottom:4}}>{f.label}</div>
-                <div style={{fontSize:24,fontWeight:900,color:C.text}}>{measurements[f.k]||"—"}<span style={{fontSize:12,color:C.textSoft,marginLeft:3}}>{measurements[f.k]?f.unit:""}</span></div>
+                <div style={{fontSize:24,fontWeight:700,color:C.text}}>{measurements[f.k]||"—"}<span style={{fontSize:12,color:C.textSoft,marginLeft:3}}>{measurements[f.k]?f.unit:""}</span></div>
               </div>
             ))}
           </div>
@@ -255,24 +301,25 @@ export function BodyPage({ measurements, setMeasurements, weightHistory, setWeig
           </div>}
           {/* Weight chart */}
           <div className="card" style={{marginBottom:14}}><div className="sec-title">Weight history</div><WeightChart history={weightHistory} cycleInfo={cycleInfo}/></div>
-          {cycleInfo&&<div style={{background:cycleInfo.phase.bg,borderRadius:18,padding:"14px 16px",border:`1.5px solid ${cycleInfo.phase.color}`,marginBottom:14}}><div style={{fontWeight:800,fontSize:12,color:cycleInfo.phase.textColor,marginBottom:6}}><Glyph emoji={cycleInfo.phase.emoji} chip={false} size={12} color={cycleInfo.phase.textColor}/> {cycleInfo.phase.label} phase context</div><div style={{fontSize:12,color:cycleInfo.phase.textColor,fontWeight:500,lineHeight:1.6,opacity:.9}}>{cycleInfo.phase.weight}</div></div>}
+          <MeasurementHistoryCard history={measurementHistory} onDelete={(date,key)=>{setMeasurementHistory(h=>deleteValue(h,date,key));showToast("Entry deleted");}}/>
+          {cycleInfo&&<div style={{background:C.card,borderRadius:18,padding:"14px 16px",boxShadow:`0 6px 20px ${C.shadow}`,marginBottom:14}}><div style={{fontWeight:600,fontSize:12,color:cycleInfo.phase.textColor,marginBottom:6}}><Glyph emoji={cycleInfo.phase.emoji} chip={false} size={12} color={cycleInfo.phase.textColor}/> {cycleInfo.phase.label} phase context</div><div style={{fontSize:12,color:cycleInfo.phase.textColor,fontWeight:500,lineHeight:1.6,opacity:.9}}>{cycleInfo.phase.weight}</div></div>}
         </div>}
 
         {subTab==="insights"&&<div>
           {cycleInfo&&<PhaseBadge cycleInfo={cycleInfo}/>}
           <div className="card" style={{marginBottom:14}}>
-            <div style={{fontWeight:800,fontSize:14,color:C.textMid,marginBottom:4}}><Glyph emoji="✨" chip={false} size={15}/> AI body insight</div>
+            <div style={{fontWeight:600,fontSize:14,color:C.textMid,marginBottom:4}}><Glyph emoji="✨" chip={false} size={15}/> AI body insight</div>
             <div style={{fontSize:12,color:C.textSoft,fontWeight:500,marginBottom:14,lineHeight:1.5}}>Get a warm, personalised explanation of what's going on in your body right now, taking into account your cycle phase, weight trend, and measurements.</div>
             <button className="btn btn-primary" style={{width:"100%"}} onClick={generateInsight} disabled={aiLoading}>{aiLoading?<><div className="spin"/>Thinking about your body...</>:<><Glyph emoji="✨" chip={false} size={16} color="currentColor"/>Get my insight</>}</button>
             {aiInsight&&<div style={{marginTop:14,background:C.lavender,borderRadius:14,padding:"14px 16px"}}>
-              <div style={{fontSize:11,fontWeight:800,color:"#B5506E",marginBottom:8}}>YOUR INSIGHT</div>
+              <div style={{fontSize:11,fontWeight:600,color:"#B5506E",marginBottom:8}}>YOUR INSIGHT</div>
               <div style={{fontSize:13,lineHeight:1.7,color:"#6E2F45",fontWeight:500}}>{aiInsight}</div>
-              <button style={{marginTop:10,background:"none",border:"none",fontSize:11,color:"#B5506E",fontWeight:700,cursor:"pointer",padding:0,fontFamily:"Nunito"}} onClick={()=>{setAiInsight("");save("body-insight","");}}>Clear</button>
+              <button style={{marginTop:10,background:"none",border:"none",fontSize:11,color:"#B5506E",fontWeight:700,cursor:"pointer",padding:0,fontFamily:"DM Sans"}} onClick={()=>{setAiInsight("");save("body-insight","");}}>Clear</button>
             </div>}
           </div>
           <div style={{marginBottom:8}}>
-            <div style={{fontSize:12,fontWeight:800,color:C.textMid,marginBottom:10}}>UNDERSTANDING YOUR CYCLE</div>
-            {phaseRanges(stats.length,periodLength.length).map(r=>({...PHASES[r.id],range:r})).map(p=><div key={p.id} style={{background:p.bg,borderRadius:18,padding:"14px 16px",marginBottom:10,border:`1.5px solid ${p.color}`,opacity:cycleInfo?.phase?.id===p.id?1:.7}}><div style={{fontWeight:900,fontSize:14,color:p.textColor,marginBottom:4}}><Glyph emoji={p.emoji} chip={false} size={14} color={p.textColor}/> {p.label} · Days {p.range.start+1}-{p.range.end}</div><div style={{fontSize:12,color:p.textColor,fontWeight:500,lineHeight:1.6,opacity:.9}}>{p.body}</div></div>)}
+            <div style={{fontSize:12,fontWeight:600,color:C.textMid,marginBottom:10}}>UNDERSTANDING YOUR CYCLE</div>
+            {phaseRanges(stats.length,periodLength.length).map(r=>({...PHASES[r.id],range:r})).map(p=><div key={p.id} style={{background:C.card,borderRadius:18,padding:"14px 16px",marginBottom:10,boxShadow:`0 6px 20px ${C.shadow}`,opacity:cycleInfo?.phase?.id===p.id?1:.7}}><div style={{fontWeight:700,fontSize:14,color:p.textColor,marginBottom:4}}><Glyph emoji={p.emoji} chip={false} size={14} color={p.textColor}/> {p.label} · Days {p.range.start+1}-{p.range.end}</div><div style={{fontSize:12,color:p.textColor,fontWeight:500,lineHeight:1.6,opacity:.9}}>{p.body}</div></div>)}
           </div>
         </div>}
       </div>

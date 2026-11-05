@@ -20,14 +20,17 @@ Formly is a mobile-first fitness app that combines workout planning, food guidan
 <p align="center">
   <img src="docs/screenshots/ask.png" width="240" alt="Ask: the cycle-aware food coach chat">
   <img src="docs/screenshots/recipes.png" width="240" alt="Recipes: meals and drinks for the current phase with photos and video links">
-  <img src="docs/screenshots/quick-add.png" width="240" alt="Quick add menu from the navigation bar">
+</p>
+<p align="center">
+  <img src="docs/screenshots/measurements.png" width="240" alt="Body: measurements, weight trend and measurement history">
+  <img src="docs/screenshots/profile.png" width="240" alt="Profile: details, cycle summary and about Formly">
 </p>
 
 ## Features
 
 **Cycle**
 - **Home cycle ring**: the current cycle day and phase in a ring of phases, with a mascot whose colour and mood follow the phase; the whole screen is tinted by phase
-- **Monthly cycle calendar**: logged periods, predicted periods and ovulation days; tap a day to mark a period start or end
+- **Monthly cycle calendar**: logged periods (with flow level), predicted periods and ovulation days; tap any day to start a period, mark its flow as light, medium or heavy, or mark "no flow" to end it
 - **Learned predictions**: next period shown as a range, based on your own logged cycles (see [How predictions work](#how-predictions-work))
 - **Late periods**: shown as "X days late" with a one-tap "My period started"
 - **Editable period length**, learned from the days you log a period ending
@@ -44,9 +47,9 @@ Formly is a mobile-first fitness app that combines workout planning, food guidan
 - **Recipes**: 3 meals and 2 drinks for each phase, with ingredients, steps, photos and YouTube / TikTok links; "Make me a recipe" generates one from what you have at home, and you can save favourites
 
 **Everywhere**
-- **Soft Blush design**: one petal-pink accent on a blush ground, soft pastels for meaning, line icons instead of emoji
+- **Soft Blush design**: DM Serif Display headings over DM Sans, one rose accent on a blush ground, phase colours only where they carry meaning (ring, calendar, tags), line icons instead of emoji
 - **Quick add**: the + button logs a period start or end, or jumps to logging a workout, the food coach or measurements
-- **Body measurements**: weight and measurements over time with supportive, cycle-aware AI feedback
+- **Body measurements**: weight and measurements with a history chart per metric, the change since last time, and supportive, cycle-aware AI feedback
 - **Optional accounts**: sign up to back up and sync across devices, or keep everything in the browser
 - **Local-first PWA**: installable, works offline from localStorage; signed-in users' data syncs to Supabase in the background
 
@@ -118,7 +121,7 @@ The frontend reads the public Supabase URL and anon key from `GET /api/config`, 
 | `GET` | `/api/config` | Public Supabase URL and anon key (if accounts are enabled) |
 | `GET` | `/api/health` | Health check |
 
-Recipe photos are Creative Commons or public-domain images found through [Openverse](https://openverse.org); each one is shown with its photographer, licence and a link to the source.
+Recipe photos are Creative Commons or public-domain images found through [Openverse](https://openverse.org); each one is shown with its photographer, licence and a link to the source. Photos for the built-in recipes ship with the app (`src/data/recipePhotos.ts`, regenerated with `python scripts/fetch_recipe_photos.py`); photos for AI recipes are looked up from the browser, so each user has their own Openverse rate limit.
 
 ## Running Locally
 

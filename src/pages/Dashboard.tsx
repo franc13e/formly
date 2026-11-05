@@ -61,17 +61,17 @@ export function Dashboard({ schedule, weightHistory, cycleInfo, workoutLog, user
 
       <div className="row-between" style={{ padding: "0 4px", marginBottom: 14 }}>
         <div>
-          <div style={{ fontSize: 26, fontWeight: 800, color: C.text, letterSpacing: "-0.01em" }}>{greeting}{userName ? `, ${userName}` : ""}</div>
+          <div className="h-display" style={{ fontSize: 30, color: C.text, lineHeight: 1.1 }}>{greeting}{userName ? `, ${userName}` : ""}</div>
           <div style={{ fontSize: 13, color: C.textSoft, fontWeight: 600, marginTop: 2 }}>{today}</div>
         </div>
-        <span style={{ width: 44, height: 44, borderRadius: "50%", background: C.white, boxShadow: `0 4px 12px ${C.shadow}`, display: "inline-flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: C.accentInk, flexShrink: 0 }}>{(userName || "F").slice(0, 1).toUpperCase()}</span>
+        <span style={{ width: 44, height: 44, borderRadius: "50%", background: C.white, boxShadow: `0 4px 12px ${C.shadow}`, display: "inline-flex", alignItems: "center", justifyContent: "center", fontWeight:600, color: C.accentInk, flexShrink: 0 }}>{(userName || "F").slice(0, 1).toUpperCase()}</span>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7,minmax(0,1fr))", gap: 6, marginBottom: 16 }}>
         {week.map(d => (
           <div key={d.key} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "8px 0", borderRadius: 14, background: d.isToday ? C.petal : "rgba(255,255,255,.72)", boxShadow: d.isToday ? `0 6px 14px ${C.shadow}` : "none" }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: d.isToday ? C.text : C.textSoft }}>{d.isToday ? "Today" : d.label}</span>
-            <span style={{ fontSize: 15, fontWeight: 800, color: C.text }}>{d.num}</span>
+            <span style={{ fontSize: 15, fontWeight:600, color: C.text }}>{d.num}</span>
             <span style={{ width: 5, height: 5, borderRadius: "50%", background: d.busy ? (d.isToday ? C.text : C.accentInk) : "transparent" }} />
           </div>
         ))}
@@ -85,7 +85,7 @@ export function Dashboard({ schedule, weightHistory, cycleInfo, workoutLog, user
             <span className="row" style={{ gap: 5 }}><span style={{ width: 9, height: 9, borderRadius: "50%", background: RING.ovulation.arc }} />Fertile window</span>
           </div>
           {(cycleInfo.daysLate > 0 || cycleInfo.dayOfCycle > cycleInfo.periodLength) && (
-            <button className="btn" onClick={onPeriodStarted} style={{ background: C.white, color: C.accentInk, padding: "10px 18px", fontSize: 14, fontWeight: 800, boxShadow: `0 4px 14px ${C.shadow}` }}>
+            <button className="btn" onClick={onPeriodStarted} style={{ background: C.white, color: C.accentInk, padding: "10px 18px", fontSize: 14, fontWeight:600, boxShadow: `0 4px 14px ${C.shadow}` }}>
               My period started <Glyph emoji="➕" chip={false} size={15} color="currentColor" />
             </button>
           )}
@@ -93,7 +93,7 @@ export function Dashboard({ schedule, weightHistory, cycleInfo, workoutLog, user
       ) : (
         <div className="card" style={{ textAlign: "center", marginBottom: 16, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
           <Mascot phase={null} size={110} />
-          <div style={{ fontWeight: 800, fontSize: 16 }}>Track your cycle</div>
+          <div style={{ fontWeight:600, fontSize: 16 }}>Track your cycle</div>
           <div style={{ fontSize: 13, color: C.textMid, lineHeight: 1.6 }}>Log your last period and Formly will tune workouts and food to where you are in your cycle.</div>
           <button className="btn btn-primary" onClick={onOpenBody}>Set up cycle tracking</button>
         </div>
@@ -101,7 +101,7 @@ export function Dashboard({ schedule, weightHistory, cycleInfo, workoutLog, user
 
       {cycleInfo && cycleInfo.daysLate > 0 && (
         <div className="card" style={{ marginBottom: 14, background: C.rose }}>
-          <div style={{ fontWeight: 800, fontSize: 14, color: ACCENT.protein.text, marginBottom: 4 }}>Your period is {cycleInfo.daysLate} day{cycleInfo.daysLate > 1 ? "s" : ""} late</div>
+          <div style={{ fontWeight:600, fontSize: 14, color: ACCENT.protein.text, marginBottom: 4 }}>Your period is {cycleInfo.daysLate} day{cycleInfo.daysLate > 1 ? "s" : ""} late</div>
           <div style={{ fontSize: 12, color: ACCENT.protein.text, fontWeight: 600, lineHeight: 1.6 }}>A few days either way is common: stress, sleep, travel and training can all shift a cycle. Tap "My period started" when it does.</div>
         </div>
       )}
@@ -111,14 +111,14 @@ export function Dashboard({ schedule, weightHistory, cycleInfo, workoutLog, user
           <div className="row" style={{ gap: 12, padding: "14px 16px" }}>
             <Glyph emoji="💧" size={17} />
             <span style={{ flex: 1, fontSize: 14, fontWeight: 700 }}>Next period</span>
-            <span style={{ fontSize: 14, fontWeight: 800, color: C.accentInk }}>{cycleInfo.daysLate > 0 ? `Expected ${fmt(next)}` : `${fmt(shift(next, -predictionSpread))} – ${fmt(shift(next, predictionSpread))}`}</span>
+            <span style={{ fontSize: 14, fontWeight:600, color: C.accentInk }}>{cycleInfo.daysLate > 0 ? `Expected ${fmt(next)}` : `${fmt(shift(next, -predictionSpread))} – ${fmt(shift(next, predictionSpread))}`}</span>
           </div>
           {fertileFrom && fertileTo && <>
             <div style={{ height: 1, background: C.border, margin: "0 16px" }} />
             <div className="row" style={{ gap: 12, padding: "14px 16px" }}>
               <Glyph emoji="☀️" size={17} />
               <span style={{ flex: 1, fontSize: 14, fontWeight: 700 }}>Fertile window</span>
-              <span style={{ fontSize: 14, fontWeight: 800, color: ACCENT.carbs.text }}>{inFertile ? `Now · until ${fmt(fertileTo)}` : `${fmt(fertileFrom)} – ${fmt(fertileTo)}`}</span>
+              <span style={{ fontSize: 14, fontWeight:600, color: ACCENT.carbs.text }}>{inFertile ? `Now · until ${fmt(fertileTo)}` : `${fmt(fertileFrom)} – ${fmt(fertileTo)}`}</span>
             </div>
           </>}
         </div>

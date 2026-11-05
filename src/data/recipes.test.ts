@@ -79,3 +79,11 @@ describe("parseRecipe", () => {
     expect(parseRecipe("TITLE: X\nINGREDIENTS:\n- a")).toBeNull();
   });
 });
+
+describe("curated recipe photos", () => {
+  it("ships a stored https photo for every curated recipe", async () => {
+    const { CURATED_PHOTOS } = await import("./recipePhotos");
+    const ids = (Object.keys(PHASES) as PhaseId[]).flatMap(p => RECIPES[p].map(r => r.id));
+    for (const id of ids) expect(CURATED_PHOTOS[id]?.url.startsWith("https://"), id).toBe(true);
+  });
+});

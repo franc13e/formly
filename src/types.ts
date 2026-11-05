@@ -116,6 +116,12 @@ export type MeasurementKey = "weight" | "height" | "waist" | "hips" | "bust" | "
  */
 export type Measurements = Partial<Record<MeasurementKey, string>>;
 
+/**
+ * One dated set of measurements, persisted in "measurement-history" (sorted by date
+ * ascending, at most one per day). Only metrics that had a value that day are present.
+ */
+export type MeasurementSnapshot = { date: string } & Partial<Record<MeasurementKey, number>>;
+
 /** One weigh-in, persisted in "weight-history" (sorted by date ascending). */
 export interface WeightEntry {
   /** YYYY-MM-DD */
@@ -129,7 +135,11 @@ export interface PeriodEntry {
   date: string;
   /** Last bleeding day, YYYY-MM-DD, once logged. */
   end?: string;
+  /** Flow level recorded per day (YYYY-MM-DD), for days the user marked. */
+  flow?: Record<string, FlowLevel>;
 }
+
+export type FlowLevel = "light" | "medium" | "heavy";
 
 // ─── Cycle ────────────────────────────────────────────────────────────────────
 

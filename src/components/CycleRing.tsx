@@ -29,7 +29,7 @@ export function CycleRing({ cycleInfo, size = 260 }: CycleRingProps) {
         <circle cx={c + r * Math.cos(angle)} cy={c + r * Math.sin(angle)} r={stroke * 0.85} fill="#FFFFFF" stroke={RING[cycleInfo.phase.id].mark} strokeWidth={stroke * 0.38} />
       </svg>
       <div style={{ position: "absolute", top: size * 0.2, left: 0, right: 0, textAlign: "center" }}>
-        <div style={{ fontSize: size * 0.146, fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1, color: C.text }}>Day {cycleInfo.dayOfCycle}</div>
+        <div className="h-display" style={{ fontSize: size * 0.17, lineHeight: 1, color: C.text }}>Day {cycleInfo.dayOfCycle}</div>
         <div style={{ fontSize: 13, fontWeight: 700, color: cycleInfo.phase.textColor, marginTop: 4 }}>{label}</div>
       </div>
       <div style={{ position: "absolute", left: 0, right: 0, top: size * 0.52, display: "flex", justifyContent: "center" }}>

@@ -35,7 +35,7 @@ function TabRow({ tab, setTab }: { tab: WorkoutsTab; setTab: (tab: WorkoutsTab) 
   return (
     <div className="row" style={{gap:6,marginBottom:16,background:C.bgDeep,borderRadius:14,padding:5}}>
       {([["schedule","Schedule"],["browse","Browse"],["ai","AI Coach"],["history","History"]] as const).map(([v,l])=>(
-        <button key={v} onClick={()=>setTab(v)} style={{flex:1,padding:"7px 0",borderRadius:10,border:"none",cursor:"pointer",background:tab===v?C.white:"transparent",color:tab===v?"#B5506E":C.textSoft,fontWeight:800,fontSize:13,fontFamily:"Nunito",boxShadow:tab===v?`0 1px 6px ${C.shadow}`:"none",transition:"all .15s"}}>{l}</button>
+        <button key={v} onClick={()=>setTab(v)} style={{flex:1,padding:"7px 0",borderRadius:10,border:"none",cursor:"pointer",background:tab===v?C.white:"transparent",color:tab===v?"#B5506E":C.textSoft,fontWeight:600,fontSize:13,fontFamily:"DM Sans",boxShadow:tab===v?`0 1px 6px ${C.shadow}`:"none",transition:"all .15s"}}>{l}</button>
       ))}
     </div>
   );
@@ -126,9 +126,9 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
     return(
       <div key={w.id} className="workout-card">
         <div className="row-between" style={{gap:8}}>
-          <div className="row" style={{minWidth:0}}><Glyph emoji={w.emoji} size={17}/><div style={{minWidth:0}}><div style={{fontWeight:800,fontSize:15}}>{w.name}</div><div style={{fontSize:12,color:C.textSoft,fontWeight:500}}>{w.muscle}{w.duration?` · ${w.duration}`:""}</div></div></div>
+          <div className="row" style={{minWidth:0}}><Glyph emoji={w.emoji} size={17}/><div style={{minWidth:0}}><div style={{fontWeight:600,fontSize:15}}>{w.name}</div><div style={{fontSize:12,color:C.textSoft,fontWeight:500}}>{w.muscle}{w.duration?` · ${w.duration}`:""}</div></div></div>
           <div className="row" style={{gap:4,flexShrink:0}}>
-            {custom&&<span style={{fontSize:11,fontWeight:800,padding:"3px 10px",borderRadius:99,background:C.lavender,color:"#B5506E"}}>Yours</span>}
+            {custom&&<span style={{fontSize:11,fontWeight:600,padding:"3px 10px",borderRadius:99,background:C.lavender,color:"#B5506E"}}>Yours</span>}
             <span style={{fontSize:11,fontWeight:700,padding:"3px 10px",borderRadius:99,background:dc.bg,color:dc.text}}>{w.difficulty}</span>
           </div>
         </div>
@@ -149,14 +149,14 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
 
   return (
     <div className="scroll" style={{padding:"24px 24px 40px"}}>
-      <div style={{fontSize:24,fontWeight:900,color:C.text,marginBottom:16}}>Workouts</div>
+      <div className="h-display" style={{fontSize:32,color:C.text,marginBottom:16}}>Workouts</div>
       <TabRow tab={tab} setTab={setTab}/>
 
       {tab==="schedule" && (
         <div>
           {aiPlan && (
             <div style={{background:`linear-gradient(135deg,${C.lavender},${C.rose})`,borderRadius:16,padding:"12px 14px",marginBottom:14,border:`1.5px solid ${C.lavenderDeep}`}}>
-              <div style={{fontSize:11,fontWeight:800,color:"#B5506E",marginBottom:2}}><Glyph emoji="✨" chip={false} size={12} color="#B5506E"/> AI plan active</div>
+              <div style={{fontSize:11,fontWeight:600,color:"#B5506E",marginBottom:2}}><Glyph emoji="✨" chip={false} size={12} color="#B5506E"/> AI plan active</div>
               <div style={{fontSize:12,color:C.textMid,fontWeight:500}}>Tap any day to add workouts to your schedule.</div>
             </div>
           )}
@@ -164,7 +164,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
           {/* Week / Month toggle */}
           <div className="row" role="group" aria-label="Calendar view" style={{gap:4,marginBottom:12,background:C.bgDeep,borderRadius:12,padding:4,width:"fit-content"}}>
             {([["week","Week"],["month","Month"]] as const).map(([v,l])=>(
-              <button key={v} onClick={()=>setScheduleView(v)} aria-pressed={scheduleView===v} style={{padding:"5px 16px",borderRadius:9,border:"none",cursor:"pointer",background:scheduleView===v?C.white:"transparent",color:scheduleView===v?"#B5506E":C.textSoft,fontWeight:800,fontSize:12,fontFamily:"Nunito",boxShadow:scheduleView===v?`0 1px 6px ${C.shadow}`:"none",transition:"all .15s"}}>{l}</button>
+              <button key={v} onClick={()=>setScheduleView(v)} aria-pressed={scheduleView===v} style={{padding:"5px 16px",borderRadius:9,border:"none",cursor:"pointer",background:scheduleView===v?C.white:"transparent",color:scheduleView===v?"#B5506E":C.textSoft,fontWeight:600,fontSize:12,fontFamily:"DM Sans",boxShadow:scheduleView===v?`0 1px 6px ${C.shadow}`:"none",transition:"all .15s"}}>{l}</button>
             ))}
           </div>
 
@@ -176,7 +176,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
             {/* Calendar grid header */}
             <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:4,marginBottom:6}}>
               {["M","T","W","T","F","S","S"].map((d,i)=>(
-                <div key={i} style={{textAlign:"center",fontSize:10,fontWeight:800,color:C.textSoft,padding:"4px 0"}}>{d}</div>
+                <div key={i} style={{textAlign:"center",fontSize:10,fontWeight:600,color:C.textSoft,padding:"4px 0"}}>{d}</div>
               ))}
             </div>
 
@@ -189,12 +189,12 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
                 const isPicking = pickingDay === day.date;
                 return (
                   <button key={day.date} onClick={()=>selectDay(day.date)} aria-pressed={isPicking} aria-label={`${day.label} ${day.num}`} style={{
-                    borderRadius:12, padding:"8px 4px", display:"flex", flexDirection:"column", alignItems:"center", gap:3, minHeight:44, fontFamily:"Nunito",
+                    borderRadius:12, padding:"8px 4px", display:"flex", flexDirection:"column", alignItems:"center", gap:3, minHeight:44, fontFamily:"DM Sans",
                     cursor:"pointer", border:`1.5px solid ${isPicking?"#C4607D":isToday?C.lavenderDeep:items==="rest"?C.sageDeep:items.length?C.lavenderDeep:C.border}`,
                     background:isPicking?"#C4607D":isToday?C.lavender:items==="rest"?C.sage:items.length?C.lavender+"60":C.white,
                     transition:"all .15s",
                   }}>
-                    <div style={{fontSize:11,fontWeight:900,color:isPicking?"white":isToday?"#B5506E":C.text}}>{day.num}</div>
+                    <div style={{fontSize:11,fontWeight:700,color:isPicking?"white":isToday?"#B5506E":C.text}}>{day.num}</div>
                     {items==="rest"
                       ? <div><Glyph emoji="🌿" chip={false} size={11}/></div>
                       : items.length>0 && (
@@ -219,7 +219,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
               <div className="card slide-in" style={{marginBottom:14}}>
                 <div className="row-between" style={{marginBottom:12}}>
                   <div>
-                    <div style={{fontWeight:900,fontSize:16,color:C.text}}>{sel.toLocaleDateString("en-US",{weekday:"short"})}, {sel.toLocaleDateString("en-US",{month:"long",day:"numeric"})}</div>
+                    <div style={{fontWeight:700,fontSize:16,color:C.text}}>{sel.toLocaleDateString("en-US",{weekday:"short"})}, {sel.toLocaleDateString("en-US",{month:"long",day:"numeric"})}</div>
                     {isToday&&<div style={{fontSize:11,fontWeight:700,color:"#C4607D"}}>Today</div>}
                   </div>
                   <span style={{fontSize:13,color:C.textSoft,fontWeight:600}}>{items.length?`${items.length} workout${items.length>1?"s":""}` : "Rest day"}</span>
@@ -249,9 +249,9 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
                         <div style={{fontSize:11,color:C.textSoft,fontWeight:700,marginBottom:6}}>Move to:</div>
                         <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:4,marginBottom:8}}>
                           {weekOf(pickingDay).map(d=>{const dt=new Date(d+"T12:00"),cur=d===pickingDay;return(
-                            <button key={d} disabled={cur} onClick={()=>moveItem(pickingDay,idx,d)} aria-label={`Move to ${shortDate(d)}`} style={{padding:"6px 0",borderRadius:10,border:`1.5px solid ${cur?C.border:C.lavenderDeep}`,background:cur?"transparent":C.white,color:cur?C.textSoft:"#8E3A55",cursor:cur?"default":"pointer",fontFamily:"Nunito",display:"flex",flexDirection:"column",alignItems:"center",lineHeight:1.2,opacity:cur?.5:1}}>
-                              <span style={{fontSize:9,fontWeight:800}}>{dt.toLocaleDateString("en-US",{weekday:"short"})}</span>
-                              <span style={{fontSize:12,fontWeight:900}}>{dt.getDate()}</span>
+                            <button key={d} disabled={cur} onClick={()=>moveItem(pickingDay,idx,d)} aria-label={`Move to ${shortDate(d)}`} style={{padding:"6px 0",borderRadius:10,border:`1.5px solid ${cur?C.border:C.lavenderDeep}`,background:cur?"transparent":C.white,color:cur?C.textSoft:"#8E3A55",cursor:cur?"default":"pointer",fontFamily:"DM Sans",display:"flex",flexDirection:"column",alignItems:"center",lineHeight:1.2,opacity:cur?.5:1}}>
+                              <span style={{fontSize:9,fontWeight:600}}>{dt.toLocaleDateString("en-US",{weekday:"short"})}</span>
+                              <span style={{fontSize:12,fontWeight:700}}>{dt.getDate()}</span>
                             </button>
                           );})}
                         </div>
@@ -268,7 +268,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
                 <div style={{marginTop:8}}>
                   {/* Rest day toggle */}
                   <div className="row" style={{marginBottom:12,gap:8}}>
-                    <button onClick={()=>{setSchedule(s=>({...s,[pickingDay]:s[pickingDay]==="rest"?[]:"rest"}));setMovingIdx(null);showToast(schedule[pickingDay]==="rest"?"Rest day removed":"Rest day set");}} style={{padding:"7px 14px",borderRadius:99,border:`1.5px solid ${schedule[pickingDay]==="rest"?C.sageDeep:C.border}`,background:schedule[pickingDay]==="rest"?C.sage:"transparent",color:schedule[pickingDay]==="rest"?ACCENT.fiber.text:C.textSoft,fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"Nunito",transition:"all .15s"}}>
+                    <button onClick={()=>{setSchedule(s=>({...s,[pickingDay]:s[pickingDay]==="rest"?[]:"rest"}));setMovingIdx(null);showToast(schedule[pickingDay]==="rest"?"Rest day removed":"Rest day set");}} style={{padding:"7px 14px",borderRadius:99,border:`1.5px solid ${schedule[pickingDay]==="rest"?C.sageDeep:C.border}`,background:schedule[pickingDay]==="rest"?C.sage:"transparent",color:schedule[pickingDay]==="rest"?ACCENT.fiber.text:C.textSoft,fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"DM Sans",transition:"all .15s"}}>
                       <Glyph emoji="🌿" chip={false} size={13} color="currentColor"/> {schedule[pickingDay]==="rest"?"Rest day set":"Mark as rest day"}
                     </button>
                   </div>
@@ -277,7 +277,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
                       <div style={{fontSize:11,color:C.textSoft,fontWeight:700,marginBottom:6}}>Quick add from your plan:</div>
                       <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
                         {workoutPlan.map(w=>(
-                          <button key={w.id} onClick={()=>{addToDay(pickingDay,{name:w.name,emoji:w.emoji,detail:[w.muscle,w.duration].filter(Boolean).join(" · ")});showToast("Added ✓");}} style={{padding:"5px 12px",borderRadius:99,border:`1.5px solid ${C.lavenderDeep}`,background:C.lavender,color:"#8E3A55",fontWeight:700,fontSize:11,cursor:"pointer",fontFamily:"Nunito"}}>
+                          <button key={w.id} onClick={()=>{addToDay(pickingDay,{name:w.name,emoji:w.emoji,detail:[w.muscle,w.duration].filter(Boolean).join(" · ")});showToast("Added ✓");}} style={{padding:"5px 12px",borderRadius:99,border:`1.5px solid ${C.lavenderDeep}`,background:C.lavender,color:"#8E3A55",fontWeight:700,fontSize:11,cursor:"pointer",fontFamily:"DM Sans"}}>
                             <Glyph emoji={w.emoji} chip={false} size={13}/> {w.name}
                           </button>
                         ))}
@@ -300,12 +300,12 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
       {tab==="browse" && (
         <div>
           {cycleInfo&&<div style={{background:cycleInfo.phase.bg,borderRadius:14,padding:"10px 14px",marginBottom:14,border:`1.5px solid ${cycleInfo.phase.color}`}}>
-            <div style={{fontSize:11,fontWeight:800,color:cycleInfo.phase.textColor,marginBottom:4}}><Glyph emoji={cycleInfo.phase.emoji} chip={false} size={12} color={cycleInfo.phase.textColor}/> Best for your {cycleInfo.phase.label.toLowerCase()} phase</div>
+            <div style={{fontSize:11,fontWeight:600,color:cycleInfo.phase.textColor,marginBottom:4}}><Glyph emoji={cycleInfo.phase.emoji} chip={false} size={12} color={cycleInfo.phase.textColor}/> Best for your {cycleInfo.phase.label.toLowerCase()} phase</div>
             <div style={{fontSize:12,color:cycleInfo.phase.textColor,fontWeight:500,opacity:.9}}>{cycleInfo.phase.workouts[0]} · {cycleInfo.phase.workouts[1]}</div>
           </div>}
-          <button onClick={()=>setCustomModal({initial:null})} style={{width:"100%",display:"flex",alignItems:"center",gap:12,padding:"14px 16px",marginBottom:10,borderRadius:18,border:`1.5px dashed ${C.lavenderDeep}`,background:C.lavender+"60",cursor:"pointer",fontFamily:"Nunito",textAlign:"left"}}>
+          <button onClick={()=>setCustomModal({initial:null})} style={{width:"100%",display:"flex",alignItems:"center",gap:12,padding:"14px 16px",marginBottom:10,borderRadius:18,border:`1.5px dashed ${C.lavenderDeep}`,background:C.lavender+"60",cursor:"pointer",fontFamily:"DM Sans",textAlign:"left"}}>
             <span style={{width:34,height:34,borderRadius:"50%",background:C.lavender,display:"inline-flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Plus size={18} color="#B5506E" strokeWidth={2.4} aria-hidden="true"/></span>
-            <span><span style={{display:"block",fontWeight:800,fontSize:15,color:"#8E3A55"}}>Create workout</span><span style={{display:"block",fontSize:12,color:C.textSoft,fontWeight:500}}>Add your own session, with its own icon</span></span>
+            <span><span style={{display:"block",fontWeight:600,fontSize:15,color:"#8E3A55"}}>Create workout</span><span style={{display:"block",fontSize:12,color:C.textSoft,fontWeight:500}}>Add your own session, with its own icon</span></span>
           </button>
           <div style={{display:"flex",flexDirection:"column",gap:10}}>
             {customWorkouts.map(w=>renderWorkoutCard(w,true))}
@@ -317,14 +317,14 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
       {tab==="history" && (
         <div>
           {(!workoutLog||workoutLog.length===0)
-            ?<div style={{textAlign:"center",padding:"40px 0",color:C.textSoft}}><div style={{marginBottom:10}}><Glyph emoji="🌱" size={24}/></div><div style={{fontWeight:800,fontSize:15,color:C.text}}>Nothing logged yet</div><div style={{fontSize:13,marginTop:6,lineHeight:1.6}}>Every workout counts. Tap Log on any session to start tracking your progress.</div></div>
+            ?<div style={{textAlign:"center",padding:"40px 0",color:C.textSoft}}><div style={{marginBottom:10}}><Glyph emoji="🌱" size={24}/></div><div style={{fontWeight:600,fontSize:15,color:C.text}}>Nothing logged yet</div><div style={{fontSize:13,marginTop:6,lineHeight:1.6}}>Every workout counts. Tap Log on any session to start tracking your progress.</div></div>
             :<>
               {/* Monthly summary */}
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:16}}>
                 {([["🏋️",stats.workouts,stats.workouts===1?"workout this month":"workouts this month"],["📅",stats.activeDays,stats.activeDays===1?"active day this month":"active days this month"],["🔥",streak,"day streak"]] as const).map(([emoji,value,label])=>(
                   <div key={emoji} className="card" style={{padding:"12px 10px",borderRadius:16,display:"flex",flexDirection:"column",alignItems:"center",gap:4,textAlign:"center"}}>
                     <Glyph emoji={emoji} size={13}/>
-                    <div style={{fontSize:20,fontWeight:900,color:C.text,lineHeight:1.1}}>{value}</div>
+                    <div style={{fontSize:20,fontWeight:700,color:C.text,lineHeight:1.1}}>{value}</div>
                     <div style={{fontSize:10,fontWeight:700,color:C.textSoft,lineHeight:1.3}}>{label}</div>
                   </div>
                 ))}
@@ -336,7 +336,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
                   if (!entries) return {};
                   return {
                     background:C.sage, border:`1.5px solid ${C.sageDeep}`,
-                    content:<span style={{display:"inline-flex",alignItems:"center",gap:1}}><Glyph emoji={entries[0].emoji||"🏋️"} chip={false} size={12}/>{entries.length>1&&<span style={{fontSize:9,fontWeight:800,color:ACCENT.fiber.text}}>+{entries.length-1}</span>}</span>,
+                    content:<span style={{display:"inline-flex",alignItems:"center",gap:1}}><Glyph emoji={entries[0].emoji||"🏋️"} chip={false} size={12}/>{entries.length>1&&<span style={{fontSize:9,fontWeight:600,color:ACCENT.fiber.text}}>+{entries.length-1}</span>}</span>,
                   };
                 }}/>
               </div>
@@ -346,7 +346,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
                 const entries = logByDate[shownHistoryDay] ?? [];
                 return (
                   <div className="slide-in" key={shownHistoryDay}>
-                    <div style={{fontSize:12,fontWeight:800,color:C.textMid,marginBottom:8}}>
+                    <div style={{fontSize:12,fontWeight:600,color:C.textMid,marginBottom:8}}>
                       {shownHistoryDay===todayStr?"Today":shortDate(shownHistoryDay)}
                       {entries.length>0&&<span style={{fontWeight:600,color:C.textSoft,marginLeft:8}}>{entries.length} workout{entries.length>1?"s":""}</span>}
                     </div>
@@ -356,7 +356,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
                         <div className="row" style={{gap:10}}>
                           <Glyph emoji={e.emoji||"🏋️"} size={16}/>
                           <div style={{flex:1}}>
-                            <div style={{fontWeight:800,fontSize:14}}>{e.name}</div>
+                            <div style={{fontWeight:600,fontSize:14}}>{e.name}</div>
                             <div style={{fontSize:11,color:C.textSoft,marginTop:3}}>{e.duration}{e.sets?` · ${e.sets} sets`:""}{e.reps?` x ${e.reps} reps`:""}{e.weight?` @ ${e.weight}kg`:""}</div>
                             {e.notes&&<div style={{fontSize:11,color:C.textMid,marginTop:4,fontStyle:"italic"}}>{e.notes}</div>}
                           </div>

@@ -16,12 +16,12 @@ interface RingField {
 // ─── Body visualizer ──────────────────────────────────────────────────────────
 export function MeasurementRings({ measurements, goalMeasurements }: MeasurementRingsProps) {
   const fields: RingField[] = [
-    { key:"waist",  label:"Waist",  color:"#FFB347", track:"#FFF0D6" },
-    { key:"hips",   label:"Hips",   color:"#F6B7C4", track:"#EDE0FA" },
-    { key:"bust",   label:"Bust",   color:"#F08090", track:"#FAE0E4" },
-    { key:"glutes", label:"Glutes", color:"#90D0A0", track:"#D6F5E6" },
-    { key:"thighs", label:"Thighs", color:"#60C8F0", track:"#D6F0FA" },
-    { key:"arms",   label:"Arms",   color:"#F0C040", track:"#FFFBEC" },
+    { key:"waist",  label:"Waist",  color:"#D8798F", track:"#F7E3E8" },
+    { key:"hips",   label:"Hips",   color:"#D8798F", track:"#F7E3E8" },
+    { key:"bust",   label:"Bust",   color:"#D8798F", track:"#F7E3E8" },
+    { key:"glutes", label:"Glutes", color:"#D8798F", track:"#F7E3E8" },
+    { key:"thighs", label:"Thighs", color:"#D8798F", track:"#F7E3E8" },
+    { key:"arms",   label:"Arms",   color:"#D8798F", track:"#F7E3E8" },
   ];
   const sz=72, cx=36, cy=36, r=28, circ=2*Math.PI*r;
   return (
@@ -42,7 +42,7 @@ export function MeasurementRings({ measurements, goalMeasurements }: Measurement
                   style={{transition:"stroke-dasharray .6s ease"}}/>
               </svg>
               <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                <span style={{fontSize:10,fontWeight:800,color:cur>0?f.color:C.border,textAlign:"center",lineHeight:1.2}}>
+                <span style={{fontSize:10,fontWeight:600,color:cur>0?C.accentInk:C.textSoft,textAlign:"center",lineHeight:1.2}}>
                   {cur>0?`${cur}cm`:"—"}
                 </span>
               </div>
