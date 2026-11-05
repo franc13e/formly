@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/franc13e/formly/actions/workflows/ci.yml/badge.svg)](https://github.com/franc13e/formly/actions/workflows/ci.yml)
 
+**Fitness that follows your cycle.** Workouts, food and body tracking that adapt to the four phases of your cycle, and learn your rhythm the more you log.
+
 Formly is a mobile-first fitness app that combines workout planning, food guidance and optional menstrual-cycle tracking, with AI coaching that adapts to where you are in your cycle. It installs as a PWA and works offline.
 
 **Live demo:** https://formly-teal.vercel.app
@@ -26,7 +28,31 @@ Formly is a mobile-first fitness app that combines workout planning, food guidan
 <p align="center">
   <img src="docs/screenshots/measurements.png" width="240" alt="Body: measurements, weight trend and measurement history">
   <img src="docs/screenshots/profile.png" width="240" alt="Profile: details, cycle summary and about Formly">
+  <img src="docs/screenshots/profile-about.png" width="240" alt="Profile: what Formly does, our approach, and data and privacy">
 </p>
+
+## About Formly
+
+These are the same words as the About section on the app's Profile screen.
+
+**What Formly does**
+
+| | |
+|---|---|
+| **Your cycle, understood** | A cycle ring and calendar that learn your real cycle and period length. |
+| **Food for your phase** | What to eat now, plus recipes with photos and how-to videos. |
+| **Ask anything** | A food coach for cravings, bloating, snacks and goals. |
+| **Workouts that fit** | Picks for your phase, 50 exercises with pictures, sessions and your own. |
+| **Body tracking** | Weight and measurements over time, in context. |
+| **AI coach** | Plans shaped by your phase, goal and routine. |
+
+**Our approach:** your body isn't the same every week, so your plan shouldn't be either.
+
+1. **Awareness over numbers.** A heavier week in your luteal phase is water and hormones, not failure.
+2. **Work with your cycle.** Push when your energy rises, ease off when your body asks for rest.
+3. **Gentle, not perfect.** Every logged day helps Formly learn you. Missing one is fine.
+
+**Data and privacy:** your periods, workouts, food chats and measurements stay in your browser, and also in your account if you sign in to sync. When you use an AI feature, only your question and the context it needs (like your phase and goal) are sent to write the answer. Recipe names, and nothing about you, are sent to Openverse to find openly licensed photos.
 
 ## Features
 
@@ -46,7 +72,7 @@ Formly is a mobile-first fitness app that combines workout planning, food guidan
 - **Your own workouts**: create, edit and delete custom workouts with an icon (suggested from the name)
 - **Exercise library**: about 50 exercises across glutes, legs, back, chest, shoulders, arms, core, cardio and recovery, filterable by muscle group, each with a demonstration picture where one exists
 - **For your phase**: Browse opens with workouts that suit your current phase, each with a one-line reason
-- **Sessions**: ready-made sessions (Glute day, Leg day, Upper body, Period-friendly flow and more) or your own; add a whole session to a day in one tap, shown grouped on the schedule while each exercise keeps its own log
+- **Sessions**: ready-made sessions (Glute day, Leg day, Upper body, Period-friendly flow and more) or your own, built from the library or exercises you type in yourself (saved under "Yours"); add a whole session to a day in one tap, shown grouped on the schedule while each exercise keeps its own log
 - **AI coach**: personalised plans from your goal, activity level, focus areas and current phase
 
 **Nutrition**

@@ -27,7 +27,7 @@ const FEATURES = [
   { emoji: "🌙", title: "Your cycle, understood", desc: "A cycle ring and calendar that learn your real cycle and period length." },
   { emoji: "🥗", title: "Food for your phase", desc: "What to eat now, plus recipes with photos and how-to videos." },
   { emoji: "💭", title: "Ask anything", desc: "A food coach for cravings, bloating, snacks and goals." },
-  { emoji: "🏋️", title: "Workouts that fit", desc: "Week and month plans, your own workouts, a history calendar." },
+  { emoji: "🏋️", title: "Workouts that fit", desc: "Picks for your phase, 50 exercises with pictures, sessions and your own." },
   { emoji: "📏", title: "Body tracking", desc: "Weight and measurements over time, in context." },
   { emoji: "✨", title: "AI coach", desc: "Plans shaped by your phase, goal and routine." },
 ];
