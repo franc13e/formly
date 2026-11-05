@@ -3,11 +3,11 @@ import type { PhaseId } from "../types";
 
 // ─── Mascot: a soft "puffy" blob that changes colour and mood with the phase ──
 const LOOKS: Record<PhaseId | "none", { light: string; mid: string; deep: string }> = {
-  menstrual:  { light: "#FFE9EE", mid: "#F6B7C4", deep: "#EC97AA" },
-  follicular: { light: "#E4F5E8", mid: "#BFE3C8", deep: "#9FD0AC" },
-  ovulation:  { light: "#FFF6D8", mid: "#F8D57E", deep: "#EDBE55" },
-  luteal:     { light: "#F3EEFB", mid: "#DCD3F1", deep: "#C3B5E6" },
-  none:       { light: "#FFE9EE", mid: "#F6B7C4", deep: "#EC97AA" },
+  menstrual:  { light: "#FFF1F4", mid: "#F7CBD5", deep: "#EFADBD" },
+  follicular: { light: "#EEF8F0", mid: "#D2EAD8", deep: "#B3D9BE" },
+  ovulation:  { light: "#FFF9E6", mid: "#F8E4AE", deep: "#EFCD78" },
+  luteal:     { light: "#F8F5FD", mid: "#E4DDF4", deep: "#CFC3EC" },
+  none:       { light: "#FFF1F4", mid: "#F7CBD5", deep: "#EFADBD" },
 };
 
 const INK = "#3A2630";
@@ -55,8 +55,8 @@ export function Mascot({ phase, size = 110 }: MascotProps) {
       </defs>
       <path d="M10 82 C6 50 22 18 55 16 C88 14 106 46 100 82 Z" fill={`url(#${gid})`}/>
       <ellipse cx="38" cy="32" rx="12" ry="7" fill="#FFFFFF" opacity="0.7" transform="rotate(-20 38 32)"/>
-      <ellipse cx="34" cy="61" rx="6" ry="3.5" fill="#F6B7C4" opacity={key === "menstrual" || key === "none" ? 0.55 : 0.9}/>
-      <ellipse cx="76" cy="61" rx="6" ry="3.5" fill="#F6B7C4" opacity={key === "menstrual" || key === "none" ? 0.55 : 0.9}/>
+      <ellipse cx="34" cy="61" rx="6" ry="3.5" fill="#F7CBD5" opacity={key === "menstrual" || key === "none" ? 0.55 : 0.9}/>
+      <ellipse cx="76" cy="61" rx="6" ry="3.5" fill="#F7CBD5" opacity={key === "menstrual" || key === "none" ? 0.55 : 0.9}/>
       <Face phase={key}/>
     </svg>
   );

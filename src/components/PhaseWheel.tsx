@@ -12,7 +12,7 @@ export function PhaseWheel({ cycleInfo, size=200 }: PhaseWheelProps) {
   const cx=size/2,cy=size/2,r=size*.36,innerR=size*.22;
   // Boundaries follow the cycle length (ovulation ~14 days before the next period).
   const total=cycleInfo?.cycleLength??28;
-  const look: Record<PhaseId,{label:string;color:string}>={menstrual:{label:"🌙",color:"#F6B7C4"},follicular:{label:"🌱",color:"#BFE3C8"},ovulation:{label:"☀️",color:"#F8D57E"},luteal:{label:"🍂",color:"#DCD3F1"}};
+  const look: Record<PhaseId,{label:string;color:string}>={menstrual:{label:"🌙",color:"#F7CBD5"},follicular:{label:"🌱",color:"#D2EAD8"},ovulation:{label:"☀️",color:"#F8E4AE"},luteal:{label:"🍂",color:"#E4DDF4"}};
   const phases=phaseRanges(total,cycleInfo?.periodLength??5).map(r=>({...r,...look[r.id]}));
   const toAngle=(day: number)=>(day/total)*2*Math.PI-Math.PI/2;
   const arcPath=(s: number,e: number,outerR: number,innerRad: number)=>{const a1=toAngle(s),a2=toAngle(e-.1),x1=cx+outerR*Math.cos(a1),y1=cy+outerR*Math.sin(a1),x2=cx+outerR*Math.cos(a2),y2=cy+outerR*Math.sin(a2),x3=cx+innerRad*Math.cos(a2),y3=cy+innerRad*Math.sin(a2),x4=cx+innerRad*Math.cos(a1),y4=cy+innerRad*Math.sin(a1),large=(e-s)/total>.5?1:0;return `M ${x1} ${y1} A ${outerR} ${outerR} 0 ${large} 1 ${x2} ${y2} L ${x3} ${y3} A ${innerRad} ${innerRad} 0 ${large} 0 ${x4} ${y4} Z`;};

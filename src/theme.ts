@@ -1,40 +1,40 @@
 import type { PhaseId } from "./types";
 // ─── Design tokens ────────────────────────────────────────────────────────────
 export const C = {
-  // Soft Blush: a pale blush ground, white cards, one petal-pink accent; the other
-  // pastels are kept equally soft and used for meaning (phases, food types).
-  bg:"#FFF4F5", bgDeep:"#FBEAED", card:"#FFFFFF",
+  // Ballet: a pale ballet-slipper pink accent on a near-white blush ground, white cards,
+  // and the other pastels softened to the same gentle lightness.
+  bg:"#FFF9F9", bgDeep:"#FCF1F3", card:"#FFFFFF",
   // "lavender" is the soft highlight for selected things; kept pink-leaning so screens stay rosy.
-  lavender:"#FBEAF0", lavenderDeep:"#F2C9D6",
-  rose:"#FDE7EC", roseDeep:"#F6B7C4",
-  sage:"#E6F4EA", sageDeep:"#BFE3C8",
-  butter:"#FFF3D6", butterDeep:"#F8D57E",
-  peach:"#FFEADF", peachDeep:"#F9C6AE",
-  sky:"#E4F0F8", skyDeep:"#BCD9EC",
+  lavender:"#FDF0F3", lavenderDeep:"#F4D3DC",
+  rose:"#FDF3F5", roseDeep:"#F4CDD6",
+  sage:"#EEF7F0", sageDeep:"#D2EAD8",
+  butter:"#FFF8E8", butterDeep:"#F8E4AE",
+  peach:"#FFF1EA", peachDeep:"#F8D3C1",
+  sky:"#EEF5FA", skyDeep:"#CFE3F0",
   text:"#3A2630", textMid:"#6E5662", textSoft:"#82677A",
-  border:"#F3DFE4", shadow:"rgba(201,110,138,0.14)", white:"#FFFFFF",
+  border:"#F5E6EA", shadow:"rgba(201,130,150,0.11)", white:"#FFFFFF",
   /** Main accent fill (buttons, today, active tab); always with dark text on it. */
-  petal:"#F6B7C4",
+  petal:"#FADBE2",
   /** Accent for text and icons on light grounds (passes contrast on white). */
-  accentInk:"#B5506E",
+  accentInk:"#A95C76",
   /** The dark pill navigation. */
   ink:"#2E2229",
 } as const;
 export const ACCENT = {
-  protein:{text:"#B5506E"}, carbs:{text:"#8A6A12"}, fats:{text:"#A65A33"},
+  protein:{text:"#A95C76"}, carbs:{text:"#8A6A12"}, fats:{text:"#A65A33"},
   sugar:{text:"#9A4F78"}, fiber:{text:"#3F7A4E"}, water:{text:"#2F6A92", deep:C.skyDeep},
 } as const;
 /** Home background, tinted by the current phase. */
 export const PHASE_GROUND = {
-  menstrual:"#FFF5F6", follicular:"#F8FBF7", ovulation:"#FFFBF3", luteal:"#FAF8FD",
+  menstrual:"#FFF7F8", follicular:"#F9FCF9", ovulation:"#FFFCF5", luteal:"#FBFAFE",
 } as const;
 
 /** Soft ring colours per phase, and the darker shade used for the "today" marker. */
 export const RING: Record<PhaseId, { arc: string; mark: string }> = {
-  menstrual:  { arc: "#F6B7C4", mark: "#E07F96" },
-  follicular: { arc: "#BFE3C8", mark: "#7FBF90" },
-  ovulation:  { arc: "#F8D57E", mark: "#D9AE3F" },
-  luteal:     { arc: "#DCD3F1", mark: "#A893DA" },
+  menstrual:  { arc: "#F7CBD5", mark: "#E59AAD" },
+  follicular: { arc: "#D2EAD8", mark: "#97C9A5" },
+  ovulation:  { arc: "#F8E4AE", mark: "#DDBB63" },
+  luteal:     { arc: "#E4DDF4", mark: "#B7A8E0" },
 };
 
 // ─── CSS ──────────────────────────────────────────────────────────────────────

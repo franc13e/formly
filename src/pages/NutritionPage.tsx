@@ -18,7 +18,7 @@ function SubTabs({ subTab, setSubTab }: { subTab: NutritionSubTab; setSubTab: (t
   return (
     <div style={{display:"flex",borderBottom:`2px solid ${C.border}`}}>
       {([["cycle","This Phase"],["goals","Ask"],["recipes","Recipes"]] as const).map(([v,l]) => (
-        <button key={v} onClick={() => setSubTab(v)} style={{flex:1,padding:"10px 0",border:"none",background:"transparent",cursor:"pointer",fontFamily:"DM Sans",fontWeight:600,fontSize:14,color:subTab===v?"#B5506E":C.textSoft,borderBottom:subTab===v?"2px solid #B5506E":"2px solid transparent",marginBottom:-2,transition:"all .15s"}}>{l}</button>
+        <button key={v} onClick={() => setSubTab(v)} style={{flex:1,padding:"10px 0",border:"none",background:"transparent",cursor:"pointer",fontFamily:"DM Sans",fontWeight:600,fontSize:14,color:subTab===v?"#A95C76":C.textSoft,borderBottom:subTab===v?"2px solid #A95C76":"2px solid transparent",marginBottom:-2,transition:"all .15s"}}>{l}</button>
       ))}
     </div>
   );

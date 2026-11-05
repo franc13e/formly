@@ -47,7 +47,7 @@ Formly is a mobile-first fitness app that combines workout planning, food guidan
 - **Recipes**: 3 meals and 2 drinks for each phase, with ingredients, steps, photos and YouTube / TikTok links; "Make me a recipe" generates one from what you have at home, and you can save favourites
 
 **Everywhere**
-- **Soft Blush design**: DM Serif Display headings over DM Sans, one rose accent on a blush ground, phase colours only where they carry meaning (ring, calendar, tags), line icons instead of emoji
+- **Soft Blush design**: DM Serif Display headings over DM Sans, a pale ballet-pink accent on a near-white blush ground, softened pastels, phase colours only where they carry meaning (ring, calendar, tags), line icons instead of emoji
 - **Quick add**: the + button logs a period start or end, or jumps to logging a workout, the food coach or measurements
 - **Body measurements**: weight and measurements with a history chart per metric, the change since last time, and supportive, cycle-aware AI feedback
 - **Optional accounts**: sign up to back up and sync across devices, or keep everything in the browser

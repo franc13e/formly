@@ -64,11 +64,11 @@ export function CustomWorkoutModal({ initial, onSave, onClose }: CustomWorkoutMo
       <div style={{marginBottom:12}}>
         <div className="row-between" style={{marginBottom:5}}>
           <div className="label" id="cw-icon" style={{marginBottom:0}}>Icon</div>
-          {pickedEmoji&&pickedEmoji!==suggested&&<button type="button" onClick={()=>setPickedEmoji(null)} style={{background:"none",border:"none",color:"#B5506E",fontWeight:700,fontSize:11,cursor:"pointer",fontFamily:"DM Sans"}}>Use suggested</button>}
+          {pickedEmoji&&pickedEmoji!==suggested&&<button type="button" onClick={()=>setPickedEmoji(null)} style={{background:"none",border:"none",color:"#A95C76",fontWeight:700,fontSize:11,cursor:"pointer",fontFamily:"DM Sans"}}>Use suggested</button>}
         </div>
         <div role="radiogroup" aria-labelledby="cw-icon" style={{display:"grid",gridTemplateColumns:"repeat(8,1fr)",gap:6}}>
           {WORKOUT_ICONS.map(([e,label])=>{const on=emoji===e;return(
-            <button key={e} type="button" role="radio" aria-checked={on} aria-label={label} title={label} onClick={()=>setPickedEmoji(e)} style={{aspectRatio:"1",borderRadius:12,border:`2px solid ${on?"#B5506E":"transparent"}`,background:on?C.lavender:C.bgDeep,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",padding:0}}>
+            <button key={e} type="button" role="radio" aria-checked={on} aria-label={label} title={label} onClick={()=>setPickedEmoji(e)} style={{aspectRatio:"1",borderRadius:12,border:`2px solid ${on?"#A95C76":"transparent"}`,background:on?C.lavender:C.bgDeep,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",padding:0}}>
               <Glyph emoji={e} size={13}/>
             </button>
           );})}

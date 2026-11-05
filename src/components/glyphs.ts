@@ -13,7 +13,7 @@ export type Tone = "lavender" | "rose" | "sage" | "butter" | "peach" | "sky";
 
 // Every tone renders the same soft rose chip: one accent keeps screens calm. The tone
 // names stay so data and callers don't change, and a palette can be reintroduced later.
-const ROSE_CHIP = { bg: "#FBEFF2", fg: C.accentInk };
+const ROSE_CHIP = { bg: "#FDF3F5", fg: C.accentInk };
 export const TONES: Record<Tone, { bg: string; fg: string }> = {
   lavender: ROSE_CHIP, rose: ROSE_CHIP, sage: ROSE_CHIP, butter: ROSE_CHIP, peach: ROSE_CHIP, sky: ROSE_CHIP,
 };

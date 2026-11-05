@@ -110,12 +110,12 @@ export default function App() {
         {toast&&<div className="toast">{toast}</div>}
         {/* Desktop sidebar — hidden on mobile via CSS */}
         <div className="desktop-sidebar">
-          <div style={{padding:"0 24px 32px",fontFamily:"DM Sans",fontWeight:700,fontSize:22,color:"#8E3A55",letterSpacing:"-0.5px"}}>
+          <div style={{padding:"0 24px 32px",fontFamily:"DM Sans",fontWeight:700,fontSize:22,color:"#8A4862",letterSpacing:"-0.5px"}}>
             formly
           </div>
           {TABS.map(t=>(
-            <button key={t.id} onClick={()=>setTab(t.id)} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 24px",background:tab===t.id?C.rose:"transparent",border:"none",cursor:"pointer",width:"100%",textAlign:"left",fontFamily:"DM Sans",fontWeight:700,fontSize:14,color:tab===t.id?"#8E3A55":C.textMid,borderLeft:tab===t.id?"3px solid #B5506E":"3px solid transparent",transition:"all .15s"}}>
-              <Icon d={Icons[t.icon]} size={18} stroke={tab===t.id?"#B5506E":C.textMid} strokeWidth={1.8}/>
+            <button key={t.id} onClick={()=>setTab(t.id)} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 24px",background:tab===t.id?C.rose:"transparent",border:"none",cursor:"pointer",width:"100%",textAlign:"left",fontFamily:"DM Sans",fontWeight:700,fontSize:14,color:tab===t.id?"#8A4862":C.textMid,borderLeft:tab===t.id?"3px solid #A95C76":"3px solid transparent",transition:"all .15s"}}>
+              <Icon d={Icons[t.icon]} size={18} stroke={tab===t.id?"#A95C76":C.textMid} strokeWidth={1.8}/>
               {t.label}
             </button>
           ))}

@@ -16,7 +16,7 @@ interface RecipesTabProps {
   showToast: ShowToast;
 }
 
-const PURPLE = "#B5506E";
+const PURPLE = "#A95C76";
 const PHASE_IDS = Object.keys(PHASES) as PhaseId[];
 const FILTERS: [RecipeFilter, string][] = [["all", "All"], ["meal", "Meals"], ["drink", "Drinks"]];
 
@@ -154,14 +154,14 @@ export function RecipesTab({ cycleInfo, showToast }: RecipesTabProps) {
 
       {/* AI recipe maker */}
       <div className="card" style={{marginTop:16,marginBottom:14,background:C.lavender,border:"none"}}>
-        <div style={{fontWeight:600,fontSize:14,color:"#8E3A55",marginBottom:4}}><Glyph emoji="✨" chip={false} size={14} color={PURPLE}/> Make me a recipe</div>
-        <div style={{fontSize:12,color:"#8E3A55",fontWeight:500,lineHeight:1.5,marginBottom:12}}>A {phase.label.toLowerCase()}-phase recipe from what you have at home.</div>
+        <div style={{fontWeight:600,fontSize:14,color:"#8A4862",marginBottom:4}}><Glyph emoji="✨" chip={false} size={14} color={PURPLE}/> Make me a recipe</div>
+        <div style={{fontSize:12,color:"#8A4862",fontWeight:500,lineHeight:1.5,marginBottom:12}}>A {phase.label.toLowerCase()}-phase recipe from what you have at home.</div>
         <div style={{display:"flex",gap:6,marginBottom:10}}>
           {(["meal","drink"] as const).map(k => (
-            <button key={k} className="chip" onClick={() => setAiKind(k)} style={aiKind===k?{background:C.lavenderDeep,borderColor:"transparent",color:"#8E3A55"}:{}}>{k === "meal" ? "Meal" : "Drink"}</button>
+            <button key={k} className="chip" onClick={() => setAiKind(k)} style={aiKind===k?{background:C.lavenderDeep,borderColor:"transparent",color:"#8A4862"}:{}}>{k === "meal" ? "Meal" : "Drink"}</button>
           ))}
         </div>
-        <label className="label" htmlFor="recipe-have" style={{color:"#8E3A55"}}>Ingredients I have (optional)</label>
+        <label className="label" htmlFor="recipe-have" style={{color:"#8A4862"}}>Ingredients I have (optional)</label>
         <input id="recipe-have" className="input" placeholder="e.g. eggs, spinach, sweet potato" value={have} maxLength={300} onChange={e => setHave(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !aiLoading) void makeRecipe(); }} style={{fontSize:13,marginBottom:10,background:C.white}}/>
         <button className="btn btn-primary" style={{width:"100%"}} onClick={() => void makeRecipe()} disabled={aiLoading}>
           {aiLoading ? <><div className="spin"/>Cooking something up...</> : <><Glyph emoji="✨" chip={false} size={16} color="currentColor"/>Make me a {aiKind}</>}
@@ -196,7 +196,7 @@ export function RecipesTab({ cycleInfo, showToast }: RecipesTabProps) {
               action={
                 <div className="row-between" style={{marginTop:10}}>
                   <span style={{fontSize:11,color:C.textSoft,fontWeight:600}}>{r.phase && PHASES[r.phase] ? `${PHASES[r.phase].label} phase` : "Saved"}</span>
-                  <button onClick={() => setSaved(s => s.filter(x => x.id !== r.id))} style={{display:"inline-flex",alignItems:"center",gap:3,background:"none",border:"none",fontSize:11,color:"#B5506E",fontWeight:700,cursor:"pointer",fontFamily:"DM Sans"}}>
+                  <button onClick={() => setSaved(s => s.filter(x => x.id !== r.id))} style={{display:"inline-flex",alignItems:"center",gap:3,background:"none",border:"none",fontSize:11,color:"#A95C76",fontWeight:700,cursor:"pointer",fontFamily:"DM Sans"}}>
                     <X size={12} aria-hidden="true"/> Remove
                   </button>
                 </div>

@@ -16,12 +16,12 @@ interface RingField {
 // ─── Body visualizer ──────────────────────────────────────────────────────────
 export function MeasurementRings({ measurements, goalMeasurements }: MeasurementRingsProps) {
   const fields: RingField[] = [
-    { key:"waist",  label:"Waist",  color:"#D8798F", track:"#F7E3E8" },
-    { key:"hips",   label:"Hips",   color:"#D8798F", track:"#F7E3E8" },
-    { key:"bust",   label:"Bust",   color:"#D8798F", track:"#F7E3E8" },
-    { key:"glutes", label:"Glutes", color:"#D8798F", track:"#F7E3E8" },
-    { key:"thighs", label:"Thighs", color:"#D8798F", track:"#F7E3E8" },
-    { key:"arms",   label:"Arms",   color:"#D8798F", track:"#F7E3E8" },
+    { key:"waist",  label:"Waist",  color:"#E3A0B2", track:"#FAEDF0" },
+    { key:"hips",   label:"Hips",   color:"#E3A0B2", track:"#FAEDF0" },
+    { key:"bust",   label:"Bust",   color:"#E3A0B2", track:"#FAEDF0" },
+    { key:"glutes", label:"Glutes", color:"#E3A0B2", track:"#FAEDF0" },
+    { key:"thighs", label:"Thighs", color:"#E3A0B2", track:"#FAEDF0" },
+    { key:"arms",   label:"Arms",   color:"#E3A0B2", track:"#FAEDF0" },
   ];
   const sz=72, cx=36, cy=36, r=28, circ=2*Math.PI*r;
   return (

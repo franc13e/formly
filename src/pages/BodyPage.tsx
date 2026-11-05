@@ -86,7 +86,7 @@ function SubTabs({ subTab, setSubTab }: { subTab: BodySubTab; setSubTab: (tab: B
   return (
     <div style={{display:"flex",borderBottom:`2px solid ${C.border}`}}>
       {([["cycle","Cycle"],["measurements","Body"],["insights","Insights"]] as const).map(([v,l])=>(
-        <button key={v} onClick={()=>setSubTab(v)} style={{flex:1,padding:"10px 0",border:"none",background:"transparent",cursor:"pointer",fontFamily:"DM Sans",fontWeight:600,fontSize:14,color:subTab===v?"#B5506E":C.textSoft,borderBottom:subTab===v?"2px solid #B5506E":"2px solid transparent",marginBottom:-2,transition:"all .15s"}}>{l}</button>
+        <button key={v} onClick={()=>setSubTab(v)} style={{flex:1,padding:"10px 0",border:"none",background:"transparent",cursor:"pointer",fontFamily:"DM Sans",fontWeight:600,fontSize:14,color:subTab===v?"#A95C76":C.textSoft,borderBottom:subTab===v?"2px solid #A95C76":"2px solid transparent",marginBottom:-2,transition:"all .15s"}}>{l}</button>
       ))}
     </div>
   );
@@ -129,8 +129,9 @@ export function BodyPage({ measurements, setMeasurements, measurementHistory, se
     if(info.loggedPeriod){
       // Solid period colour; 1-3 small dots for light / medium / heavy when recorded.
       const level=flowOn(periodList,date);
-      const dots=level?<span aria-label={`${level} flow`} style={{display:"flex",gap:2,marginTop:2}}>{Array.from({length:FLOW_DOTS[level]},(_,i)=><span key={i} style={{width:4,height:4,borderRadius:"50%",background:C.white}}/>)}</span>:undefined;
-      return {background:PHASES.menstrual.color,border:`1.5px solid ${PHASES.menstrual.color}`,textColor:"white",content:dots};
+      const dots=level?<span aria-label={`${level} flow`} style={{display:"flex",gap:2,marginTop:2}}>{Array.from({length:FLOW_DOTS[level]},(_,i)=><span key={i} style={{width:4,height:4,borderRadius:"50%",background:PHASES.menstrual.textColor}}/>)}</span>:undefined;
+      // Dark rose numbers: white would be too faint on the pale period pink.
+      return {background:PHASES.menstrual.color,border:`1.5px solid ${PHASES.menstrual.color}`,textColor:PHASES.menstrual.textColor,content:dots};
     }
     if(info.predictedPeriod)return {background:PHASES.menstrual.bg,border:`1.5px dashed ${PHASES.menstrual.color}`,textColor:PHASES.menstrual.textColor};
     // Only period and ovulation days carry colour; the rest of the month stays plain.
@@ -269,7 +270,7 @@ export function BodyPage({ measurements, setMeasurements, measurementHistory, se
                 const lengths = entries.map((p,i,arr)=>arr[i+1]?Math.round((new Date(p.date).getTime()-new Date(arr[i+1].date).getTime())/(1000*60*60*24)):null).filter((n): n is number => Boolean(n));
                 const avg = lengths.length ? Math.round(lengths.reduce((a,b)=>a+b,0)/lengths.length) : null;
                 return (<>
-                  {avg&&<div style={{background:C.lavender,borderRadius:10,padding:"8px 12px",marginBottom:10,fontSize:12,fontWeight:700,color:"#B5506E"}}>Your average cycle: {avg} days</div>}
+                  {avg&&<div style={{background:C.lavender,borderRadius:10,padding:"8px 12px",marginBottom:10,fontSize:12,fontWeight:700,color:"#A95C76"}}>Your average cycle: {avg} days</div>}
                   {entries.map((p,i,arr)=>{const next=arr[i+1];const len=next?Math.round((new Date(p.date).getTime()-new Date(next.date).getTime())/(1000*60*60*24)):null;return(<div key={p.date} className="row-between" style={{padding:"6px 0",borderTop:i>0?`1px solid ${C.border}`:"none"}}><span style={{fontSize:13,fontWeight:600,color:C.textMid}}>{new Date(p.date+"T12:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</span>{len&&<span style={{fontSize:11,color:C.textSoft,fontWeight:600}}>{len}d</span>}</div>);})}
                 </>);
               })()}
@@ -312,9 +313,9 @@ export function BodyPage({ measurements, setMeasurements, measurementHistory, se
             <div style={{fontSize:12,color:C.textSoft,fontWeight:500,marginBottom:14,lineHeight:1.5}}>Get a warm, personalised explanation of what's going on in your body right now, taking into account your cycle phase, weight trend, and measurements.</div>
             <button className="btn btn-primary" style={{width:"100%"}} onClick={generateInsight} disabled={aiLoading}>{aiLoading?<><div className="spin"/>Thinking about your body...</>:<><Glyph emoji="✨" chip={false} size={16} color="currentColor"/>Get my insight</>}</button>
             {aiInsight&&<div style={{marginTop:14,background:C.lavender,borderRadius:14,padding:"14px 16px"}}>
-              <div style={{fontSize:11,fontWeight:600,color:"#B5506E",marginBottom:8}}>YOUR INSIGHT</div>
-              <div style={{fontSize:13,lineHeight:1.7,color:"#6E2F45",fontWeight:500}}>{aiInsight}</div>
-              <button style={{marginTop:10,background:"none",border:"none",fontSize:11,color:"#B5506E",fontWeight:700,cursor:"pointer",padding:0,fontFamily:"DM Sans"}} onClick={()=>{setAiInsight("");save("body-insight","");}}>Clear</button>
+              <div style={{fontSize:11,fontWeight:600,color:"#A95C76",marginBottom:8}}>YOUR INSIGHT</div>
+              <div style={{fontSize:13,lineHeight:1.7,color:"#6E3A4F",fontWeight:500}}>{aiInsight}</div>
+              <button style={{marginTop:10,background:"none",border:"none",fontSize:11,color:"#A95C76",fontWeight:700,cursor:"pointer",padding:0,fontFamily:"DM Sans"}} onClick={()=>{setAiInsight("");save("body-insight","");}}>Clear</button>
             </div>}
           </div>
           <div style={{marginBottom:8}}>
