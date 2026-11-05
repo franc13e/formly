@@ -12,12 +12,14 @@ interface DashboardProps {
   cycleInfo: CycleInfo | null;
   workoutLog: WorkoutLogEntry[];
   userName: string;
+  /** Logs a period that started today. */
+  onPeriodStarted: () => void;
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
 // ─── DASHBOARD ────────────────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
-export function Dashboard({ schedule, weightHistory, cycleInfo, workoutLog, userName }: DashboardProps) {
+export function Dashboard({ schedule, weightHistory, cycleInfo, workoutLog, userName, onPeriodStarted }: DashboardProps) {
   const today = new Date().toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"});
   const todayStr = localDateKey();
   const todaySchedule = schedule[todayStr]||[];
@@ -44,6 +46,13 @@ export function Dashboard({ schedule, weightHistory, cycleInfo, workoutLog, user
           {weekStreak>0&&<div style={{fontSize:12,fontWeight:700,color:ACCENT.carbs.text}}><Glyph emoji="🔥" chip={false} size={13}/> {weekStreak} day{weekStreak>1?"s":""} this week</div>}
         </div>
       </div>
+      {cycleInfo&&cycleInfo.daysLate>0&&(
+        <div className="card" style={{marginBottom:10,background:C.rose,border:`1.5px solid ${C.roseDeep}`}}>
+          <div style={{fontWeight:900,fontSize:14,color:ACCENT.protein.text,marginBottom:4}}>Your period is {cycleInfo.daysLate} day{cycleInfo.daysLate>1?"s":""} late</div>
+          <div style={{fontSize:12,color:ACCENT.protein.text,fontWeight:500,lineHeight:1.6,opacity:.9,marginBottom:10}}>A few days either way is common: stress, sleep, travel and training can all shift a cycle. Log it when it starts so Formly can learn your rhythm.</div>
+          <button className="btn btn-primary btn-sm" onClick={onPeriodStarted}>It started today</button>
+        </div>
+      )}
       {cycleInfo&&<div style={{marginBottom:10}}><PhaseBadge cycleInfo={cycleInfo}/></div>}
       {cycleInfo && (
         <div className="card" style={{marginBottom:14,background:cycleInfo.phase.bg,border:`1.5px solid ${cycleInfo.phase.color}`}}>

@@ -18,3 +18,11 @@ export const ALL_WORKOUTS: Workout[] = [
 ];
 export const MUSCLES: string[]=["All","Chest","Back","Legs","Glutes","Shoulders","Core","Cardio","Recovery"];
 export const DIFF_COLOR: Record<Difficulty, {bg:string;text:string}>={Beginner:{bg:C.sage,text:ACCENT.fiber.text},Intermediate:{bg:C.butter,text:ACCENT.carbs.text},Advanced:{bg:C.rose,text:ACCENT.protein.text}};
+
+/** Muscle groups offered when creating your own workout. */
+export const WORKOUT_MUSCLE_GROUPS: string[]=["Full body","Chest","Back","Legs","Glutes","Arms","Shoulders","Core","Cardio","Recovery"];
+/** Icons (stored as emoji, drawn by `Glyph`) offered in the custom workout icon picker. */
+export const WORKOUT_ICONS: [emoji: string, label: string][]=[
+  ["🏋️","Weights"],["💪","Strength"],["🏃","Running"],["🚶","Walking"],["🦵","Legs"],["🍑","Glutes"],["⚡","Core"],["🔥","HIIT"],
+  ["🧘","Yoga"],["🎯","Shoulders"],["🚴","Cycling"],["🏊","Swimming"],["🥊","Boxing"],["🤸","Gymnastics"],["⛰️","Hiking"],["❤️","Cardio"],
+];

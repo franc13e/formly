@@ -1,4 +1,4 @@
-import type { CycleInfo, Phase, PhaseId } from "../types";
+import type { CycleInfo, PeriodEntry, Phase, PhaseId } from "../types";
 import { localDateKey } from "./date";
 
 // ─── Cycle engine ─────────────────────────────────────────────────────────────
@@ -11,38 +11,134 @@ export const PHASES: Record<PhaseId, Phase> = {
 
 const DAY_MS = 1000*60*60*24;
 
-/**
- * Works out where `today` falls in the cycle that started on `periodStart` (YYYY-MM-DD).
- * Returns null when there is no start date, or when it is in the future or more than
- * two cycle lengths ago. `nextPeriodDate`/`daysUntilNext` refer to the end of the current
- * cycle, i.e. periodStart + (cycleIndex+1)*cycleLength.
- */
 /** Supported cycle lengths (days); values outside this range are clamped. */
 export const MIN_CYCLE_LENGTH = 21;
 export const MAX_CYCLE_LENGTH = 40;
+/** Days past the expected start that count as "late" before Formly assumes a period just wasn't logged. */
+export const LATE_GRACE_DAYS = 10;
 
 export function clampCycleLength(value: number): number {
   if (!Number.isFinite(value)) return 28;
   return Math.min(MAX_CYCLE_LENGTH, Math.max(MIN_CYCLE_LENGTH, Math.round(value)));
 }
 
+/**
+ * Phase for a 1-based cycle day. The luteal phase is fairly constant at ~14 days, so
+ * ovulation sits ~14 days before the next period: days L-14..L-12 (14-16 in a 28-day cycle).
+ */
+export function phaseOfDay(day: number, cycleLength=28): PhaseId {
+  const ovulation=clampCycleLength(cycleLength)-14;
+  return day<=5?"menstrual":day<ovulation?"follicular":day<=ovulation+2?"ovulation":"luteal";
+}
+
+/** Phase boundaries as [start, end) day offsets (0-based), e.g. for drawing the phase wheel. */
+export function phaseRanges(cycleLength=28): {id:PhaseId;start:number;end:number}[] {
+  const L=clampCycleLength(cycleLength), ov=L-14;
+  return [{id:"menstrual",start:0,end:5},{id:"follicular",start:5,end:ov-1},{id:"ovulation",start:ov-1,end:ov+2},{id:"luteal",start:ov+2,end:L}];
+}
+
+const toDate=(key: string)=>new Date(key+"T12:00:00");
+const daysBetween=(a: Date, b: Date)=>Math.round((b.getTime()-a.getTime())/DAY_MS);
+
+/**
+ * Works out where `today` falls in the cycle that started on `periodStart` (YYYY-MM-DD).
+ * Returns null when there is no start date, or when it is in the future or more than
+ * two cycle lengths ago. Up to LATE_GRACE_DAYS past the expected start it reports the
+ * period as late (still luteal, countdown 0); after that it assumes a period was missed
+ * in the log and continues in the next cycle.
+ */
 export function getCycleInfo(periodStart: string, rawCycleLength=28): CycleInfo | null {
   if (!periodStart) return null;
   // Guards against out-of-range values saved by older versions of the input.
   const cycleLength=clampCycleLength(rawCycleLength);
-  const start=new Date(periodStart+"T12:00:00"), today=new Date();
+  const start=toDate(periodStart), today=new Date();
   // Corrupted or hand-edited storage shouldn't crash the app: treat it as "not set".
   if (Number.isNaN(start.getTime())) return null;
   today.setHours(12,0,0,0);
   const dayOfCycle=Math.floor((today.getTime()-start.getTime())/DAY_MS)+1;
   if (dayOfCycle<1||dayOfCycle>cycleLength*2) return null;
+  if (dayOfCycle>cycleLength&&dayOfCycle<=cycleLength+LATE_GRACE_DAYS) {
+    const expected=new Date(start);
+    expected.setDate(start.getDate()+cycleLength);
+    return {phase:PHASES.luteal,dayOfCycle,cycleLength,daysUntilNext:0,nextPeriodDate:localDateKey(expected),daysLate:dayOfCycle-cycleLength};
+  }
   const d=((dayOfCycle-1)%cycleLength)+1;
-  const phase: PhaseId=d<=5?"menstrual":d<=13?"follicular":d<=16?"ovulation":"luteal";
   // Count from the start of the current cycle (the displayed day wraps after cycleLength
   // days), so the countdown keeps working in the second cycle instead of going negative.
   const cycleIndex=Math.floor((dayOfCycle-1)/cycleLength);
   const nextPeriod=new Date(start);
   nextPeriod.setDate(start.getDate()+(cycleIndex+1)*cycleLength);
   const daysUntilNext=Math.ceil((nextPeriod.getTime()-today.getTime())/DAY_MS);
-  return {phase:PHASES[phase],dayOfCycle:d,cycleLength,daysUntilNext,nextPeriodDate:localDateKey(nextPeriod)};
+  return {phase:PHASES[phaseOfDay(d,cycleLength)],dayOfCycle:d,cycleLength,daysUntilNext,nextPeriodDate:localDateKey(nextPeriod),daysLate:0};
+}
+
+/** All logged period starts (history plus the current start), unique, oldest first. */
+export function periodStarts(history: PeriodEntry[], periodStart: string): string[] {
+  const all=new Set(history.map(p=>p.date));
+  if (periodStart) all.add(periodStart);
+  return [...all].filter(d=>!Number.isNaN(toDate(d).getTime())).sort();
+}
+
+export interface CycleStats {
+  /** Cycle length to predict with. */
+  length: number;
+  /** Typical +/- days around a prediction. */
+  spread: number;
+  /** How many complete logged cycles the length is based on (0 = the user's setting). */
+  cyclesLogged: number;
+}
+
+/**
+ * Learns cycle length from the gaps between logged period starts (the last 6 plausible
+ * cycles). Gaps longer than 50 days are skipped as probably-unlogged periods. With fewer
+ * than one complete cycle it falls back to the user's setting.
+ */
+export function cycleStats(starts: string[], settingLength=28): CycleStats {
+  const gaps: number[]=[];
+  for (let i=1;i<starts.length;i++) {
+    const gap=daysBetween(toDate(starts[i-1]),toDate(starts[i]));
+    if (gap>=MIN_CYCLE_LENGTH-3&&gap<=50) gaps.push(gap);
+  }
+  const recent=gaps.slice(-6);
+  if (!recent.length) return {length:clampCycleLength(settingLength),spread:3,cyclesLogged:0};
+  const mean=recent.reduce((a,b)=>a+b,0)/recent.length;
+  const sd=Math.sqrt(recent.reduce((a,b)=>a+(b-mean)**2,0)/recent.length);
+  const spread=recent.length<2?3:Math.min(7,Math.max(1,Math.round(sd)));
+  return {length:clampCycleLength(mean),spread,cyclesLogged:recent.length};
+}
+
+export interface CycleDay {
+  phase: PhaseId;
+  /** 1-based day within its cycle. */
+  dayOfCycle: number;
+  /** A bleeding day (days 1-5) of a logged period. */
+  loggedPeriod: boolean;
+  /** A bleeding day of a predicted (future) period. */
+  predictedPeriod: boolean;
+  /** True when the day is after today, so phase is a forecast. */
+  future: boolean;
+}
+
+/**
+ * Cycle details for any date, for the monthly cycle calendar. Past cycles use the real
+ * gaps between logged starts; after the latest start, cycles are projected with `length`.
+ * Returns null before the first logged period.
+ */
+export function cycleDayOn(date: string, starts: string[], length: number): CycleDay | null {
+  const day=toDate(date);
+  let idx=-1;
+  for (let i=0;i<starts.length;i++) if (starts[i]<=date) idx=i;
+  if (idx<0) return null;
+  const today=new Date(); today.setHours(12,0,0,0);
+  const future=day.getTime()>today.getTime();
+  const sinceStart=daysBetween(toDate(starts[idx]),day);
+  const next=starts[idx+1];
+  if (next) {
+    const len=daysBetween(toDate(starts[idx]),toDate(next));
+    const d=sinceStart+1;
+    return {phase:phaseOfDay(d,len),dayOfCycle:d,loggedPeriod:d<=5,predictedPeriod:false,future};
+  }
+  const d=(sinceStart%length)+1, cycleIndex=Math.floor(sinceStart/length);
+  const projected=cycleIndex>0;
+  return {phase:phaseOfDay(d,length),dayOfCycle:d,loggedPeriod:!projected&&d<=5,predictedPeriod:projected&&d<=5&&future,future};
 }

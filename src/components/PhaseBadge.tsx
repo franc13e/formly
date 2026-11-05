@@ -15,7 +15,7 @@ export function PhaseBadge({ cycleInfo, compact=false }: PhaseBadgeProps) {
       <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
         <Glyph emoji={p.emoji} size={18}/>
         <div><div style={{fontWeight:900,fontSize:15,color:p.textColor}}>{p.label} phase</div><div style={{fontSize:11,color:p.textColor,opacity:.8,fontWeight:600}}>{p.days} · Day {cycleInfo.dayOfCycle}</div></div>
-        <div style={{marginLeft:"auto",textAlign:"right"}}><div style={{fontSize:10,fontWeight:700,color:p.textColor,opacity:.7}}>Next period</div><div style={{fontSize:12,fontWeight:800,color:p.textColor}}>{cycleInfo.daysUntilNext>0?`in ${cycleInfo.daysUntilNext}d`:"soon"}</div></div>
+        <div style={{marginLeft:"auto",textAlign:"right"}}><div style={{fontSize:10,fontWeight:700,color:p.textColor,opacity:.7}}>Next period</div><div style={{fontSize:12,fontWeight:800,color:p.textColor}}>{cycleInfo.daysLate>0?`${cycleInfo.daysLate}d late`:cycleInfo.daysUntilNext>0?`in ${cycleInfo.daysUntilNext}d`:"soon"}</div></div>
       </div>
       <div style={{fontSize:13,color:p.textColor,fontWeight:600,fontStyle:"italic",opacity:.85}}>"{p.tagline}"</div>
     </div>

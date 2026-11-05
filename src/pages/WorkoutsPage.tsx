@@ -1,13 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { ArrowRightLeft, Pencil, Plus } from "lucide-react";
 import { C, ACCENT } from "../theme";
 import { ALL_WORKOUTS, DIFF_COLOR } from "../data/workouts";
 import { SwipeToDelete } from "../components/SwipeToDelete";
 import { Glyph } from "../components/Glyph";
 import { AICoachPanel } from "../components/AICoachPanel";
+import { MonthCalendar, type DayLook } from "../components/MonthCalendar";
+import { CustomWorkoutModal } from "../components/CustomWorkoutModal";
 import type { CycleInfo, LoggableWorkout, Measurements, Schedule, ScheduledWorkout, Setter, ShowToast, Workout, WorkoutLogEntry, WorkoutLogForm } from "../types";
 import { localDateKey } from "../lib/date";
+import { load, save } from "../lib/storage";
+import { groupLogByDate, logStreak, monthStats, moveInSchedule, weekOf } from "../lib/workouts";
 
 type WorkoutsTab = "schedule" | "browse" | "ai" | "history";
+type ScheduleView = "week" | "month";
 
 interface WorkoutsPageProps {
   workoutPlan: Workout[];
@@ -35,33 +41,110 @@ function TabRow({ tab, setTab }: { tab: WorkoutsTab; setTab: (tab: WorkoutsTab) 
   );
 }
 
+/** "Thu, Nov 12" */
+const shortDate = (date: string) => new Date(date+"T12:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});
+/** Timestamp id for a new log entry (kept outside the component so the React compiler's purity check doesn't flag the click handler). */
+const newLogId = () => Date.now();
+const EMPTY_LOG_FORM: WorkoutLogForm = { sets:"", reps:"", weight:"", notes:"", duration:"" };
+const iconBtn = { background:"none", border:"none", color:C.textSoft, cursor:"pointer", padding:4, display:"inline-flex", alignItems:"center", justifyContent:"center", borderRadius:8 } as const;
+
 // ══════════════════════════════════════════════════════════════════════════════
 // ─── WORKOUTS ─────────────────────────────────────────────────────────────────
 export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedule, workoutLog, setWorkoutLog, aiPlan, setAiPlan, measurements, cycleInfo, showToast }: WorkoutsPageProps) {
   const [tab, setTab] = useState<WorkoutsTab>("schedule");
   const [logModal, setLogModal] = useState<LoggableWorkout | null>(null);
-  const [logForm, setLogForm] = useState<WorkoutLogForm>({ sets:"", reps:"", weight:"", notes:"", duration:"" });
+  const [logForm, setLogForm] = useState<WorkoutLogForm>(EMPTY_LOG_FORM);
   const [customInput, setCustomInput] = useState("");
   const [pickingDay, setPickingDay] = useState<string | null>(null);
+  const [scheduleView, setScheduleView] = useState<ScheduleView>("week");
+  const [movingIdx, setMovingIdx] = useState<number | null>(null);
+  const [moveDate, setMoveDate] = useState("");
+  const [historyDay, setHistoryDay] = useState<string | null>(null);
+  const [customWorkouts, setCustomWorkouts] = useState<Workout[]>(()=>load("custom-workouts",[]));
+  const [customModal, setCustomModal] = useState<{ initial: Workout | null } | null>(null);
+  useEffect(()=>{save("custom-workouts",customWorkouts);},[customWorkouts]);
+
   const todayStr = localDateKey();
   const completedToday = new Set((workoutLog||[]).filter(e=>e.date===todayStr).map(e=>e.name));
 
-  const DAYS = Array.from({length:7}, (_,i) => {
-    const d = new Date();
-    const monday = d.getDate() - ((d.getDay()+6)%7);
-    d.setDate(monday + i);
-    return { date: localDateKey(d), label:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][i], num: d.getDate() };
-  });
+  const DAYS = weekOf(todayStr).map((date,i) => ({ date, label:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][i], num: new Date(date+"T12:00").getDate() }));
 
   const addToDay = (date: string, item: ScheduledWorkout) => setSchedule(s => ({ ...s, [date]: [...(Array.isArray(s[date])?s[date]:[]), item] }));
-  const removeFromDay = (date: string, idx: number) => setSchedule(s => ({ ...s, [date]: (Array.isArray(s[date])?s[date]:[]).filter((_,i)=>i!==idx) }));
+  const removeFromDay = (date: string, idx: number) => { setSchedule(s => ({ ...s, [date]: (Array.isArray(s[date])?s[date]:[]).filter((_,i)=>i!==idx) })); setMovingIdx(null); };
+  const moveItem = (from: string, idx: number, to: string) => {
+    if (!to || to===from) return;
+    setSchedule(s => moveInSchedule(s, from, idx, to));
+    setMovingIdx(null); setMoveDate("");
+    showToast(`Moved to ${shortDate(to)}`);
+  };
+  const selectDay = (date: string) => { setPickingDay(p => p===date ? null : date); setMovingIdx(null); };
+  const openLog = (w: LoggableWorkout) => { setLogModal(w); setLogForm(EMPTY_LOG_FORM); };
 
   const logWorkout = () => {
     if (!logModal) return;
-    const entry = { workoutId: logModal.id||logModal.name, name: logModal.name, emoji: logModal.emoji||"🏋️", muscle: logModal.muscle||"", date: todayStr, time: new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}), sets:logForm.sets, reps:logForm.reps, weight:logForm.weight, duration:logForm.duration||logModal.duration||"", notes:logForm.notes, id:Date.now() };
+    const entry = { workoutId: logModal.id||logModal.name, name: logModal.name, emoji: logModal.emoji||"🏋️", muscle: logModal.muscle||"", date: todayStr, time: new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}), sets:logForm.sets, reps:logForm.reps, weight:logForm.weight, duration:logForm.duration||logModal.duration||"", notes:logForm.notes, id:newLogId() };
     setWorkoutLog(l=>[entry,...(l||[])]);
-    setLogModal(null); setLogForm({sets:"",reps:"",weight:"",notes:"",duration:""});
+    setLogModal(null); setLogForm(EMPTY_LOG_FORM);
     showToast("Workout logged!");
+  };
+
+  const saveCustomWorkout = (w: Workout) => {
+    const exists = customWorkouts.some(x=>x.id===w.id);
+    setCustomWorkouts(list => exists ? list.map(x=>x.id===w.id?w:x) : [w,...list]);
+    if (exists) setWorkoutPlan(p=>p.map(x=>x.id===w.id?w:x));
+    setCustomModal(null);
+    showToast(exists?"Workout updated":"Workout created ✓");
+  };
+  const deleteCustomWorkout = (id: number) => {
+    setCustomWorkouts(list=>list.filter(x=>x.id!==id));
+    setWorkoutPlan(p=>p.filter(x=>x.id!==id));
+    showToast("Workout deleted");
+  };
+
+  /** Month-view look for a schedule day: dots for planned workouts, a leaf for rest. */
+  const scheduleLook = (date: string): DayLook => {
+    const entry = schedule[date];
+    const isToday = date===todayStr;
+    if (entry==="rest") return { background:C.sage, border:`1.5px solid ${C.sageDeep}`, content:<Glyph emoji="🌿" chip={false} size={11}/> };
+    if (!Array.isArray(entry) || entry.length===0) return {};
+    return {
+      background: isToday ? C.lavender : C.lavender+"60", border:`1.5px solid ${C.lavenderDeep}`,
+      content: <div style={{display:"flex",gap:2,justifyContent:"center"}}>{entry.slice(0,3).map((_,i)=><div key={i} style={{width:5,height:5,borderRadius:"50%",background:"#9070D0"}}/>)}</div>,
+    };
+  };
+
+  // History: grouped log, monthly summary and the default selected day
+  const logByDate = groupLogByDate(workoutLog||[]);
+  const latestLogged = Object.keys(logByDate).sort().pop();
+  const shownHistoryDay = historyDay ?? (logByDate[todayStr] ? todayStr : latestLogged ?? todayStr);
+  const stats = monthStats(workoutLog||[], todayStr);
+  const streak = logStreak(Object.keys(logByDate), todayStr);
+
+  const renderWorkoutCard = (w: Workout, custom: boolean) => {
+    const dc=DIFF_COLOR[w.difficulty] ?? DIFF_COLOR.Beginner;
+    const inPlan=workoutPlan.some(p=>p.id===w.id);
+    return(
+      <div key={w.id} className="workout-card">
+        <div className="row-between" style={{gap:8}}>
+          <div className="row" style={{minWidth:0}}><Glyph emoji={w.emoji} size={17}/><div style={{minWidth:0}}><div style={{fontWeight:800,fontSize:15}}>{w.name}</div><div style={{fontSize:12,color:C.textSoft,fontWeight:500}}>{w.muscle}{w.duration?` · ${w.duration}`:""}</div></div></div>
+          <div className="row" style={{gap:4,flexShrink:0}}>
+            {custom&&<span style={{fontSize:11,fontWeight:800,padding:"3px 10px",borderRadius:99,background:C.lavender,color:"#7050B0"}}>Yours</span>}
+            <span style={{fontSize:11,fontWeight:700,padding:"3px 10px",borderRadius:99,background:dc.bg,color:dc.text}}>{w.difficulty}</span>
+          </div>
+        </div>
+        {w.achieve&&<div style={{fontSize:12,color:C.textMid,fontWeight:500,lineHeight:1.5,background:C.bgDeep,borderRadius:10,padding:"6px 10px"}}>{w.achieve}</div>}
+        <div className="row" style={{gap:8}}>
+          <button className={`btn btn-sm ${inPlan?"btn-ghost":"btn-primary"}`} style={{flex:1}} onClick={()=>{if(inPlan){setWorkoutPlan(p=>p.filter(x=>x.id!==w.id));showToast("Removed");}else{setWorkoutPlan(p=>[...p,w]);showToast("Added!");}}}>
+            {inPlan?"✓ In plan":"+ Add to plan"}
+          </button>
+          <button className="btn btn-sm" style={{flex:1,background:C.butter,color:ACCENT.carbs.text,border:"none"}} onClick={()=>openLog(w)}>Log workout</button>
+          {custom&&<>
+            <button style={iconBtn} onClick={()=>setCustomModal({initial:w})} aria-label={`Edit ${w.name}`}><Pencil size={15} strokeWidth={1.8}/></button>
+            <SwipeToDelete onDelete={()=>deleteCustomWorkout(w.id)}/>
+          </>}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -78,52 +161,65 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
             </div>
           )}
 
-          {/* Calendar grid header */}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:4,marginBottom:6}}>
-            {["M","T","W","T","F","S","S"].map((d,i)=>(
-              <div key={i} style={{textAlign:"center",fontSize:10,fontWeight:800,color:C.textSoft,padding:"4px 0"}}>{d}</div>
+          {/* Week / Month toggle */}
+          <div className="row" role="group" aria-label="Calendar view" style={{gap:4,marginBottom:12,background:C.bgDeep,borderRadius:12,padding:4,width:"fit-content"}}>
+            {([["week","Week"],["month","Month"]] as const).map(([v,l])=>(
+              <button key={v} onClick={()=>setScheduleView(v)} aria-pressed={scheduleView===v} style={{padding:"5px 16px",borderRadius:9,border:"none",cursor:"pointer",background:scheduleView===v?C.white:"transparent",color:scheduleView===v?"#7050B0":C.textSoft,fontWeight:800,fontSize:12,fontFamily:"Nunito",boxShadow:scheduleView===v?`0 1px 6px ${C.shadow}`:"none",transition:"all .15s"}}>{l}</button>
             ))}
           </div>
 
-          {/* Calendar day cells */}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:4,marginBottom:16}}>
-            {DAYS.map(day => {
-              const entry = schedule[day.date];
-              const items = Array.isArray(entry) ? entry : entry === "rest" ? "rest" : [];
-              const isToday = day.date === todayStr;
-              const isPicking = pickingDay === day.date;
-              return (
-                <div key={day.date} onClick={()=>setPickingDay(isPicking?null:day.date)} style={{
-                  borderRadius:12, padding:"8px 4px", display:"flex", flexDirection:"column", alignItems:"center", gap:3,
-                  cursor:"pointer", border:`1.5px solid ${isPicking?"#9070D0":isToday?C.lavenderDeep:items==="rest"?C.sageDeep:items.length?C.lavenderDeep:C.border}`,
-                  background:isPicking?"#9070D0":isToday?C.lavender:items==="rest"?C.sage:items.length?C.lavender+"60":C.white,
-                  transition:"all .15s",
-                }}>
-                  <div style={{fontSize:11,fontWeight:900,color:isPicking?"white":isToday?"#7050B0":C.text}}>{day.num}</div>
-                  {items==="rest"
-                    ? <div><Glyph emoji="🌿" chip={false} size={11}/></div>
-                    : items.length>0 && (
-                      <div style={{display:"flex",flexWrap:"wrap",gap:2,justifyContent:"center"}}>
-                        {items.slice(0,3).map((_,i)=>(
-                          <div key={i} style={{width:5,height:5,borderRadius:"50%",background:isPicking?"white":"#9070D0"}}/>
-                        ))}
-                      </div>
-                    )}
-                </div>
-              );
-            })}
-          </div>
+          {scheduleView==="month" ? (
+            <div style={{marginBottom:16}}>
+              <MonthCalendar selected={pickingDay} onSelect={selectDay} renderDay={scheduleLook} initialMonth={pickingDay ?? undefined}/>
+            </div>
+          ) : (<>
+            {/* Calendar grid header */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:4,marginBottom:6}}>
+              {["M","T","W","T","F","S","S"].map((d,i)=>(
+                <div key={i} style={{textAlign:"center",fontSize:10,fontWeight:800,color:C.textSoft,padding:"4px 0"}}>{d}</div>
+              ))}
+            </div>
+
+            {/* Calendar day cells */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:4,marginBottom:16}}>
+              {DAYS.map(day => {
+                const entry = schedule[day.date];
+                const items = Array.isArray(entry) ? entry : entry === "rest" ? "rest" : [];
+                const isToday = day.date === todayStr;
+                const isPicking = pickingDay === day.date;
+                return (
+                  <button key={day.date} onClick={()=>selectDay(day.date)} aria-pressed={isPicking} aria-label={`${day.label} ${day.num}`} style={{
+                    borderRadius:12, padding:"8px 4px", display:"flex", flexDirection:"column", alignItems:"center", gap:3, minHeight:44, fontFamily:"Nunito",
+                    cursor:"pointer", border:`1.5px solid ${isPicking?"#9070D0":isToday?C.lavenderDeep:items==="rest"?C.sageDeep:items.length?C.lavenderDeep:C.border}`,
+                    background:isPicking?"#9070D0":isToday?C.lavender:items==="rest"?C.sage:items.length?C.lavender+"60":C.white,
+                    transition:"all .15s",
+                  }}>
+                    <div style={{fontSize:11,fontWeight:900,color:isPicking?"white":isToday?"#7050B0":C.text}}>{day.num}</div>
+                    {items==="rest"
+                      ? <div><Glyph emoji="🌿" chip={false} size={11}/></div>
+                      : items.length>0 && (
+                        <div style={{display:"flex",flexWrap:"wrap",gap:2,justifyContent:"center"}}>
+                          {items.slice(0,3).map((_,i)=>(
+                            <div key={i} style={{width:5,height:5,borderRadius:"50%",background:isPicking?"white":"#9070D0"}}/>
+                          ))}
+                        </div>
+                      )}
+                  </button>
+                );
+              })}
+            </div>
+          </>)}
 
           {/* Selected day detail panel */}
           {pickingDay && (()=>{
-            const day = DAYS.find(d=>d.date===pickingDay);
             const items = Array.isArray(schedule[pickingDay]) ? schedule[pickingDay] : [];
             const isToday = pickingDay===todayStr;
+            const sel = new Date(pickingDay+"T12:00");
             return (
               <div className="card slide-in" style={{marginBottom:14}}>
                 <div className="row-between" style={{marginBottom:12}}>
                   <div>
-                    <div style={{fontWeight:900,fontSize:16,color:C.text}}>{day?.label}, {new Date(pickingDay+"T12:00").toLocaleDateString("en-US",{month:"long",day:"numeric"})}</div>
+                    <div style={{fontWeight:900,fontSize:16,color:C.text}}>{sel.toLocaleDateString("en-US",{weekday:"short"})}, {sel.toLocaleDateString("en-US",{month:"long",day:"numeric"})}</div>
                     {isToday&&<div style={{fontSize:11,fontWeight:700,color:"#9070D0"}}>Today</div>}
                   </div>
                   <span style={{fontSize:13,color:C.textSoft,fontWeight:600}}>{items.length?`${items.length} workout${items.length>1?"s":""}` : "Rest day"}</span>
@@ -131,18 +227,40 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
 
                 {/* Workouts for this day */}
                 {items.map((item,idx)=>(
-                  <div key={idx} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:C.bgDeep,borderRadius:12,marginBottom:8}}>
-                    <Glyph emoji={item.emoji||"🏋️"} size={15}/>
-                    <div style={{flex:1}}>
-                      <div style={{fontWeight:700,fontSize:13}}>{item.name}</div>
-                      {item.detail&&<div style={{fontSize:11,color:C.textSoft,fontWeight:500}}>{item.detail}</div>}
+                  <div key={idx} style={{background:C.bgDeep,borderRadius:12,marginBottom:8}}>
+                    <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px"}}>
+                      <Glyph emoji={item.emoji||"🏋️"} size={15}/>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontWeight:700,fontSize:13}}>{item.name}</div>
+                        {item.detail&&<div style={{fontSize:11,color:C.textSoft,fontWeight:500}}>{item.detail}</div>}
+                      </div>
+                      <div className="row" style={{gap:4}}>
+                        {isToday&&<button className="btn btn-sm" style={{background:completedToday.has(item.name)?C.sage:C.butter,color:completedToday.has(item.name)?ACCENT.fiber.text:ACCENT.carbs.text,border:"none",fontSize:11}} onClick={()=>openLog(item)}>
+                          {completedToday.has(item.name)?"✓ Done":"Log"}
+                        </button>}
+                        <button style={{...iconBtn,color:movingIdx===idx?"#7050B0":C.textSoft,background:movingIdx===idx?C.lavender:"none"}} aria-label={`Move ${item.name} to another day`} aria-expanded={movingIdx===idx} onClick={()=>{setMovingIdx(movingIdx===idx?null:idx);setMoveDate("");}}>
+                          <ArrowRightLeft size={15} strokeWidth={1.8}/>
+                        </button>
+                        <button style={{...iconBtn,fontSize:16}} aria-label={`Remove ${item.name}`} onClick={()=>removeFromDay(pickingDay,idx)}>×</button>
+                      </div>
                     </div>
-                    <div className="row" style={{gap:6}}>
-                      {isToday&&<button className="btn btn-sm" style={{background:completedToday.has(item.name)?C.sage:C.butter,color:completedToday.has(item.name)?ACCENT.fiber.text:ACCENT.carbs.text,border:"none",fontSize:11}} onClick={()=>{setLogModal(item);setLogForm({sets:"",reps:"",weight:"",notes:"",duration:""});}}>
-                        {completedToday.has(item.name)?"✓ Done":"Log"}
-                      </button>}
-                      <button style={{background:"none",border:"none",color:C.textSoft,cursor:"pointer",fontSize:16}} onClick={()=>removeFromDay(pickingDay,idx)}>×</button>
-                    </div>
+                    {movingIdx===idx&&(
+                      <div className="slide-in" style={{padding:"0 12px 12px"}}>
+                        <div style={{fontSize:11,color:C.textSoft,fontWeight:700,marginBottom:6}}>Move to:</div>
+                        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:4,marginBottom:8}}>
+                          {weekOf(pickingDay).map(d=>{const dt=new Date(d+"T12:00"),cur=d===pickingDay;return(
+                            <button key={d} disabled={cur} onClick={()=>moveItem(pickingDay,idx,d)} aria-label={`Move to ${shortDate(d)}`} style={{padding:"6px 0",borderRadius:10,border:`1.5px solid ${cur?C.border:C.lavenderDeep}`,background:cur?"transparent":C.white,color:cur?C.textSoft:"#5040A0",cursor:cur?"default":"pointer",fontFamily:"Nunito",display:"flex",flexDirection:"column",alignItems:"center",lineHeight:1.2,opacity:cur?.5:1}}>
+                              <span style={{fontSize:9,fontWeight:800}}>{dt.toLocaleDateString("en-US",{weekday:"short"})}</span>
+                              <span style={{fontSize:12,fontWeight:900}}>{dt.getDate()}</span>
+                            </button>
+                          );})}
+                        </div>
+                        <div className="row" style={{gap:8}}>
+                          <input className="input" type="date" aria-label="Move to another date" value={moveDate} onChange={e=>setMoveDate(e.target.value)} style={{fontSize:13,padding:"8px 12px"}}/>
+                          <button className="btn btn-primary btn-sm" style={{flexShrink:0}} disabled={!moveDate||moveDate===pickingDay} onClick={()=>moveItem(pickingDay,idx,moveDate)}>Move</button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
 
@@ -150,7 +268,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
                 <div style={{marginTop:8}}>
                   {/* Rest day toggle */}
                   <div className="row" style={{marginBottom:12,gap:8}}>
-                    <button onClick={()=>{setSchedule(s=>({...s,[pickingDay]:s[pickingDay]==="rest"?[]:"rest"}));showToast(schedule[pickingDay]==="rest"?"Rest day removed":"Rest day set");}} style={{padding:"7px 14px",borderRadius:99,border:`1.5px solid ${schedule[pickingDay]==="rest"?C.sageDeep:C.border}`,background:schedule[pickingDay]==="rest"?C.sage:"transparent",color:schedule[pickingDay]==="rest"?ACCENT.fiber.text:C.textSoft,fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"Nunito",transition:"all .15s"}}>
+                    <button onClick={()=>{setSchedule(s=>({...s,[pickingDay]:s[pickingDay]==="rest"?[]:"rest"}));setMovingIdx(null);showToast(schedule[pickingDay]==="rest"?"Rest day removed":"Rest day set");}} style={{padding:"7px 14px",borderRadius:99,border:`1.5px solid ${schedule[pickingDay]==="rest"?C.sageDeep:C.border}`,background:schedule[pickingDay]==="rest"?C.sage:"transparent",color:schedule[pickingDay]==="rest"?ACCENT.fiber.text:C.textSoft,fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"Nunito",transition:"all .15s"}}>
                       <Glyph emoji="🌿" chip={false} size={13} color="currentColor"/> {schedule[pickingDay]==="rest"?"Rest day set":"Mark as rest day"}
                     </button>
                   </div>
@@ -159,7 +277,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
                       <div style={{fontSize:11,color:C.textSoft,fontWeight:700,marginBottom:6}}>Quick add from your plan:</div>
                       <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
                         {workoutPlan.map(w=>(
-                          <button key={w.id} onClick={()=>{addToDay(pickingDay,{name:w.name,emoji:w.emoji,detail:`${w.muscle} · ${w.duration}`});showToast("Added ✓");}} style={{padding:"5px 12px",borderRadius:99,border:`1.5px solid ${C.lavenderDeep}`,background:C.lavender,color:"#5040A0",fontWeight:700,fontSize:11,cursor:"pointer",fontFamily:"Nunito"}}>
+                          <button key={w.id} onClick={()=>{addToDay(pickingDay,{name:w.name,emoji:w.emoji,detail:[w.muscle,w.duration].filter(Boolean).join(" · ")});showToast("Added ✓");}} style={{padding:"5px 12px",borderRadius:99,border:`1.5px solid ${C.lavenderDeep}`,background:C.lavender,color:"#5040A0",fontWeight:700,fontSize:11,cursor:"pointer",fontFamily:"Nunito"}}>
                             <Glyph emoji={w.emoji} chip={false} size={13}/> {w.name}
                           </button>
                         ))}
@@ -185,26 +303,13 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
             <div style={{fontSize:11,fontWeight:800,color:cycleInfo.phase.textColor,marginBottom:4}}><Glyph emoji={cycleInfo.phase.emoji} chip={false} size={12} color={cycleInfo.phase.textColor}/> Best for your {cycleInfo.phase.label.toLowerCase()} phase</div>
             <div style={{fontSize:12,color:cycleInfo.phase.textColor,fontWeight:500,opacity:.9}}>{cycleInfo.phase.workouts[0]} · {cycleInfo.phase.workouts[1]}</div>
           </div>}
+          <button onClick={()=>setCustomModal({initial:null})} style={{width:"100%",display:"flex",alignItems:"center",gap:12,padding:"14px 16px",marginBottom:10,borderRadius:18,border:`1.5px dashed ${C.lavenderDeep}`,background:C.lavender+"60",cursor:"pointer",fontFamily:"Nunito",textAlign:"left"}}>
+            <span style={{width:34,height:34,borderRadius:"50%",background:C.lavender,display:"inline-flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Plus size={18} color="#7050B0" strokeWidth={2.4} aria-hidden="true"/></span>
+            <span><span style={{display:"block",fontWeight:800,fontSize:15,color:"#5040A0"}}>Create workout</span><span style={{display:"block",fontSize:12,color:C.textSoft,fontWeight:500}}>Add your own session, with its own icon</span></span>
+          </button>
           <div style={{display:"flex",flexDirection:"column",gap:10}}>
-            {ALL_WORKOUTS.map(w=>{
-              const dc=DIFF_COLOR[w.difficulty];
-              const inPlan=workoutPlan.some(p=>p.id===w.id);
-              return(
-                <div key={w.id} className="workout-card">
-                  <div className="row-between">
-                    <div className="row"><Glyph emoji={w.emoji} size={17}/><div><div style={{fontWeight:800,fontSize:15}}>{w.name}</div><div style={{fontSize:12,color:C.textSoft,fontWeight:500}}>{w.muscle} · {w.duration}</div></div></div>
-                    <span style={{fontSize:11,fontWeight:700,padding:"3px 10px",borderRadius:99,background:dc.bg,color:dc.text}}>{w.difficulty}</span>
-                  </div>
-                  {w.achieve&&<div style={{fontSize:12,color:C.textMid,fontWeight:500,lineHeight:1.5,background:C.bgDeep,borderRadius:10,padding:"6px 10px"}}>{w.achieve}</div>}
-                  <div className="row" style={{gap:8}}>
-                    <button className={`btn btn-sm ${inPlan?"btn-ghost":"btn-primary"}`} style={{flex:1}} onClick={()=>{if(inPlan){setWorkoutPlan(p=>p.filter(x=>x.id!==w.id));showToast("Removed");}else{setWorkoutPlan(p=>[...p,w]);showToast("Added!");}}}>
-                      {inPlan?"✓ In plan":"+ Add to plan"}
-                    </button>
-                    <button className="btn btn-sm" style={{flex:1,background:C.butter,color:ACCENT.carbs.text,border:"none"}} onClick={()=>{setLogModal(w);setLogForm({sets:"",reps:"",weight:"",notes:"",duration:""});}}>Log workout</button>
-                  </div>
-                </div>
-              );
-            })}
+            {customWorkouts.map(w=>renderWorkoutCard(w,true))}
+            {ALL_WORKOUTS.map(w=>renderWorkoutCard(w,false))}
           </div>
         </div>
       )}
@@ -213,36 +318,67 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
         <div>
           {(!workoutLog||workoutLog.length===0)
             ?<div style={{textAlign:"center",padding:"40px 0",color:C.textSoft}}><div style={{marginBottom:10}}><Glyph emoji="🌱" size={24}/></div><div style={{fontWeight:800,fontSize:15,color:C.text}}>Nothing logged yet</div><div style={{fontSize:13,marginTop:6,lineHeight:1.6}}>Every workout counts. Tap Log on any session to start tracking your progress.</div></div>
-            :Object.entries((workoutLog||[]).reduce<Record<string, WorkoutLogEntry[]>>((acc,e)=>{if(!acc[e.date])acc[e.date]=[];acc[e.date].push(e);return acc;},{})).sort(([a],[b])=>b.localeCompare(a)).map(([date,entries])=>(
-              <div key={date} style={{marginBottom:18}}>
-                <div style={{fontSize:12,fontWeight:800,color:C.textMid,marginBottom:8}}>
-                  {date===todayStr?"Today":new Date(date+"T12:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})}
-                  <span style={{fontWeight:600,color:C.textSoft,marginLeft:8}}>{entries.length} workout{entries.length>1?"s":""}</span>
-                </div>
-                {entries.map(e=>(
-                  <div key={e.id} className="card" style={{marginBottom:8,padding:"12px 14px"}}>
-                    <div className="row" style={{gap:10}}>
-                      <Glyph emoji={e.emoji||"🏋️"} size={16}/>
-                      <div style={{flex:1}}>
-                        <div style={{fontWeight:800,fontSize:14}}>{e.name}</div>
-                        <div style={{fontSize:11,color:C.textSoft,marginTop:3}}>{e.duration}{e.sets?` · ${e.sets} sets`:""}{e.reps?` x ${e.reps} reps`:""}{e.weight?` @ ${e.weight}kg`:""}</div>
-                        {e.notes&&<div style={{fontSize:11,color:C.textMid,marginTop:4,fontStyle:"italic"}}>{e.notes}</div>}
-                      </div>
-                      <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4}}>
-                        <span style={{fontSize:10,color:C.textSoft,fontWeight:600}}>{e.time}</span>
-                        <SwipeToDelete onDelete={()=>setWorkoutLog(l=>l.filter(x=>x.id!==e.id))}/>
-                      </div>
-                    </div>
+            :<>
+              {/* Monthly summary */}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:16}}>
+                {([["🏋️",stats.workouts,stats.workouts===1?"workout this month":"workouts this month"],["📅",stats.activeDays,stats.activeDays===1?"active day this month":"active days this month"],["🔥",streak,"day streak"]] as const).map(([emoji,value,label])=>(
+                  <div key={emoji} className="card" style={{padding:"12px 10px",borderRadius:16,display:"flex",flexDirection:"column",alignItems:"center",gap:4,textAlign:"center"}}>
+                    <Glyph emoji={emoji} size={13}/>
+                    <div style={{fontSize:20,fontWeight:900,color:C.text,lineHeight:1.1}}>{value}</div>
+                    <div style={{fontSize:10,fontWeight:700,color:C.textSoft,lineHeight:1.3}}>{label}</div>
                   </div>
                 ))}
               </div>
-            ))
+
+              <div className="card" style={{padding:14,marginBottom:16}}>
+                <MonthCalendar selected={shownHistoryDay} onSelect={setHistoryDay} initialMonth={shownHistoryDay} renderDay={date=>{
+                  const entries = logByDate[date];
+                  if (!entries) return {};
+                  return {
+                    background:C.sage, border:`1.5px solid ${C.sageDeep}`,
+                    content:<span style={{display:"inline-flex",alignItems:"center",gap:1}}><Glyph emoji={entries[0].emoji||"🏋️"} chip={false} size={12}/>{entries.length>1&&<span style={{fontSize:9,fontWeight:800,color:ACCENT.fiber.text}}>+{entries.length-1}</span>}</span>,
+                  };
+                }}/>
+              </div>
+
+              {/* Selected day's entries */}
+              {(()=>{
+                const entries = logByDate[shownHistoryDay] ?? [];
+                return (
+                  <div className="slide-in" key={shownHistoryDay}>
+                    <div style={{fontSize:12,fontWeight:800,color:C.textMid,marginBottom:8}}>
+                      {shownHistoryDay===todayStr?"Today":shortDate(shownHistoryDay)}
+                      {entries.length>0&&<span style={{fontWeight:600,color:C.textSoft,marginLeft:8}}>{entries.length} workout{entries.length>1?"s":""}</span>}
+                    </div>
+                    {entries.length===0&&<div style={{fontSize:13,color:C.textSoft,fontWeight:500,padding:"4px 0 12px"}}>No workouts logged on this day.</div>}
+                    {entries.map(e=>(
+                      <div key={e.id} className="card" style={{marginBottom:8,padding:"12px 14px"}}>
+                        <div className="row" style={{gap:10}}>
+                          <Glyph emoji={e.emoji||"🏋️"} size={16}/>
+                          <div style={{flex:1}}>
+                            <div style={{fontWeight:800,fontSize:14}}>{e.name}</div>
+                            <div style={{fontSize:11,color:C.textSoft,marginTop:3}}>{e.duration}{e.sets?` · ${e.sets} sets`:""}{e.reps?` x ${e.reps} reps`:""}{e.weight?` @ ${e.weight}kg`:""}</div>
+                            {e.notes&&<div style={{fontSize:11,color:C.textMid,marginTop:4,fontStyle:"italic"}}>{e.notes}</div>}
+                          </div>
+                          <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4}}>
+                            <span style={{fontSize:10,color:C.textSoft,fontWeight:600}}>{e.time}</span>
+                            <SwipeToDelete onDelete={()=>setWorkoutLog(l=>l.filter(x=>x.id!==e.id))}/>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </>
           }
         </div>
       )}
 
 
       {tab==="ai" && <AICoachPanel measurements={measurements} cycleInfo={cycleInfo} plan={aiPlan} setPlan={setAiPlan} showToast={showToast}/>}
+
+      {customModal&&<CustomWorkoutModal initial={customModal.initial} onSave={saveCustomWorkout} onClose={()=>setCustomModal(null)}/>}
 
       {logModal&&<div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setLogModal(null)}><div className="modal">
         <div className="modal-handle"/>

@@ -38,6 +38,56 @@ export interface GoalFoodGuide {
   examples: string[];
 }
 
+/** One message in the food chat, persisted under "food-chat". */
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export type RecipeKind = "meal" | "drink";
+
+/** A curated recipe from `RECIPES` (src/data/recipes.ts). */
+export interface Recipe {
+  id: string;
+  name: string;
+  kind: RecipeKind;
+  /** An emoji from the glyph set (rendered with `<Glyph>`). */
+  emoji: string;
+  /** e.g. "15 min" */
+  time: string;
+  /** One sentence on why it helps this phase. */
+  why: string;
+  ingredients: string[];
+  steps: string[];
+}
+
+/** A recipe written by the AI ("Make me a recipe"), parsed from its plain-text reply. */
+export interface AIRecipe {
+  title: string;
+  /** e.g. "15 min"; empty when the reply didn't include one. */
+  time: string;
+  why: string;
+  ingredients: string[];
+  steps: string[];
+}
+
+/** An AI recipe the user saved, persisted in "saved-recipes" (newest first). */
+export interface SavedRecipe extends AIRecipe {
+  id: number;
+  kind: RecipeKind;
+  phase?: PhaseId;
+  /** YYYY-MM-DD */
+  savedAt: string;
+}
+
+/** Body of POST /api/recipe. */
+export interface RecipeRequest {
+  kind: RecipeKind;
+  ingredients?: string;
+  phase?: PhaseId;
+  context?: string;
+}
+
 // ─── Body ─────────────────────────────────────────────────────────────────────
 
 export type MeasurementKey = "weight" | "height" | "waist" | "hips" | "bust" | "glutes" | "thighs" | "arms";
@@ -92,14 +142,20 @@ export interface CycleInfo {
   daysUntilNext: number;
   /** YYYY-MM-DD (UTC) */
   nextPeriodDate: string;
+  /** Days past the expected start with no new period logged (0 when not late). */
+  daysLate: number;
 }
 
 // ─── Workouts ─────────────────────────────────────────────────────────────────
 
 export type Difficulty = "Beginner" | "Intermediate" | "Advanced";
 
-/** A workout from the built-in library (`ALL_WORKOUTS`); also the shape of "workout-plan" items. */
+/**
+ * A workout from the built-in library (`ALL_WORKOUTS`) or one the user created
+ * (persisted under "custom-workouts"); also the shape of "workout-plan" items.
+ */
 export interface Workout {
+  /** Library workouts use small ids (1, 2, ...); custom workouts use `Date.now()`-based ids, so they never collide. */
   id: number;
   name: string;
   emoji: string;

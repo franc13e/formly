@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { C, CSS } from "./theme";
 import { load, save } from "./lib/storage";
-import { getCycleInfo } from "./lib/cycle";
+import { cycleStats, getCycleInfo, periodStarts } from "./lib/cycle";
 import { useToast } from "./hooks/useToast";
 import { TABS } from "./data/tabs";
 import { Icon } from "./components/Icon";
 import { Icons } from "./components/icons";
 import { Glyph } from "./components/Glyph";
+import { localDateKey } from "./lib/date";
 import { OnboardingFlow } from "./pages/OnboardingFlow";
 import { Dashboard } from "./pages/Dashboard";
 import { NutritionPage } from "./pages/NutritionPage";
@@ -34,7 +35,16 @@ export default function App() {
   const [aiPlan,setAiPlan]=useState<string | null>(()=>load<string | null>("ai-plan",null));
   const [toast,showToast]=useToast();
 
-  const cycleInfo=getCycleInfo(periodStart,cycleLength);
+  // Predict with the cycle length learned from logged periods; the setting is the fallback.
+  const starts=periodStarts(periodHistory,periodStart);
+  const stats=cycleStats(starts,cycleLength);
+  const cycleInfo=getCycleInfo(periodStart,stats.length);
+
+  /** Records a period that started on `date` (YYYY-MM-DD); the latest start drives the cycle. */
+  const logPeriodStart=(date: string)=>{
+    setPeriodHistory(h=>[...h.filter(x=>x.date!==date),{date}].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,24));
+    setPeriodStart(p=>!p||date>p?date:p);
+  };
 
   useEffect(()=>{save("onboarded",onboarded);},[onboarded]);
   useEffect(()=>{save("user-name",userName);},[userName]);
@@ -80,9 +90,9 @@ export default function App() {
           </div>}
         </div>
         <div className="desktop-content">
-        {tab==="home"&&<Dashboard schedule={schedule} weightHistory={weightHistory} cycleInfo={cycleInfo} workoutLog={workoutLog} userName={userName}/>}
+        {tab==="home"&&<Dashboard schedule={schedule} weightHistory={weightHistory} cycleInfo={cycleInfo} workoutLog={workoutLog} userName={userName} onPeriodStarted={()=>{logPeriodStart(localDateKey());showToast("Period logged");}}/>}
         {tab==="nutrition"&&<NutritionPage cycleInfo={cycleInfo} showToast={showToast}/>}
-        {tab==="body"&&<BodyPage measurements={measurements} setMeasurements={setMeasurements} weightHistory={weightHistory} setWeightHistory={setWeightHistory} cycleInfo={cycleInfo} periodStart={periodStart} setPeriodStart={setPeriodStart} periodHistory={periodHistory} setPeriodHistory={setPeriodHistory} cycleLength={cycleLength} setCycleLength={setCycleLength} showToast={showToast}/>}
+        {tab==="body"&&<BodyPage measurements={measurements} setMeasurements={setMeasurements} weightHistory={weightHistory} setWeightHistory={setWeightHistory} cycleInfo={cycleInfo} periodStart={periodStart} setPeriodStart={setPeriodStart} periodHistory={periodHistory} setPeriodHistory={setPeriodHistory} cycleLength={cycleLength} setCycleLength={setCycleLength} starts={starts} stats={stats} logPeriodStart={logPeriodStart} showToast={showToast}/>}
         {tab==="workouts"&&<WorkoutsPage workoutPlan={workoutPlan} setWorkoutPlan={setWorkoutPlan} schedule={schedule} setSchedule={setSchedule} workoutLog={workoutLog} setWorkoutLog={setWorkoutLog} aiPlan={aiPlan} setAiPlan={setAiPlan} measurements={measurements} cycleInfo={cycleInfo} showToast={showToast}/>}
         {tab==="settings"&&<SettingsPage userName={userName} setUserName={setUserName} showToast={showToast}/>}
         <nav className="bottom-nav">

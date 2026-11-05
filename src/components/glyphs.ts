@@ -1,8 +1,8 @@
 import {
-  Armchair, Bean, Beef, BicepsFlexed, Bird, Brain, CalendarDays, Candy, Carrot, Cherry, Citrus, CloudSun,
-  Coffee, Droplet, Dumbbell, Egg, Fish, Flame, Flower2, Footprints, Grape, Hand, Leaf, LeafyGreen, Milk,
-  Moon, Pencil, PersonStanding, Ruler, Salad, Scale, Soup, Sparkle, Sparkles, Sprout, Sun, Target,
-  TreeDeciduous, TrendingUp, Wheat, Wind, Zap, type LucideIcon,
+  Accessibility, Armchair, Bean, Beef, BicepsFlexed, Bike, Bird, Brain, CalendarDays, Candy, Carrot, Cherry, Citrus, CloudSun,
+  Coffee, Droplet, Dumbbell, Egg, Fish, Flame, Flower2, Footprints, Grape, Hand, HandFist, HeartPulse, Leaf, LeafyGreen, Milk,
+  Moon, Mountain, Pencil, PersonStanding, Ruler, Salad, Scale, Soup, Sparkle, Sparkles, Sprout, Sun, Target,
+  TreeDeciduous, TrendingUp, Waves, Wheat, Wind, Zap, type LucideIcon,
 } from "lucide-react";
 import { C, ACCENT } from "../theme";
 
@@ -25,6 +25,8 @@ const GLYPHS: Record<string, [LucideIcon, Tone]> = {
   "🔥": [Flame, "peach"], "💪": [BicepsFlexed, "rose"], "🏃": [Footprints, "sky"], "🚶": [PersonStanding, "sage"],
   "🪑": [Armchair, "butter"], "⚡": [Zap, "butter"], "🦅": [Bird, "sky"], "🦵": [PersonStanding, "peach"],
   "🏋": [Dumbbell, "lavender"], "🍑": [Citrus, "peach"], "🧘": [Wind, "lavender"], "🎯": [Target, "rose"],
+  "🚴": [Bike, "sky"], "🏊": [Waves, "sky"], "🥊": [HandFist, "rose"], "🤸": [Accessibility, "peach"],
+  "⛰": [Mountain, "sage"], "❤": [HeartPulse, "rose"],
   // cycle and time of day
   "🌙": [Moon, "rose"], "🌱": [Sprout, "sage"], "☀": [Sun, "butter"], "🍂": [TreeDeciduous, "lavender"],
   "🌤": [CloudSun, "butter"], "🌸": [Flower2, "rose"], "🌿": [Leaf, "sage"],
