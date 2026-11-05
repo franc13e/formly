@@ -17,7 +17,7 @@ interface RingField {
 export function MeasurementRings({ measurements, goalMeasurements }: MeasurementRingsProps) {
   const fields: RingField[] = [
     { key:"waist",  label:"Waist",  color:"#FFB347", track:"#FFF0D6" },
-    { key:"hips",   label:"Hips",   color:"#C8A0F0", track:"#EDE0FA" },
+    { key:"hips",   label:"Hips",   color:"#F6B7C4", track:"#EDE0FA" },
     { key:"bust",   label:"Bust",   color:"#F08090", track:"#FAE0E4" },
     { key:"glutes", label:"Glutes", color:"#90D0A0", track:"#D6F5E6" },
     { key:"thighs", label:"Thighs", color:"#60C8F0", track:"#D6F0FA" },

@@ -57,8 +57,8 @@ export function OnboardingFlow({ onDone }: OnboardingFlowProps) {
           {[{val:true,emoji:"🌸",label:"Yes, track my cycle",sub:"Get phase-aware insights, workouts and nutrition"},{val:false,emoji:"✦",label:"No thanks, skip this",sub:"You can always enable it later in the Body tab"}].map(opt=>(
             <button key={String(opt.val)} onClick={()=>setTrackCycle(opt.val)} style={{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",borderRadius:16,border:`2px solid ${trackCycle===opt.val?C.lavenderDeep:C.border}`,background:trackCycle===opt.val?C.lavender:C.white,cursor:"pointer",fontFamily:"Nunito",textAlign:"left",transition:"all .15s"}}>
               <Glyph emoji={opt.emoji} size={18}/>
-              <div><div style={{fontWeight:800,fontSize:14,color:trackCycle===opt.val?"#5040A0":C.text}}>{opt.label}</div><div style={{fontSize:12,color:C.textSoft,fontWeight:500,marginTop:2}}>{opt.sub}</div></div>
-              <div style={{marginLeft:"auto",width:18,height:18,borderRadius:"50%",border:`2px solid ${trackCycle===opt.val?"#7050B0":C.border}`,background:trackCycle===opt.val?"#7050B0":"transparent",flexShrink:0}}/>
+              <div><div style={{fontWeight:800,fontSize:14,color:trackCycle===opt.val?"#8E3A55":C.text}}>{opt.label}</div><div style={{fontSize:12,color:C.textSoft,fontWeight:500,marginTop:2}}>{opt.sub}</div></div>
+              <div style={{marginLeft:"auto",width:18,height:18,borderRadius:"50%",border:`2px solid ${trackCycle===opt.val?"#B5506E":C.border}`,background:trackCycle===opt.val?"#B5506E":"transparent",flexShrink:0}}/>
             </button>
           ))}
         </div>}

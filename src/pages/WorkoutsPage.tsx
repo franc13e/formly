@@ -35,7 +35,7 @@ function TabRow({ tab, setTab }: { tab: WorkoutsTab; setTab: (tab: WorkoutsTab) 
   return (
     <div className="row" style={{gap:6,marginBottom:16,background:C.bgDeep,borderRadius:14,padding:5}}>
       {([["schedule","Schedule"],["browse","Browse"],["ai","AI Coach"],["history","History"]] as const).map(([v,l])=>(
-        <button key={v} onClick={()=>setTab(v)} style={{flex:1,padding:"7px 0",borderRadius:10,border:"none",cursor:"pointer",background:tab===v?C.white:"transparent",color:tab===v?"#7050B0":C.textSoft,fontWeight:800,fontSize:13,fontFamily:"Nunito",boxShadow:tab===v?`0 1px 6px ${C.shadow}`:"none",transition:"all .15s"}}>{l}</button>
+        <button key={v} onClick={()=>setTab(v)} style={{flex:1,padding:"7px 0",borderRadius:10,border:"none",cursor:"pointer",background:tab===v?C.white:"transparent",color:tab===v?"#B5506E":C.textSoft,fontWeight:800,fontSize:13,fontFamily:"Nunito",boxShadow:tab===v?`0 1px 6px ${C.shadow}`:"none",transition:"all .15s"}}>{l}</button>
       ))}
     </div>
   );
@@ -109,7 +109,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
     if (!Array.isArray(entry) || entry.length===0) return {};
     return {
       background: isToday ? C.lavender : C.lavender+"60", border:`1.5px solid ${C.lavenderDeep}`,
-      content: <div style={{display:"flex",gap:2,justifyContent:"center"}}>{entry.slice(0,3).map((_,i)=><div key={i} style={{width:5,height:5,borderRadius:"50%",background:"#9070D0"}}/>)}</div>,
+      content: <div style={{display:"flex",gap:2,justifyContent:"center"}}>{entry.slice(0,3).map((_,i)=><div key={i} style={{width:5,height:5,borderRadius:"50%",background:"#C4607D"}}/>)}</div>,
     };
   };
 
@@ -128,7 +128,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
         <div className="row-between" style={{gap:8}}>
           <div className="row" style={{minWidth:0}}><Glyph emoji={w.emoji} size={17}/><div style={{minWidth:0}}><div style={{fontWeight:800,fontSize:15}}>{w.name}</div><div style={{fontSize:12,color:C.textSoft,fontWeight:500}}>{w.muscle}{w.duration?` · ${w.duration}`:""}</div></div></div>
           <div className="row" style={{gap:4,flexShrink:0}}>
-            {custom&&<span style={{fontSize:11,fontWeight:800,padding:"3px 10px",borderRadius:99,background:C.lavender,color:"#7050B0"}}>Yours</span>}
+            {custom&&<span style={{fontSize:11,fontWeight:800,padding:"3px 10px",borderRadius:99,background:C.lavender,color:"#B5506E"}}>Yours</span>}
             <span style={{fontSize:11,fontWeight:700,padding:"3px 10px",borderRadius:99,background:dc.bg,color:dc.text}}>{w.difficulty}</span>
           </div>
         </div>
@@ -156,7 +156,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
         <div>
           {aiPlan && (
             <div style={{background:`linear-gradient(135deg,${C.lavender},${C.rose})`,borderRadius:16,padding:"12px 14px",marginBottom:14,border:`1.5px solid ${C.lavenderDeep}`}}>
-              <div style={{fontSize:11,fontWeight:800,color:"#7050B0",marginBottom:2}}><Glyph emoji="✨" chip={false} size={12} color="#7050B0"/> AI plan active</div>
+              <div style={{fontSize:11,fontWeight:800,color:"#B5506E",marginBottom:2}}><Glyph emoji="✨" chip={false} size={12} color="#B5506E"/> AI plan active</div>
               <div style={{fontSize:12,color:C.textMid,fontWeight:500}}>Tap any day to add workouts to your schedule.</div>
             </div>
           )}
@@ -164,7 +164,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
           {/* Week / Month toggle */}
           <div className="row" role="group" aria-label="Calendar view" style={{gap:4,marginBottom:12,background:C.bgDeep,borderRadius:12,padding:4,width:"fit-content"}}>
             {([["week","Week"],["month","Month"]] as const).map(([v,l])=>(
-              <button key={v} onClick={()=>setScheduleView(v)} aria-pressed={scheduleView===v} style={{padding:"5px 16px",borderRadius:9,border:"none",cursor:"pointer",background:scheduleView===v?C.white:"transparent",color:scheduleView===v?"#7050B0":C.textSoft,fontWeight:800,fontSize:12,fontFamily:"Nunito",boxShadow:scheduleView===v?`0 1px 6px ${C.shadow}`:"none",transition:"all .15s"}}>{l}</button>
+              <button key={v} onClick={()=>setScheduleView(v)} aria-pressed={scheduleView===v} style={{padding:"5px 16px",borderRadius:9,border:"none",cursor:"pointer",background:scheduleView===v?C.white:"transparent",color:scheduleView===v?"#B5506E":C.textSoft,fontWeight:800,fontSize:12,fontFamily:"Nunito",boxShadow:scheduleView===v?`0 1px 6px ${C.shadow}`:"none",transition:"all .15s"}}>{l}</button>
             ))}
           </div>
 
@@ -190,17 +190,17 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
                 return (
                   <button key={day.date} onClick={()=>selectDay(day.date)} aria-pressed={isPicking} aria-label={`${day.label} ${day.num}`} style={{
                     borderRadius:12, padding:"8px 4px", display:"flex", flexDirection:"column", alignItems:"center", gap:3, minHeight:44, fontFamily:"Nunito",
-                    cursor:"pointer", border:`1.5px solid ${isPicking?"#9070D0":isToday?C.lavenderDeep:items==="rest"?C.sageDeep:items.length?C.lavenderDeep:C.border}`,
-                    background:isPicking?"#9070D0":isToday?C.lavender:items==="rest"?C.sage:items.length?C.lavender+"60":C.white,
+                    cursor:"pointer", border:`1.5px solid ${isPicking?"#C4607D":isToday?C.lavenderDeep:items==="rest"?C.sageDeep:items.length?C.lavenderDeep:C.border}`,
+                    background:isPicking?"#C4607D":isToday?C.lavender:items==="rest"?C.sage:items.length?C.lavender+"60":C.white,
                     transition:"all .15s",
                   }}>
-                    <div style={{fontSize:11,fontWeight:900,color:isPicking?"white":isToday?"#7050B0":C.text}}>{day.num}</div>
+                    <div style={{fontSize:11,fontWeight:900,color:isPicking?"white":isToday?"#B5506E":C.text}}>{day.num}</div>
                     {items==="rest"
                       ? <div><Glyph emoji="🌿" chip={false} size={11}/></div>
                       : items.length>0 && (
                         <div style={{display:"flex",flexWrap:"wrap",gap:2,justifyContent:"center"}}>
                           {items.slice(0,3).map((_,i)=>(
-                            <div key={i} style={{width:5,height:5,borderRadius:"50%",background:isPicking?"white":"#9070D0"}}/>
+                            <div key={i} style={{width:5,height:5,borderRadius:"50%",background:isPicking?"white":"#C4607D"}}/>
                           ))}
                         </div>
                       )}
@@ -220,7 +220,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
                 <div className="row-between" style={{marginBottom:12}}>
                   <div>
                     <div style={{fontWeight:900,fontSize:16,color:C.text}}>{sel.toLocaleDateString("en-US",{weekday:"short"})}, {sel.toLocaleDateString("en-US",{month:"long",day:"numeric"})}</div>
-                    {isToday&&<div style={{fontSize:11,fontWeight:700,color:"#9070D0"}}>Today</div>}
+                    {isToday&&<div style={{fontSize:11,fontWeight:700,color:"#C4607D"}}>Today</div>}
                   </div>
                   <span style={{fontSize:13,color:C.textSoft,fontWeight:600}}>{items.length?`${items.length} workout${items.length>1?"s":""}` : "Rest day"}</span>
                 </div>
@@ -238,7 +238,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
                         {isToday&&<button className="btn btn-sm" style={{background:completedToday.has(item.name)?C.sage:C.butter,color:completedToday.has(item.name)?ACCENT.fiber.text:ACCENT.carbs.text,border:"none",fontSize:11}} onClick={()=>openLog(item)}>
                           {completedToday.has(item.name)?"✓ Done":"Log"}
                         </button>}
-                        <button style={{...iconBtn,color:movingIdx===idx?"#7050B0":C.textSoft,background:movingIdx===idx?C.lavender:"none"}} aria-label={`Move ${item.name} to another day`} aria-expanded={movingIdx===idx} onClick={()=>{setMovingIdx(movingIdx===idx?null:idx);setMoveDate("");}}>
+                        <button style={{...iconBtn,color:movingIdx===idx?"#B5506E":C.textSoft,background:movingIdx===idx?C.lavender:"none"}} aria-label={`Move ${item.name} to another day`} aria-expanded={movingIdx===idx} onClick={()=>{setMovingIdx(movingIdx===idx?null:idx);setMoveDate("");}}>
                           <ArrowRightLeft size={15} strokeWidth={1.8}/>
                         </button>
                         <button style={{...iconBtn,fontSize:16}} aria-label={`Remove ${item.name}`} onClick={()=>removeFromDay(pickingDay,idx)}>×</button>
@@ -249,7 +249,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
                         <div style={{fontSize:11,color:C.textSoft,fontWeight:700,marginBottom:6}}>Move to:</div>
                         <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:4,marginBottom:8}}>
                           {weekOf(pickingDay).map(d=>{const dt=new Date(d+"T12:00"),cur=d===pickingDay;return(
-                            <button key={d} disabled={cur} onClick={()=>moveItem(pickingDay,idx,d)} aria-label={`Move to ${shortDate(d)}`} style={{padding:"6px 0",borderRadius:10,border:`1.5px solid ${cur?C.border:C.lavenderDeep}`,background:cur?"transparent":C.white,color:cur?C.textSoft:"#5040A0",cursor:cur?"default":"pointer",fontFamily:"Nunito",display:"flex",flexDirection:"column",alignItems:"center",lineHeight:1.2,opacity:cur?.5:1}}>
+                            <button key={d} disabled={cur} onClick={()=>moveItem(pickingDay,idx,d)} aria-label={`Move to ${shortDate(d)}`} style={{padding:"6px 0",borderRadius:10,border:`1.5px solid ${cur?C.border:C.lavenderDeep}`,background:cur?"transparent":C.white,color:cur?C.textSoft:"#8E3A55",cursor:cur?"default":"pointer",fontFamily:"Nunito",display:"flex",flexDirection:"column",alignItems:"center",lineHeight:1.2,opacity:cur?.5:1}}>
                               <span style={{fontSize:9,fontWeight:800}}>{dt.toLocaleDateString("en-US",{weekday:"short"})}</span>
                               <span style={{fontSize:12,fontWeight:900}}>{dt.getDate()}</span>
                             </button>
@@ -277,7 +277,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
                       <div style={{fontSize:11,color:C.textSoft,fontWeight:700,marginBottom:6}}>Quick add from your plan:</div>
                       <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
                         {workoutPlan.map(w=>(
-                          <button key={w.id} onClick={()=>{addToDay(pickingDay,{name:w.name,emoji:w.emoji,detail:[w.muscle,w.duration].filter(Boolean).join(" · ")});showToast("Added ✓");}} style={{padding:"5px 12px",borderRadius:99,border:`1.5px solid ${C.lavenderDeep}`,background:C.lavender,color:"#5040A0",fontWeight:700,fontSize:11,cursor:"pointer",fontFamily:"Nunito"}}>
+                          <button key={w.id} onClick={()=>{addToDay(pickingDay,{name:w.name,emoji:w.emoji,detail:[w.muscle,w.duration].filter(Boolean).join(" · ")});showToast("Added ✓");}} style={{padding:"5px 12px",borderRadius:99,border:`1.5px solid ${C.lavenderDeep}`,background:C.lavender,color:"#8E3A55",fontWeight:700,fontSize:11,cursor:"pointer",fontFamily:"Nunito"}}>
                             <Glyph emoji={w.emoji} chip={false} size={13}/> {w.name}
                           </button>
                         ))}
@@ -304,8 +304,8 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
             <div style={{fontSize:12,color:cycleInfo.phase.textColor,fontWeight:500,opacity:.9}}>{cycleInfo.phase.workouts[0]} · {cycleInfo.phase.workouts[1]}</div>
           </div>}
           <button onClick={()=>setCustomModal({initial:null})} style={{width:"100%",display:"flex",alignItems:"center",gap:12,padding:"14px 16px",marginBottom:10,borderRadius:18,border:`1.5px dashed ${C.lavenderDeep}`,background:C.lavender+"60",cursor:"pointer",fontFamily:"Nunito",textAlign:"left"}}>
-            <span style={{width:34,height:34,borderRadius:"50%",background:C.lavender,display:"inline-flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Plus size={18} color="#7050B0" strokeWidth={2.4} aria-hidden="true"/></span>
-            <span><span style={{display:"block",fontWeight:800,fontSize:15,color:"#5040A0"}}>Create workout</span><span style={{display:"block",fontSize:12,color:C.textSoft,fontWeight:500}}>Add your own session, with its own icon</span></span>
+            <span style={{width:34,height:34,borderRadius:"50%",background:C.lavender,display:"inline-flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Plus size={18} color="#B5506E" strokeWidth={2.4} aria-hidden="true"/></span>
+            <span><span style={{display:"block",fontWeight:800,fontSize:15,color:"#8E3A55"}}>Create workout</span><span style={{display:"block",fontSize:12,color:C.textSoft,fontWeight:500}}>Add your own session, with its own icon</span></span>
           </button>
           <div style={{display:"flex",flexDirection:"column",gap:10}}>
             {customWorkouts.map(w=>renderWorkoutCard(w,true))}

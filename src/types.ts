@@ -50,6 +50,8 @@ export type RecipeKind = "meal" | "drink";
 export interface Recipe {
   id: string;
   name: string;
+  /** Short (2-3 word) photo search for the dish as it'd be photographed, e.g. "overnight oats". Falls back to `name`. */
+  photoQuery?: string;
   kind: RecipeKind;
   /** An emoji from the glyph set (rendered with `<Glyph>`). */
   emoji: string;
@@ -88,6 +90,22 @@ export interface RecipeRequest {
   context?: string;
 }
 
+/** A Pexels food photo from GET /api/recipe-photo; `null` when there is none. */
+/** A food photo from GET /api/recipe-photo, with the credit it must be shown with. */
+export interface RecipePhoto {
+  /** https image url. */
+  url: string;
+  /** "" when the creator is unknown. */
+  photographer: string;
+  /** https profile url, or "". */
+  photographer_url: string;
+  /** https page of the photo (Pexels page / Openverse foreign landing page), or "". */
+  source_url: string;
+  source: "Pexels" | "Openverse";
+  /** Human label, e.g. "CC BY 2.0", "CC0", "Public domain", "Pexels License". */
+  license: string;
+}
+
 // ─── Body ─────────────────────────────────────────────────────────────────────
 
 export type MeasurementKey = "weight" | "height" | "waist" | "hips" | "bust" | "glutes" | "thighs" | "arms";
@@ -105,10 +123,12 @@ export interface WeightEntry {
   weight: number;
 }
 
-/** One logged period start, persisted in "period-history" (sorted newest first). */
+/** One logged period, persisted in "period-history" (sorted newest first). */
 export interface PeriodEntry {
-  /** YYYY-MM-DD */
+  /** First day, YYYY-MM-DD */
   date: string;
+  /** Last bleeding day, YYYY-MM-DD, once logged. */
+  end?: string;
 }
 
 // ─── Cycle ────────────────────────────────────────────────────────────────────
@@ -139,6 +159,8 @@ export interface CycleInfo {
   /** 1-based day within the current cycle. */
   dayOfCycle: number;
   cycleLength: number;
+  /** Bleeding days the phases are based on. */
+  periodLength: number;
   daysUntilNext: number;
   /** YYYY-MM-DD (UTC) */
   nextPeriodDate: string;

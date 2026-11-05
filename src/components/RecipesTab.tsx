@@ -8,6 +8,7 @@ import { localDateKey } from "../lib/date";
 import { parseRecipe, recipesFor, type RecipeFilter } from "../data/recipes";
 import { buildFoodContext, stripEmphasis } from "../data/foodChat";
 import { Glyph } from "./Glyph";
+import { RecipePhotoView, RecipeVideoLinks } from "./RecipeMedia";
 import type { AIRecipe, CycleInfo, PhaseId, RecipeKind, SavedRecipe, ShowToast } from "../types";
 
 interface RecipesTabProps {
@@ -15,7 +16,7 @@ interface RecipesTabProps {
   showToast: ShowToast;
 }
 
-const PURPLE = "#7050B0";
+const PURPLE = "#B5506E";
 const PHASE_IDS = Object.keys(PHASES) as PhaseId[];
 const FILTERS: [RecipeFilter, string][] = [["all", "All"], ["meal", "Meals"], ["drink", "Drinks"]];
 
@@ -41,15 +42,19 @@ function RecipeBody({ ingredients, steps }: { ingredients: string[]; steps: stri
   );
 }
 
-/** A tappable card header (emoji, name, time, why) that expands to show the recipe body. */
-function RecipeCard({ emoji, name, time, why, kind, open, onToggle, ingredients, steps, action }: {
-  emoji: string; name: string; time: string; why: string; kind: RecipeKind; open: boolean; onToggle: () => void;
+/**
+ * A tappable card header (thumbnail, name, time, why) that expands to show a food photo,
+ * the recipe body and YouTube / TikTok video links.
+ */
+function RecipeCard({ emoji, name, photoQuery, time, why, kind, open, onToggle, ingredients, steps, action }: {
+  emoji: string; name: string; photoQuery?: string; time: string; why: string; kind: RecipeKind; open: boolean; onToggle: () => void;
   ingredients: string[]; steps: string[]; action?: ReactNode;
 }) {
   return (
     <div className="card" style={{marginBottom:10,padding:"14px 16px"}}>
+      {open && <RecipePhotoView name={name} photoQuery={photoQuery} emoji={emoji} variant="hero"/>}
       <button onClick={onToggle} aria-expanded={open} style={{display:"flex",gap:12,alignItems:"flex-start",width:"100%",background:"none",border:"none",padding:0,cursor:"pointer",fontFamily:"Nunito",textAlign:"left",color:C.text}}>
-        <Glyph emoji={emoji} size={16}/>
+        {open ? <Glyph emoji={emoji} size={16}/> : <RecipePhotoView name={name} photoQuery={photoQuery} emoji={emoji} variant="thumb"/>}
         <div style={{flex:1,minWidth:0}}>
           <div style={{fontWeight:800,fontSize:14,marginBottom:3}}>{name}</div>
           <div className="row" style={{gap:10,fontSize:11,color:C.textSoft,fontWeight:700,marginBottom:4}}>
@@ -61,6 +66,7 @@ function RecipeCard({ emoji, name, time, why, kind, open, onToggle, ingredients,
         <ChevronDown size={18} color={C.textSoft} aria-hidden="true" style={{flexShrink:0,transform:open?"rotate(180deg)":"none",transition:"transform .15s"}}/>
       </button>
       {open && <RecipeBody ingredients={ingredients} steps={steps}/>}
+      {open && <RecipeVideoLinks name={name}/>}
       {action}
     </div>
   );
@@ -142,20 +148,20 @@ export function RecipesTab({ cycleInfo, showToast }: RecipesTabProps) {
       </div>
 
       {recipes.map(r => (
-        <RecipeCard key={r.id} emoji={r.emoji} name={r.name} time={r.time} why={r.why} kind={r.kind} ingredients={r.ingredients} steps={r.steps}
+        <RecipeCard key={r.id} emoji={r.emoji} name={r.name} photoQuery={r.photoQuery} time={r.time} why={r.why} kind={r.kind} ingredients={r.ingredients} steps={r.steps}
           open={openId === r.id} onToggle={() => setOpenId(o => o === r.id ? null : r.id)}/>
       ))}
 
       {/* AI recipe maker */}
       <div className="card" style={{marginTop:16,marginBottom:14,background:C.lavender,border:"none"}}>
-        <div style={{fontWeight:800,fontSize:14,color:"#5040A0",marginBottom:4}}><Glyph emoji="✨" chip={false} size={14} color={PURPLE}/> Make me a recipe</div>
-        <div style={{fontSize:12,color:"#6050A8",fontWeight:500,lineHeight:1.5,marginBottom:12}}>A {phase.label.toLowerCase()}-phase recipe from what you have at home.</div>
+        <div style={{fontWeight:800,fontSize:14,color:"#8E3A55",marginBottom:4}}><Glyph emoji="✨" chip={false} size={14} color={PURPLE}/> Make me a recipe</div>
+        <div style={{fontSize:12,color:"#8E3A55",fontWeight:500,lineHeight:1.5,marginBottom:12}}>A {phase.label.toLowerCase()}-phase recipe from what you have at home.</div>
         <div style={{display:"flex",gap:6,marginBottom:10}}>
           {(["meal","drink"] as const).map(k => (
-            <button key={k} className="chip" onClick={() => setAiKind(k)} style={aiKind===k?{background:C.lavenderDeep,borderColor:"transparent",color:"#5040A0"}:{}}>{k === "meal" ? "Meal" : "Drink"}</button>
+            <button key={k} className="chip" onClick={() => setAiKind(k)} style={aiKind===k?{background:C.lavenderDeep,borderColor:"transparent",color:"#8E3A55"}:{}}>{k === "meal" ? "Meal" : "Drink"}</button>
           ))}
         </div>
-        <label className="label" htmlFor="recipe-have" style={{color:"#5040A0"}}>Ingredients I have (optional)</label>
+        <label className="label" htmlFor="recipe-have" style={{color:"#8E3A55"}}>Ingredients I have (optional)</label>
         <input id="recipe-have" className="input" placeholder="e.g. eggs, spinach, sweet potato" value={have} maxLength={300} onChange={e => setHave(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !aiLoading) void makeRecipe(); }} style={{fontSize:13,marginBottom:10,background:C.white}}/>
         <button className="btn btn-primary" style={{width:"100%"}} onClick={() => void makeRecipe()} disabled={aiLoading}>
           {aiLoading ? <><div className="spin"/>Cooking something up...</> : <><Glyph emoji="✨" chip={false} size={16} color="currentColor"/>Make me a {aiKind}</>}
@@ -190,7 +196,7 @@ export function RecipesTab({ cycleInfo, showToast }: RecipesTabProps) {
               action={
                 <div className="row-between" style={{marginTop:10}}>
                   <span style={{fontSize:11,color:C.textSoft,fontWeight:600}}>{r.phase && PHASES[r.phase] ? `${PHASES[r.phase].label} phase` : "Saved"}</span>
-                  <button onClick={() => setSaved(s => s.filter(x => x.id !== r.id))} style={{display:"inline-flex",alignItems:"center",gap:3,background:"none",border:"none",fontSize:11,color:"#9070C0",fontWeight:700,cursor:"pointer",fontFamily:"Nunito"}}>
+                  <button onClick={() => setSaved(s => s.filter(x => x.id !== r.id))} style={{display:"inline-flex",alignItems:"center",gap:3,background:"none",border:"none",fontSize:11,color:"#B5506E",fontWeight:700,cursor:"pointer",fontFamily:"Nunito"}}>
                     <X size={12} aria-hidden="true"/> Remove
                   </button>
                 </div>

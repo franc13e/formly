@@ -2,7 +2,7 @@ import {
   Accessibility, Armchair, Bean, Beef, BicepsFlexed, Bike, Bird, Brain, CalendarDays, Candy, Carrot, Cherry, Citrus, CloudSun,
   Coffee, Droplet, Dumbbell, Egg, Fish, Flame, Flower2, Footprints, Grape, Hand, HandFist, HeartPulse, Leaf, LeafyGreen, Milk,
   Moon, Mountain, Pencil, PersonStanding, Ruler, Salad, Scale, Soup, Sparkle, Sparkles, Sprout, Sun, Target,
-  TreeDeciduous, TrendingUp, Waves, Wheat, Wind, Zap, type LucideIcon,
+  TreeDeciduous, TrendingUp, Waves, Wheat, Wind, Zap, Plus, type LucideIcon,
 } from "lucide-react";
 import { C, ACCENT } from "../theme";
 
@@ -38,7 +38,7 @@ const GLYPHS: Record<string, [LucideIcon, Tone]> = {
   // app sections and prompts
   "✨": [Sparkles, "lavender"], "✦": [Sparkle, "lavender"], "📈": [TrendingUp, "lavender"], "⚖": [Scale, "lavender"],
   "💭": [Brain, "lavender"], "📅": [CalendarDays, "sky"], "🗓": [CalendarDays, "sky"], "✏": [Pencil, "lavender"],
-  "📏": [Ruler, "peach"], "👋": [Hand, "butter"],
+  "📏": [Ruler, "peach"], "👋": [Hand, "butter"], "➕": [Plus, "rose"],
 };
 
 // "🏋️" and "🏃‍♀️" carry a variation selector / gendered suffix; match on the base character

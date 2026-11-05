@@ -2,7 +2,7 @@ import { useState } from "react";
 import { C, ACCENT } from "../theme";
 import { callAI } from "../lib/api";
 import { load, save } from "../lib/storage";
-import { PHASES, cycleDayOn, phaseRanges, type CycleStats } from "../lib/cycle";
+import { PHASES, MAX_PERIOD_LENGTH, MIN_PERIOD_LENGTH, clampPeriodLength, cycleDayOn, periodContaining, phaseRanges, type CycleStats } from "../lib/cycle";
 import { PhaseWheel } from "../components/PhaseWheel";
 import { PhaseBadge } from "../components/PhaseBadge";
 import { Glyph } from "../components/Glyph";
@@ -34,6 +34,12 @@ interface BodyPageProps {
   stats: CycleStats;
   /** Records a period that started on the given YYYY-MM-DD. */
   logPeriodStart: (date: string) => void;
+  /** Typical period length and how many logged periods it comes from (0 = the setting). */
+  periodLength: { length: number; logged: number };
+  periodLengthSetting: number;
+  setPeriodLengthSetting: Setter<number>;
+  /** Records the given YYYY-MM-DD as the last day of the period it falls in. */
+  logPeriodEnd: (date: string) => void;
   showToast: ShowToast;
 }
 
@@ -51,13 +57,13 @@ function SubTabs({ subTab, setSubTab }: { subTab: BodySubTab; setSubTab: (tab: B
   return (
     <div style={{display:"flex",borderBottom:`2px solid ${C.border}`}}>
       {([["cycle","Cycle"],["measurements","Body"],["insights","Insights"]] as const).map(([v,l])=>(
-        <button key={v} onClick={()=>setSubTab(v)} style={{flex:1,padding:"10px 0",border:"none",background:"transparent",cursor:"pointer",fontFamily:"Nunito",fontWeight:800,fontSize:14,color:subTab===v?"#7050B0":C.textSoft,borderBottom:subTab===v?"2px solid #7050B0":"2px solid transparent",marginBottom:-2,transition:"all .15s"}}>{l}</button>
+        <button key={v} onClick={()=>setSubTab(v)} style={{flex:1,padding:"10px 0",border:"none",background:"transparent",cursor:"pointer",fontFamily:"Nunito",fontWeight:800,fontSize:14,color:subTab===v?"#B5506E":C.textSoft,borderBottom:subTab===v?"2px solid #B5506E":"2px solid transparent",marginBottom:-2,transition:"all .15s"}}>{l}</button>
       ))}
     </div>
   );
 }
 
-export function BodyPage({ measurements, setMeasurements, weightHistory, setWeightHistory, cycleInfo, periodStart, setPeriodStart, periodHistory, setPeriodHistory, cycleLength, setCycleLength, starts, stats, logPeriodStart, showToast }: BodyPageProps) {
+export function BodyPage({ measurements, setMeasurements, weightHistory, setWeightHistory, cycleInfo, periodStart, setPeriodStart, periodHistory, setPeriodHistory, cycleLength, setCycleLength, starts, stats, logPeriodStart, periodLength, periodLengthSetting, setPeriodLengthSetting, logPeriodEnd, showToast }: BodyPageProps) {
   const [subTab,setSubTab]=useState<BodySubTab>("cycle");
   const [modal,setModal]=useState<BodyModal|null>(null);
   const [form,setForm]=useState<Measurements>({});
@@ -73,9 +79,21 @@ export function BodyPage({ measurements, setMeasurements, weightHistory, setWeig
     showToast("Period removed");
   };
 
+  const ends=Object.fromEntries(periodHistory.filter(p=>p.end).map(p=>[p.date,p.end as string]));
+  const dayInfo=(date: string)=>cycleDayOn(date,starts,stats.length,periodLength.length,ends);
+  // The period an "ended" tap would close: the latest logged start on or before the day,
+  // still open and recent enough to plausibly be the same period.
+  const openPeriodFor=(date: string)=>{
+    const entries=starts.map(d=>periodHistory.find(p=>p.date===d)??{date:d});
+    const cur=periodContaining(entries,date);
+    if(!cur||cur.end||date===cur.date)return null;
+    const diff=Math.round((new Date(date+"T12:00").getTime()-new Date(cur.date+"T12:00").getTime())/86400000);
+    return diff>0&&diff<14?cur:null;
+  };
+
   // Calendar look for one day: logged period days solid, predicted ones dashed, the rest tinted by phase.
   const cycleLook=(date: string): DayLook=>{
-    const info=cycleDayOn(date,starts,stats.length);
+    const info=dayInfo(date);
     if(!info)return {};
     if(info.loggedPeriod)return {background:PHASES.menstrual.color,border:`1.5px solid ${PHASES.menstrual.color}`,textColor:"white",content:<Glyph emoji="💧" chip={false} size={9} color="white"/>};
     if(info.predictedPeriod)return {background:PHASES.menstrual.bg,border:`1.5px dashed ${PHASES.menstrual.color}`,textColor:PHASES.menstrual.textColor};
@@ -145,11 +163,15 @@ export function BodyPage({ measurements, setMeasurements, weightHistory, setWeig
                 {stats.cyclesLogged>0
                   ?`Based on your last ${stats.cyclesLogged} cycle${stats.cyclesLogged>1?"s":""}: about ${stats.length} days, usually within ±${stats.spread}.`
                   :`Using your ${stats.length}-day setting. Log each period when it starts and Formly learns your real rhythm, so predictions get sharper.`}
+                {" "}{periodLength.logged>0
+                  ?`Your periods last about ${periodLength.length} days.`
+                  :`Periods counted as ${periodLength.length} days until you log when one ends.`}
               </div>
               <div className="row" style={{gap:8,marginTop:12}}>
                 <button className="btn btn-primary btn-sm" style={{flex:1}} disabled={starts.includes(today)} onClick={()=>{logPeriodStart(today);showToast("Period logged");}}>{starts.includes(today)?"Logged today ✓":"My period started today"}</button>
                 <button className="btn btn-ghost btn-sm" style={{flex:1}} onClick={()=>setModal("cycle-setup")}>Another day</button>
               </div>
+              {openPeriodFor(today)&&<button className="btn btn-ghost btn-sm" style={{width:"100%",marginTop:8}} onClick={()=>{logPeriodEnd(today);showToast("Period end logged");}}>My period ended today</button>}
             </div>}
             <div className="card" style={{marginBottom:14}}>
               <div style={{fontWeight:800,fontSize:13,color:C.textMid,marginBottom:10}}><Glyph emoji="🗓" chip={false} size={14}/> Your month</div>
@@ -160,7 +182,8 @@ export function BodyPage({ measurements, setMeasurements, weightHistory, setWeig
                 <span className="row" style={{gap:5}}><span style={{width:12,height:12,borderRadius:4,background:PHASES.ovulation.bg,border:`1.5px solid ${PHASES.ovulation.color}`}}/>Ovulation</span>
               </div>
               {(()=>{
-                const info=cycleDayOn(calDay,starts,stats.length);
+                const info=dayInfo(calDay);
+                const openForDay=openPeriodFor(calDay);
                 const isStart=starts.includes(calDay);
                 return (
                   <div style={{marginTop:12,padding:"10px 12px",background:C.bgDeep,borderRadius:12}}>
@@ -172,6 +195,7 @@ export function BodyPage({ measurements, setMeasurements, weightHistory, setWeig
                       {isStart
                         ?<button className="btn btn-ghost btn-sm" onClick={()=>removePeriodStart(calDay)}>Remove this period</button>
                         :<button className="btn btn-primary btn-sm" onClick={()=>{logPeriodStart(calDay);showToast("Period logged");}}>Period started this day</button>}
+                      {openForDay&&<button className="btn btn-ghost btn-sm" onClick={()=>{logPeriodEnd(calDay);showToast("Period end logged");}}>Period ended this day</button>}
                     </div>}
                   </div>
                 );
@@ -199,7 +223,7 @@ export function BodyPage({ measurements, setMeasurements, weightHistory, setWeig
                 const lengths = entries.map((p,i,arr)=>arr[i+1]?Math.round((new Date(p.date).getTime()-new Date(arr[i+1].date).getTime())/(1000*60*60*24)):null).filter((n): n is number => Boolean(n));
                 const avg = lengths.length ? Math.round(lengths.reduce((a,b)=>a+b,0)/lengths.length) : null;
                 return (<>
-                  {avg&&<div style={{background:C.lavender,borderRadius:10,padding:"8px 12px",marginBottom:10,fontSize:12,fontWeight:700,color:"#7050B0"}}>Your average cycle: {avg} days</div>}
+                  {avg&&<div style={{background:C.lavender,borderRadius:10,padding:"8px 12px",marginBottom:10,fontSize:12,fontWeight:700,color:"#B5506E"}}>Your average cycle: {avg} days</div>}
                   {entries.map((p,i,arr)=>{const next=arr[i+1];const len=next?Math.round((new Date(p.date).getTime()-new Date(next.date).getTime())/(1000*60*60*24)):null;return(<div key={p.date} className="row-between" style={{padding:"6px 0",borderTop:i>0?`1px solid ${C.border}`:"none"}}><span style={{fontSize:13,fontWeight:600,color:C.textMid}}>{new Date(p.date+"T12:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</span>{len&&<span style={{fontSize:11,color:C.textSoft,fontWeight:600}}>{len}d</span>}</div>);})}
                 </>);
               })()}
@@ -241,14 +265,14 @@ export function BodyPage({ measurements, setMeasurements, weightHistory, setWeig
             <div style={{fontSize:12,color:C.textSoft,fontWeight:500,marginBottom:14,lineHeight:1.5}}>Get a warm, personalised explanation of what's going on in your body right now, taking into account your cycle phase, weight trend, and measurements.</div>
             <button className="btn btn-primary" style={{width:"100%"}} onClick={generateInsight} disabled={aiLoading}>{aiLoading?<><div className="spin"/>Thinking about your body...</>:<><Glyph emoji="✨" chip={false} size={16} color="currentColor"/>Get my insight</>}</button>
             {aiInsight&&<div style={{marginTop:14,background:C.lavender,borderRadius:14,padding:"14px 16px"}}>
-              <div style={{fontSize:11,fontWeight:800,color:"#7050B0",marginBottom:8}}>YOUR INSIGHT</div>
-              <div style={{fontSize:13,lineHeight:1.7,color:"#4030A0",fontWeight:500}}>{aiInsight}</div>
-              <button style={{marginTop:10,background:"none",border:"none",fontSize:11,color:"#9070C0",fontWeight:700,cursor:"pointer",padding:0,fontFamily:"Nunito"}} onClick={()=>{setAiInsight("");save("body-insight","");}}>Clear</button>
+              <div style={{fontSize:11,fontWeight:800,color:"#B5506E",marginBottom:8}}>YOUR INSIGHT</div>
+              <div style={{fontSize:13,lineHeight:1.7,color:"#6E2F45",fontWeight:500}}>{aiInsight}</div>
+              <button style={{marginTop:10,background:"none",border:"none",fontSize:11,color:"#B5506E",fontWeight:700,cursor:"pointer",padding:0,fontFamily:"Nunito"}} onClick={()=>{setAiInsight("");save("body-insight","");}}>Clear</button>
             </div>}
           </div>
           <div style={{marginBottom:8}}>
             <div style={{fontSize:12,fontWeight:800,color:C.textMid,marginBottom:10}}>UNDERSTANDING YOUR CYCLE</div>
-            {phaseRanges(stats.length).map(r=>({...PHASES[r.id],range:r})).map(p=><div key={p.id} style={{background:p.bg,borderRadius:18,padding:"14px 16px",marginBottom:10,border:`1.5px solid ${p.color}`,opacity:cycleInfo?.phase?.id===p.id?1:.7}}><div style={{fontWeight:900,fontSize:14,color:p.textColor,marginBottom:4}}><Glyph emoji={p.emoji} chip={false} size={14} color={p.textColor}/> {p.label} · Days {p.range.start+1}-{p.range.end}</div><div style={{fontSize:12,color:p.textColor,fontWeight:500,lineHeight:1.6,opacity:.9}}>{p.body}</div></div>)}
+            {phaseRanges(stats.length,periodLength.length).map(r=>({...PHASES[r.id],range:r})).map(p=><div key={p.id} style={{background:p.bg,borderRadius:18,padding:"14px 16px",marginBottom:10,border:`1.5px solid ${p.color}`,opacity:cycleInfo?.phase?.id===p.id?1:.7}}><div style={{fontWeight:900,fontSize:14,color:p.textColor,marginBottom:4}}><Glyph emoji={p.emoji} chip={false} size={14} color={p.textColor}/> {p.label} · Days {p.range.start+1}-{p.range.end}</div><div style={{fontSize:12,color:p.textColor,fontWeight:500,lineHeight:1.6,opacity:.9}}>{p.body}</div></div>)}
           </div>
         </div>}
       </div>
@@ -258,6 +282,14 @@ export function BodyPage({ measurements, setMeasurements, weightHistory, setWeig
         <div style={{fontSize:13,color:C.textSoft,fontWeight:500,lineHeight:1.6,marginBottom:18}}>We only need two things. Your data stays on your device and is never shared.</div>
         <div style={{marginBottom:14}}><label className="label">First day of your last period</label><input className="input" type="date" value={periodStart||""} onChange={e=>setPeriodStart(e.target.value)}/></div>
         <div style={{marginBottom:20}}><label className="label">Average cycle length (days)</label><CycleLengthInput value={cycleLength} onChange={setCycleLength}/><div style={{fontSize:11,color:C.textSoft,marginTop:5,fontWeight:600}}>Most cycles are 21-35 days. The average is 28.</div></div>
+        <div style={{marginBottom:20}}><label className="label" htmlFor="period-length">Period length (days)</label>
+          <div className="row" style={{gap:8}}>
+            <button className="btn btn-ghost btn-sm" aria-label="Shorter period" onClick={()=>setPeriodLengthSetting(v=>clampPeriodLength(v-1))}>−</button>
+            <input id="period-length" className="input" type="number" min={MIN_PERIOD_LENGTH} max={MAX_PERIOD_LENGTH} value={periodLengthSetting} onChange={e=>setPeriodLengthSetting(clampPeriodLength(Number(e.target.value)))} style={{textAlign:"center",width:80}}/>
+            <button className="btn btn-ghost btn-sm" aria-label="Longer period" onClick={()=>setPeriodLengthSetting(v=>clampPeriodLength(v+1))}>+</button>
+          </div>
+          <div style={{fontSize:11,color:C.textSoft,marginTop:5,fontWeight:600}}>Most periods last 3-7 days. Once you log when periods end, Formly uses your real average instead.</div>
+        </div>
         <button className="btn btn-primary" style={{width:"100%"}} onClick={()=>{if(periodStart){setPeriodHistory(h=>{const already=h.find(x=>x.date===periodStart);if(already)return h;return[...h,{date:periodStart}].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,12);});}setModal(null);showToast("Cycle logged");}}>Save</button>
       </div></div>}
 

@@ -11,7 +11,7 @@ interface FoodChatProps {
   cycleInfo: CycleInfo | null;
 }
 
-const PURPLE = "#7050B0";
+const PURPLE = "#B5506E";
 
 /** Three bouncing dots shown while the coach is replying. */
 function TypingDots() {
@@ -87,7 +87,7 @@ export function FoodChat({ cycleInfo }: FoodChatProps) {
           </div>
         </div>
         {messages.length > 0 && (
-          <button onClick={clear} style={{display:"inline-flex",alignItems:"center",gap:4,background:"none",border:"none",fontSize:11,color:"#9070C0",fontWeight:700,cursor:"pointer",fontFamily:"Nunito",flexShrink:0}}>
+          <button onClick={clear} style={{display:"inline-flex",alignItems:"center",gap:4,background:"none",border:"none",fontSize:11,color:"#B5506E",fontWeight:700,cursor:"pointer",fontFamily:"Nunito",flexShrink:0}}>
             <Trash2 size={13} aria-hidden="true"/> Clear chat
           </button>
         )}
@@ -110,7 +110,7 @@ export function FoodChat({ cycleInfo }: FoodChatProps) {
       ) : (
         <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:14}}>
           {messages.map((m, i) => m.role === "user" ? (
-            <div key={i} style={{alignSelf:"flex-end",maxWidth:"85%",background:C.lavender,color:"#4030A0",borderRadius:"18px 18px 4px 18px",padding:"10px 14px",fontSize:13,fontWeight:600,lineHeight:1.55,whiteSpace:"pre-wrap",wordBreak:"break-word"}}>{m.content}</div>
+            <div key={i} style={{alignSelf:"flex-end",maxWidth:"85%",background:C.lavender,color:"#6E2F45",borderRadius:"18px 18px 4px 18px",padding:"10px 14px",fontSize:13,fontWeight:600,lineHeight:1.55,whiteSpace:"pre-wrap",wordBreak:"break-word"}}>{m.content}</div>
           ) : (
             <div key={i} style={{alignSelf:"flex-start",maxWidth:"90%",background:C.card,border:`1.5px solid ${C.border}`,boxShadow:`0 2px 8px ${C.shadow}`,color:C.text,borderRadius:"18px 18px 18px 4px",padding:"12px 14px",fontSize:13,fontWeight:500,lineHeight:1.65,whiteSpace:"pre-wrap",wordBreak:"break-word"}}>{m.content}</div>
           ))}

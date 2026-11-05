@@ -57,10 +57,10 @@ export function MonthCalendar({ selected, onSelect, renderDay, initialMonth }: M
               style={{
                 minHeight: 46, borderRadius: 10, padding: "5px 2px", display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
                 cursor: onSelect ? "pointer" : "default", fontFamily: "Nunito",
-                border: isSel ? "2px solid #7050B0" : look.border ?? `1.5px solid ${isToday ? C.lavenderDeep : C.border}`,
+                border: isSel ? "2px solid #B5506E" : look.border ?? `1.5px solid ${isToday ? C.lavenderDeep : C.border}`,
                 background: look.background ?? (isToday ? C.lavender : C.white),
               }}>
-              <span style={{ fontSize: 11, fontWeight: 900, color: look.textColor ?? (isToday ? "#7050B0" : C.text) }}>{i + 1}</span>
+              <span style={{ fontSize: 11, fontWeight: 900, color: look.textColor ?? (isToday ? "#B5506E" : C.text) }}>{i + 1}</span>
               {look.content}
             </button>
           );

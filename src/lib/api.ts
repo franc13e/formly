@@ -1,4 +1,5 @@
-import type { ChatMessage, RecipeRequest } from "../types";
+import type { ChatMessage, RecipePhoto, RecipeRequest } from "../types";
+import { parseRecipePhoto } from "./recipePhotos";
 
 // ─── Backend helper ───────────────────────────────────────────────────────────
 // Same-origin by default (Vercel serves the FastAPI app under /api); override with VITE_API_URL.
@@ -70,4 +71,20 @@ export function callFoodChat(messages: ChatMessage[], context?: string): Promise
 /** Asks /api/recipe for a recipe; returns its plain-text reply (see `parseRecipe`). Errors are thrown like `callAI`'s. */
 export function callRecipe(request: RecipeRequest): Promise<string> {
   return postForResult("/api/recipe", request, "callRecipe");
+}
+
+/**
+ * Looks up a food photo for a recipe name via GET /api/recipe-photo (Pexels when the server has a key,
+ * otherwise Openverse). Resolves null when there is no photo; throws on HTTP errors, timeouts (15s) and network failures.
+ */
+export async function getRecipePhoto(name: string): Promise<RecipePhoto | null> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+  try {
+    const res = await fetch(`${API}/api/recipe-photo?q=${encodeURIComponent(name.trim().slice(0, 120))}`, { signal: controller.signal });
+    if (!res.ok) throw new Error(`Server error ${res.status}`);
+    return parseRecipePhoto(await res.json());
+  } finally {
+    clearTimeout(timeout);
+  }
 }

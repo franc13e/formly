@@ -1,19 +1,41 @@
+import type { PhaseId } from "./types";
 // ─── Design tokens ────────────────────────────────────────────────────────────
 export const C = {
-  bg:"#FDF6EE", bgDeep:"#F5EDE0", card:"#FFFAF5",
-  lavender:"#EDE6F8", lavenderDeep:"#D4C8F0",
-  rose:"#FDE8E8", roseDeep:"#F5C8C8",
-  sage:"#DFF0DA", sageDeep:"#B8DDB0",
-  butter:"#FFF6D0", butterDeep:"#FFE89A",
-  peach:"#FFE8D6", peachDeep:"#FFCBA4",
-  sky:"#D6EDFF", skyDeep:"#A8D4F5",
-  text:"#3D2C1E", textMid:"#7A6055", textSoft:"#B09A8A",
-  border:"#EAD9C8", shadow:"rgba(120,80,40,0.08)", white:"#FFFDF9",
+  // Soft Blush: a pale blush ground, white cards, one petal-pink accent; the other
+  // pastels are kept equally soft and used for meaning (phases, food types).
+  bg:"#FFF4F5", bgDeep:"#FBEAED", card:"#FFFFFF",
+  // "lavender" is the soft highlight for selected things; kept pink-leaning so screens stay rosy.
+  lavender:"#FBEAF0", lavenderDeep:"#F2C9D6",
+  rose:"#FDE7EC", roseDeep:"#F6B7C4",
+  sage:"#E6F4EA", sageDeep:"#BFE3C8",
+  butter:"#FFF3D6", butterDeep:"#F8D57E",
+  peach:"#FFEADF", peachDeep:"#F9C6AE",
+  sky:"#E4F0F8", skyDeep:"#BCD9EC",
+  text:"#3A2630", textMid:"#6E5662", textSoft:"#82677A",
+  border:"#F3DFE4", shadow:"rgba(201,110,138,0.14)", white:"#FFFFFF",
+  /** Main accent fill (buttons, today, active tab); always with dark text on it. */
+  petal:"#F6B7C4",
+  /** Accent for text and icons on light grounds (passes contrast on white). */
+  accentInk:"#B5506E",
+  /** The dark pill navigation. */
+  ink:"#2E2229",
 } as const;
 export const ACCENT = {
-  protein:{text:"#C05070"}, carbs:{text:"#9A7010"}, fats:{text:"#B05020"},
-  sugar:{text:"#7050B0"}, fiber:{text:"#3A7A30"}, water:{text:"#2060A0", deep:C.skyDeep},
+  protein:{text:"#B5506E"}, carbs:{text:"#8A6A12"}, fats:{text:"#A65A33"},
+  sugar:{text:"#9A4F78"}, fiber:{text:"#3F7A4E"}, water:{text:"#2F6A92", deep:C.skyDeep},
 } as const;
+/** Home background, tinted by the current phase. */
+export const PHASE_GROUND = {
+  menstrual:"#FFF1F3", follicular:"#F1F8F2", ovulation:"#FFF8E8", luteal:"#F6F2FC",
+} as const;
+
+/** Soft ring colours per phase, and the darker shade used for the "today" marker. */
+export const RING: Record<PhaseId, { arc: string; mark: string }> = {
+  menstrual:  { arc: "#F6B7C4", mark: "#E07F96" },
+  follicular: { arc: "#BFE3C8", mark: "#7FBF90" },
+  ovulation:  { arc: "#F8D57E", mark: "#D9AE3F" },
+  luteal:     { arc: "#DCD3F1", mark: "#A893DA" },
+};
 
 // ─── CSS ──────────────────────────────────────────────────────────────────────
 export const CSS = `
@@ -26,7 +48,7 @@ export const CSS = `
   @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:.7}}
   .slide-in{animation:slideIn .25s cubic-bezier(.34,1.2,.64,1)}
   .pulse-dot{animation:pulse 2s ease-in-out infinite}
-  html,body,#root{height:100%;background:#E8DDD0;font-family:'Nunito',sans-serif;color:${C.text};}
+  html,body,#root{height:100%;background:#F8E6EA;font-family:'Nunito',sans-serif;color:${C.text};}
   ::-webkit-scrollbar{display:none;}
   .shell{max-width:430px;min-height:100dvh;margin:0 auto;background:${C.bg};display:flex;flex-direction:column;overflow:hidden;}
   @media(min-width:768px){
@@ -39,15 +61,16 @@ export const CSS = `
     .modal-overlay{align-items:center !important;}
   }
   @media(max-width:767px){.desktop-sidebar{display:none;}}
-  .scroll{flex:1;overflow-y:auto;padding-bottom:90px;}
-  .card{background:${C.card};border-radius:22px;box-shadow:0 2px 12px ${C.shadow};padding:18px;border:1.5px solid ${C.border};}
+  .scroll{flex:1;overflow-y:auto;padding-bottom:110px;}
+  .card{background:${C.card};border-radius:22px;box-shadow:0 6px 20px ${C.shadow};padding:18px;}
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;transition:transform .1s;border-radius:50px;}
   .btn:active{transform:scale(.96);}
-  .btn-primary{background:${C.lavenderDeep};color:#5040A0;padding:12px 22px;font-size:14px;box-shadow:0 3px 10px rgba(130,100,200,.25);}
+  .btn-primary{background:${C.petal};color:${C.text};padding:12px 22px;font-size:14px;font-weight:800;box-shadow:0 6px 16px ${C.shadow};}
+  .btn-primary:disabled{opacity:.55;cursor:default;}
   .btn-ghost{background:${C.white};color:${C.textMid};padding:10px 18px;font-size:13px;border:1.5px solid ${C.border};}
   .btn-sm{padding:8px 16px;font-size:12px;}
-  .input{width:100%;background:${C.bgDeep};border:1.5px solid ${C.border};border-radius:14px;padding:11px 14px;color:${C.text};font-size:14px;font-family:'Nunito',sans-serif;font-weight:600;outline:none;transition:border-color .15s;}
-  .input:focus{border-color:${C.lavenderDeep};background:${C.white};}
+  .input{width:100%;background:#FFF8F9;border:1.5px solid ${C.border};border-radius:14px;padding:11px 14px;color:${C.text};font-size:14px;font-family:'Nunito',sans-serif;font-weight:600;outline:none;transition:border-color .15s;}
+  .input:focus{border-color:${C.petal};background:${C.white};}
   .input::placeholder{color:${C.textSoft};font-weight:500;}
   select.input{appearance:none;}
   .label{font-size:12px;font-weight:700;color:${C.textMid};margin-bottom:5px;display:block;}
@@ -57,20 +80,24 @@ export const CSS = `
   .sec-title{font-size:14px;font-weight:800;color:${C.textMid};margin-bottom:10px;}
   .pill-track{background:${C.bgDeep};border-radius:99px;height:8px;overflow:hidden;}
   .pill-fill{height:100%;border-radius:99px;transition:width .5s cubic-bezier(.34,1.2,.64,1);}
-  .modal-overlay{position:fixed;inset:0;background:rgba(60,30,10,.35);display:flex;align-items:flex-end;justify-content:center;z-index:100;backdrop-filter:blur(6px);animation:fadeIn .2s ease;}
+  .modal-overlay{position:fixed;inset:0;background:rgba(58,38,48,.32);display:flex;align-items:flex-end;justify-content:center;z-index:100;backdrop-filter:blur(6px);animation:fadeIn .2s ease;}
   .modal{background:${C.bg};border-radius:28px 28px 0 0;padding:24px 22px max(24px,env(safe-area-inset-bottom));width:100%;max-width:430px;max-height:88dvh;overflow-y:auto;animation:slideUp .25s cubic-bezier(.34,1.3,.64,1);}
   .modal-handle{width:36px;height:4px;background:${C.border};border-radius:99px;margin:0 auto 20px;}
-  .modal-title{font-size:20px;font-weight:900;margin-bottom:18px;}
+  .modal-title{font-size:20px;font-weight:800;margin-bottom:18px;}
   .toast{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:${C.text};color:${C.white};padding:10px 20px;border-radius:99px;font-size:13px;font-weight:700;z-index:200;white-space:nowrap;animation:toastIn .25s cubic-bezier(.34,1.3,.64,1);}
-  .spin{width:18px;height:18px;border:2.5px solid ${C.border};border-top-color:#7050B0;border-radius:50%;animation:spinning .7s linear infinite;}
-  .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:${C.white};border-top:1.5px solid ${C.border};display:flex;padding:8px 0 max(8px,env(safe-area-inset-bottom));z-index:50;}
-  .nav-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 0;transition:transform .1s;}
+  .spin{width:18px;height:18px;border:2.5px solid ${C.border};border-top-color:${C.accentInk};border-radius:50%;animation:spinning .7s linear infinite;}
+  .bottom-nav{position:fixed;bottom:max(14px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:calc(100% - 28px);max-width:402px;display:flex;align-items:center;gap:10px;z-index:50;}
+  .nav-pill{flex:1;height:62px;background:${C.ink};border-radius:999px;display:flex;align-items:center;padding:0 6px;box-shadow:0 10px 28px rgba(46,34,41,.25);}
+  .nav-add{width:62px;height:62px;flex-shrink:0;border:0;border-radius:50%;background:${C.ink};color:${C.petal};display:inline-flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 10px 28px rgba(46,34,41,.25);}
+  .nav-tab{flex:1;height:48px;border:0;background:none;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;transition:all .2s;font-family:'Nunito',sans-serif;}
+  .nav-tab.active{flex:2.2;background:${C.petal};padding:0 10px;}
+  .nav-tab:focus-visible,.nav-add:focus-visible{outline:2px solid ${C.petal};outline-offset:2px;}
   .nav-tab:active{transform:scale(.9);}
-  .nav-icon-wrap{width:34px;height:34px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:17px;transition:background .2s;}
-  .nav-icon-wrap.active{background:${C.lavender};}
-  .nav-label{font-size:10px;font-weight:700;color:${C.textSoft};}
-  .nav-label.active{color:#7050B0;}
-  .workout-card{background:${C.card};border-radius:18px;border:1.5px solid ${C.border};padding:14px;display:flex;flex-direction:column;gap:8px;}
+  .nav-icon-wrap{display:flex;align-items:center;justify-content:center;}
+  
+  .nav-label{display:none;font-size:12px;font-weight:800;color:${C.text};white-space:nowrap;}
+  .nav-label.active{display:inline;}
+  .workout-card{background:${C.card};border-radius:20px;box-shadow:0 6px 20px ${C.shadow};padding:16px;display:flex;flex-direction:column;gap:8px;}
   @keyframes fadeIn{from{opacity:0}to{opacity:1}}
   @keyframes slideUp{from{transform:translateY(60px);opacity:.5}to{transform:translateY(0);opacity:1}}
   @keyframes toastIn{from{transform:translateX(-50%) translateY(-16px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}

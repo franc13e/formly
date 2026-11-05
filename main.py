@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, StringConstraints, field_validator
 from typing import Annotated, Literal, Optional
@@ -310,6 +310,180 @@ async def recipe(req: RecipeRequest):
         parts.append(f"About me: {req.context}")
     text = await call_groq(prompt=" ".join(parts), system=RECIPE_SYSTEM, max_tokens=600, temperature=0.7)
     return {"result": strip_markdown(text)}
+
+
+# ── Recipe photos (Pexels, else Openverse) ───────────────────────────────────
+
+PEXELS_URL = "https://api.pexels.com/v1/search"
+OPENVERSE_URL = "https://api.openverse.org/v1/images/"
+OPENVERSE_HEADERS = {"User-Agent": "Formly/1.0 (+https://formly-teal.vercel.app)"}
+OPENVERSE_MAX_QUERIES = 4
+OPENVERSE_IMAGE_TYPES = {"jpg", "jpeg", "png", "webp"}
+# Openverse license code → the label shown in the photo credit. Only these licenses are requested and accepted.
+OPENVERSE_LICENSES = {"by": "CC BY", "by-sa": "CC BY-SA", "cc0": "CC0", "pdm": "Public domain"}
+MAX_PHOTO_QUERY_CHARS = 120
+PHOTO_CACHE_MAX = 500
+PHOTO_CACHE_HEADER = "public, max-age=86400"
+# Names that already read as a dish or drink get searched on Pexels as-is; anything else gets " food".
+DISH_WORDS = re.compile(
+    r"\b(food|dish|meal|breakfast|lunch|dinner|snack|salad|soup|stew|curry|dal|dhal|chilli|chili|"
+    r"stir[- ]?fry|bowl|wrap|sandwich|toast|tacos?|burrito|pasta|noodles?|risotto|rice|omelet(te)?|"
+    r"frittata|eggs|porridge|oats|pancakes?|muffins?|cake|cookies?|bars?|bites|pudding|parfait|"
+    r"drink|smoothie|juice|tea|latte|coffee|cocoa|chocolate|milk|lemonade|cooler|tonic|shake|mocktail)\b",
+    re.I,
+)
+# Filler words dropped when shortening a name for Openverse (which AND-matches every word).
+PHOTO_STOP_WORDS = {"with", "and", "a", "an", "the", "of", "on", "in", "my", "easy", "quick", "for", "to"}
+
+# Normalised name → response body. Per warm instance only; saves upstream calls on repeat lookups.
+_photo_cache: dict[str, dict] = {}
+
+
+def photo_cache_key(name: str) -> str:
+    return " ".join(name.lower().split())
+
+
+def photo_search_query(name: str) -> str:
+    """Normalised Pexels query for a recipe name: lower-cased, single-spaced, with food context."""
+    query = photo_cache_key(name)
+    return query if DISH_WORDS.search(query) else f"{query} food"
+
+
+def openverse_queries(name: str) -> list[str]:
+    """Openverse queries to try, most specific first: the cleaned name, then without filler words,
+    then its last two, first two and last word. De-duplicated and capped at OPENVERSE_MAX_QUERIES."""
+    words = re.findall(r"[a-z0-9]+", name.lower())
+    core = [w for w in words if w not in PHOTO_STOP_WORDS] or words
+    out: list[str] = []
+    for candidate in (words, core, core[-2:], core[:2], core[-1:]):
+        query = " ".join(candidate)
+        if query and query not in out:
+            out.append(query)
+    return out[:OPENVERSE_MAX_QUERIES]
+
+
+async def pexels_search(query: str, key: str) -> dict:
+    """Calls the Pexels search API and returns its JSON. Raises on HTTP / network errors."""
+    async with httpx.AsyncClient(timeout=10) as client:
+        res = await client.get(
+            PEXELS_URL,
+            headers={"Authorization": key},
+            params={"query": query, "per_page": 1, "orientation": "landscape"},
+        )
+    res.raise_for_status()
+    return res.json()
+
+
+async def openverse_search(query: str) -> dict:
+    """Calls the keyless Openverse image search and returns its JSON. Raises on HTTP / network errors."""
+    async with httpx.AsyncClient(timeout=10) as client:
+        res = await client.get(
+            OPENVERSE_URL,
+            headers=OPENVERSE_HEADERS,
+            params={"q": query, "page_size": 5, "mature": "false", "license": ",".join(OPENVERSE_LICENSES)},
+        )
+    res.raise_for_status()
+    return res.json()
+
+
+def _https(value) -> str:
+    return value if isinstance(value, str) and value.startswith("https://") else ""
+
+
+def _photo_from_pexels(data: dict) -> Optional[dict]:
+    photos = data.get("photos") if isinstance(data, dict) else None
+    if not photos:
+        return None
+    photo = photos[0]
+    src = photo.get("src") or {}
+    url = _https(src.get("large")) or _https(src.get("medium"))
+    if not url:
+        return None
+    return {
+        "url": url,
+        "photographer": photo.get("photographer") or "",
+        "photographer_url": _https(photo.get("photographer_url")),
+        "source_url": _https(photo.get("url")),
+        "source": "Pexels",
+        "license": "Pexels License",
+    }
+
+
+def openverse_license_label(code: str, version) -> str:
+    """e.g. ("by", "2.0") → "CC BY 2.0", ("cc0", "1.0") → "CC0", ("pdm", …) → "Public domain"."""
+    label = OPENVERSE_LICENSES[code]
+    if code in ("by", "by-sa") and isinstance(version, str) and version.strip():
+        label += f" {version.strip()}"
+    return label
+
+
+def _photo_from_openverse(data: dict) -> Optional[dict]:
+    """The first usable result: an https image url, an accepted license and (if given) an image file type."""
+    results = data.get("results") if isinstance(data, dict) else None
+    for item in results or []:
+        if not isinstance(item, dict):
+            continue
+        url = _https(item.get("url"))
+        code = str(item.get("license") or "").lower()
+        filetype = item.get("filetype")
+        if not url or code not in OPENVERSE_LICENSES:
+            continue
+        if filetype and str(filetype).lower() not in OPENVERSE_IMAGE_TYPES:
+            continue
+        return {
+            "url": url,
+            "photographer": str(item.get("creator") or "").strip(),
+            "photographer_url": _https(item.get("creator_url")),
+            "source_url": _https(item.get("foreign_landing_url")),
+            "source": "Openverse",
+            "license": openverse_license_label(code, item.get("license_version")),
+        }
+    return None
+
+
+def _error_detail(e: Exception) -> str:
+    return f"{e.response.status_code}" if isinstance(e, httpx.HTTPStatusError) else type(e).__name__
+
+
+@app.get("/api/recipe-photo")
+async def recipe_photo(response: Response, q: str = Query(...)):
+    """A food photo for a recipe name: {url, photographer, photographer_url, source_url, source, license},
+    or {"url": null} when nothing matches or the lookup fails. Tries Pexels first when PEXELS_API_KEY is
+    set (the key never leaves the server); otherwise, or when Pexels has nothing, keyless Openverse."""
+    name = q.strip()
+    if not 1 <= len(name) <= MAX_PHOTO_QUERY_CHARS:
+        raise HTTPException(status_code=422, detail=f"q must be 1-{MAX_PHOTO_QUERY_CHARS} characters")
+    cache_key = photo_cache_key(name)
+
+    if cache_key in _photo_cache:
+        response.headers["Cache-Control"] = PHOTO_CACHE_HEADER
+        return _photo_cache[cache_key]
+
+    result: Optional[dict] = None
+    key = os.getenv("PEXELS_API_KEY", "").strip()
+    if key:
+        try:
+            result = _photo_from_pexels(await pexels_search(photo_search_query(name), key))
+        except Exception as e:  # network errors, non-2xx, bad JSON: fall back to Openverse
+            print(f"recipe-photo: Pexels error for {cache_key!r}: {_error_detail(e)}")
+
+    if result is None:
+        for query in openverse_queries(name):
+            try:
+                result = _photo_from_openverse(await openverse_search(query))
+            except Exception as e:  # degrade to no photo, uncached so the next request retries
+                print(f"recipe-photo: Openverse error for {query!r}: {_error_detail(e)}")
+                response.headers["Cache-Control"] = "no-store"
+                return {"url": None}
+            if result:
+                break
+
+    body = result or {"url": None}
+    if len(_photo_cache) >= PHOTO_CACHE_MAX:
+        _photo_cache.pop(next(iter(_photo_cache)))
+    _photo_cache[cache_key] = body
+    response.headers["Cache-Control"] = PHOTO_CACHE_HEADER
+    return body
 
 
 @app.get("/api/test")

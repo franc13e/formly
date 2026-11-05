@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { C, CSS } from "./theme";
 import { load, save } from "./lib/storage";
-import { cycleStats, getCycleInfo, periodStarts } from "./lib/cycle";
+import { cycleStats, getCycleInfo, periodContaining, periodLengthFrom, periodStarts } from "./lib/cycle";
 import { useToast } from "./hooks/useToast";
 import { TABS } from "./data/tabs";
 import { Icon } from "./components/Icon";
@@ -32,18 +32,32 @@ export default function App() {
   const [periodStart,setPeriodStart]=useState<string>(()=>load("period-start",""));
   const [periodHistory,setPeriodHistory]=useState<PeriodEntry[]>(()=>load("period-history",[]));
   const [cycleLength,setCycleLength]=useState<number>(()=>load("cycle-length",28));
+  const [periodLengthSetting,setPeriodLengthSetting]=useState<number>(()=>load("period-length",5));
   const [aiPlan,setAiPlan]=useState<string | null>(()=>load<string | null>("ai-plan",null));
   const [toast,showToast]=useToast();
+  const [addOpen,setAddOpen]=useState(false);
 
   // Predict with the cycle length learned from logged periods; the setting is the fallback.
   const starts=periodStarts(periodHistory,periodStart);
   const stats=cycleStats(starts,cycleLength);
-  const cycleInfo=getCycleInfo(periodStart,stats.length);
+  const periodLen=periodLengthFrom(periodHistory,periodLengthSetting);
+  const cycleInfo=getCycleInfo(periodStart,stats.length,periodLen.length);
 
   /** Records a period that started on `date` (YYYY-MM-DD); the latest start drives the cycle. */
   const logPeriodStart=(date: string)=>{
-    setPeriodHistory(h=>[...h.filter(x=>x.date!==date),{date}].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,24));
+    setPeriodHistory(h=>h.some(x=>x.date===date)?h:[...h,{date}].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,24));
     setPeriodStart(p=>!p||date>p?date:p);
+  };
+
+  /** Records `date` as the last bleeding day of the period it falls in. */
+  const logPeriodEnd=(date: string)=>{
+    setPeriodHistory(h=>{
+      // The current start may only exist as "period-start" (e.g. from onboarding).
+      const list=!periodStart||h.some(x=>x.date===periodStart)?h:[...h,{date:periodStart}];
+      const cur=periodContaining(list,date);
+      if(!cur)return h;
+      return list.map(x=>x.date===cur.date?{...x,end:date}:x).sort((a,b)=>b.date.localeCompare(a.date));
+    });
   };
 
   useEffect(()=>{save("onboarded",onboarded);},[onboarded]);
@@ -56,6 +70,7 @@ export default function App() {
   useEffect(()=>{save("period-start",periodStart);},[periodStart]);
   useEffect(()=>{save("period-history",periodHistory);},[periodHistory]);
   useEffect(()=>{save("cycle-length",cycleLength);},[cycleLength]);
+  useEffect(()=>{save("period-length",periodLengthSetting);},[periodLengthSetting]);
   useEffect(()=>{save("ai-plan",aiPlan);},[aiPlan]);
 
   const finishOnboard=(name: string,pStart: string,cLen: number)=>{
@@ -64,6 +79,15 @@ export default function App() {
     if(cLen){setCycleLength(cLen);save("cycle-length",cLen);}
     setOnboarded(true);
   };
+
+  const todayKey=localDateKey();
+  const quickActions: {emoji:string;label:string;run:()=>void}[]=[
+    ...(starts.includes(todayKey)?[]:[{emoji:"💧",label:"My period started today",run:()=>{logPeriodStart(todayKey);showToast("Period logged");}}]),
+    ...(cycleInfo&&cycleInfo.daysLate===0&&cycleInfo.dayOfCycle>1&&cycleInfo.dayOfCycle<=10&&!periodContaining(periodHistory,todayKey)?.end?[{emoji:"🌸",label:"My period ended today",run:()=>{logPeriodEnd(todayKey);showToast("Period end logged");}}]:[]),
+    {emoji:"🏋️",label:"Log a workout",run:()=>setTab("workouts")},
+    {emoji:"✨",label:"Ask the food coach",run:()=>setTab("nutrition")},
+    {emoji:"📏",label:"Update measurements",run:()=>setTab("body")},
+  ];
 
   if(!onboarded) return <><style>{CSS}</style><div className="shell"><OnboardingFlow onDone={finishOnboard}/></div></>;
 
@@ -74,12 +98,12 @@ export default function App() {
         {toast&&<div className="toast">{toast}</div>}
         {/* Desktop sidebar — hidden on mobile via CSS */}
         <div className="desktop-sidebar">
-          <div style={{padding:"0 24px 32px",fontFamily:"Nunito",fontWeight:900,fontSize:22,color:"#5040A0",letterSpacing:"-0.5px"}}>
+          <div style={{padding:"0 24px 32px",fontFamily:"Nunito",fontWeight:900,fontSize:22,color:"#8E3A55",letterSpacing:"-0.5px"}}>
             formly
           </div>
           {TABS.map(t=>(
-            <button key={t.id} onClick={()=>setTab(t.id)} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 24px",background:tab===t.id?C.lavender:"transparent",border:"none",cursor:"pointer",width:"100%",textAlign:"left",fontFamily:"Nunito",fontWeight:700,fontSize:14,color:tab===t.id?"#5040A0":C.textMid,borderLeft:tab===t.id?"3px solid #7050B0":"3px solid transparent",transition:"all .15s"}}>
-              <Icon d={Icons[t.icon]} size={18} stroke={tab===t.id?"#7050B0":C.textMid} strokeWidth={1.8}/>
+            <button key={t.id} onClick={()=>setTab(t.id)} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 24px",background:tab===t.id?C.rose:"transparent",border:"none",cursor:"pointer",width:"100%",textAlign:"left",fontFamily:"Nunito",fontWeight:700,fontSize:14,color:tab===t.id?"#8E3A55":C.textMid,borderLeft:tab===t.id?"3px solid #B5506E":"3px solid transparent",transition:"all .15s"}}>
+              <Icon d={Icons[t.icon]} size={18} stroke={tab===t.id?"#B5506E":C.textMid} strokeWidth={1.8}/>
               {t.label}
             </button>
           ))}
@@ -90,21 +114,34 @@ export default function App() {
           </div>}
         </div>
         <div className="desktop-content">
-        {tab==="home"&&<Dashboard schedule={schedule} weightHistory={weightHistory} cycleInfo={cycleInfo} workoutLog={workoutLog} userName={userName} onPeriodStarted={()=>{logPeriodStart(localDateKey());showToast("Period logged");}}/>}
+        {tab==="home"&&<Dashboard schedule={schedule} weightHistory={weightHistory} cycleInfo={cycleInfo} workoutLog={workoutLog} userName={userName} predictionSpread={stats.spread} onPeriodStarted={()=>{logPeriodStart(localDateKey());showToast("Period logged");}} onOpenBody={()=>setTab("body")}/>}
         {tab==="nutrition"&&<NutritionPage cycleInfo={cycleInfo} showToast={showToast}/>}
-        {tab==="body"&&<BodyPage measurements={measurements} setMeasurements={setMeasurements} weightHistory={weightHistory} setWeightHistory={setWeightHistory} cycleInfo={cycleInfo} periodStart={periodStart} setPeriodStart={setPeriodStart} periodHistory={periodHistory} setPeriodHistory={setPeriodHistory} cycleLength={cycleLength} setCycleLength={setCycleLength} starts={starts} stats={stats} logPeriodStart={logPeriodStart} showToast={showToast}/>}
+        {tab==="body"&&<BodyPage measurements={measurements} setMeasurements={setMeasurements} weightHistory={weightHistory} setWeightHistory={setWeightHistory} cycleInfo={cycleInfo} periodStart={periodStart} setPeriodStart={setPeriodStart} periodHistory={periodHistory} setPeriodHistory={setPeriodHistory} cycleLength={cycleLength} setCycleLength={setCycleLength} starts={starts} stats={stats} logPeriodStart={logPeriodStart} periodLength={periodLen} periodLengthSetting={periodLengthSetting} setPeriodLengthSetting={setPeriodLengthSetting} logPeriodEnd={logPeriodEnd} showToast={showToast}/>}
         {tab==="workouts"&&<WorkoutsPage workoutPlan={workoutPlan} setWorkoutPlan={setWorkoutPlan} schedule={schedule} setSchedule={setSchedule} workoutLog={workoutLog} setWorkoutLog={setWorkoutLog} aiPlan={aiPlan} setAiPlan={setAiPlan} measurements={measurements} cycleInfo={cycleInfo} showToast={showToast}/>}
         {tab==="settings"&&<SettingsPage userName={userName} setUserName={setUserName} showToast={showToast}/>}
-        <nav className="bottom-nav">
-          {TABS.map(t=>(
-            <div key={t.id} className="nav-tab" onClick={()=>setTab(t.id)}>
-              <div className={`nav-icon-wrap${tab===t.id?" active":""}`}>
-              <Icon d={Icons[t.icon]} size={18} stroke={tab===t.id?"#7050B0":"#B09A8A"} strokeWidth={1.8}/>
-            </div>
-              <span className={`nav-label${tab===t.id?" active":""}`}>{t.label}</span>
-            </div>
-          ))}
+        <nav className="bottom-nav" aria-label="Main">
+          <div className="nav-pill">
+            {TABS.map(t=>(
+              <button key={t.id} className={`nav-tab${tab===t.id?" active":""}`} onClick={()=>setTab(t.id)} aria-label={t.label} aria-current={tab===t.id?"page":undefined}>
+                <span className="nav-icon-wrap"><Icon d={Icons[t.icon]} size={19} stroke={tab===t.id?C.text:"#E9D9E0"} strokeWidth={tab===t.id?2.2:1.9}/></span>
+                <span className={`nav-label${tab===t.id?" active":""}`}>{t.label}</span>
+              </button>
+            ))}
+          </div>
+          <button className="nav-add" aria-label="Quick add" onClick={()=>setAddOpen(true)}><Glyph emoji="➕" chip={false} size={24} color={C.petal}/></button>
         </nav>
+        {addOpen&&<div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setAddOpen(false)}><div className="modal">
+          <div className="modal-handle"/>
+          <div className="modal-title">Quick add</div>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {quickActions.map(a=>(
+              <button key={a.label} onClick={()=>{a.run();setAddOpen(false);}} className="row" style={{gap:12,width:"100%",padding:"12px 14px",background:C.white,border:"none",borderRadius:16,cursor:"pointer",fontFamily:"Nunito",textAlign:"left",boxShadow:`0 4px 14px ${C.shadow}`}}>
+                <Glyph emoji={a.emoji} size={16}/>
+                <span style={{fontSize:14,fontWeight:700,color:C.text}}>{a.label}</span>
+              </button>
+            ))}
+          </div>
+        </div></div>}
       </div>
         </div>{/* end desktop-content */}
     </>

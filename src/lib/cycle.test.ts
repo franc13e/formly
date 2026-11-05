@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { clampCycleLength, cycleDayOn, cycleStats, getCycleInfo, periodStarts, phaseOfDay, PHASES } from "./cycle";
+import { clampCycleLength, cycleDayOn, cycleStats, getCycleInfo, periodContaining, periodLengthFrom, periodStarts, phaseOfDay, PHASES } from "./cycle";
 
 // "Today" is pinned to mid-July so that no test range crosses a DST change
 // (getCycleInfo works in local time and floors whole-day differences).
@@ -193,5 +193,48 @@ describe("clampCycleLength", () => {
     expect(info?.cycleLength).toBe(21);
     expect(info?.dayOfCycle).toBe(5);
     vi.useRealTimers();
+  });
+});
+
+describe("period length", () => {
+  it("shapes the menstrual and follicular phases", () => {
+    expect(phaseOfDay(3, 28, 3)).toBe("menstrual");
+    expect(phaseOfDay(4, 28, 3)).toBe("follicular");
+    expect(phaseOfDay(7, 28, 7)).toBe("menstrual");
+    expect(phaseOfDay(8, 28, 7)).toBe("follicular");
+  });
+  it("is reported by getCycleInfo", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(TODAY);
+    expect(getCycleInfo(startForDay(6), 28, 7)?.phase.id).toBe("menstrual");
+    expect(getCycleInfo(startForDay(6), 28, 7)?.periodLength).toBe(7);
+    expect(getCycleInfo(startForDay(6), 28)?.phase.id).toBe("follicular");
+    vi.useRealTimers();
+  });
+  it("is learned from logged period ends, else the setting", () => {
+    expect(periodLengthFrom([{ date: "2026-06-01" }], 6)).toEqual({ length: 6, logged: 0 });
+    expect(periodLengthFrom([{ date: "2026-06-01", end: "2026-06-04" }, { date: "2026-05-03", end: "2026-05-07" }], 6)).toEqual({ length: 5, logged: 2 });
+  });
+  it("ignores implausible ends", () => {
+    expect(periodLengthFrom([{ date: "2026-06-01", end: "2026-05-20" }, { date: "2026-04-01", end: "2026-05-01" }], 4).logged).toBe(0);
+  });
+  it("uses a logged period's own end on the calendar", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(TODAY);
+    const starts = ["2026-06-01", "2026-06-30"];
+    const ends = { "2026-06-01": "2026-06-03" };
+    expect(cycleDayOn("2026-06-03", starts, 28, 5, ends)?.loggedPeriod).toBe(true);
+    expect(cycleDayOn("2026-06-04", starts, 28, 5, ends)?.loggedPeriod).toBe(false);
+    expect(cycleDayOn("2026-07-03", starts, 28, 5, ends)?.loggedPeriod).toBe(true);
+    vi.useRealTimers();
+  });
+});
+
+describe("periodContaining", () => {
+  it("finds the latest start on or before a date", () => {
+    const h = [{ date: "2026-06-30" }, { date: "2026-06-01" }];
+    expect(periodContaining(h, "2026-07-02")?.date).toBe("2026-06-30");
+    expect(periodContaining(h, "2026-06-15")?.date).toBe("2026-06-01");
+    expect(periodContaining(h, "2026-05-01")).toBeUndefined();
   });
 });

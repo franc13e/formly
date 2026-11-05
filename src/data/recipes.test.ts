@@ -21,6 +21,13 @@ describe("RECIPES", () => {
     }
   });
 
+  it("gives every recipe a short photo search", () => {
+    for (const r of phaseIds.flatMap((p) => RECIPES[p])) {
+      expect(r.photoQuery?.trim(), r.id).toBeTruthy();
+      expect(r.photoQuery!.length, r.id).toBeLessThanOrEqual(40);
+    }
+  });
+
   it("uses unique ids", () => {
     const ids = phaseIds.flatMap((p) => RECIPES[p].map((r) => r.id));
     expect(new Set(ids).size).toBe(ids.length);
