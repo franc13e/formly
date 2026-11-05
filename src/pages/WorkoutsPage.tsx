@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
-import { ArrowRightLeft, BookOpen, Pencil, Plus } from "lucide-react";
+import { Fragment, useEffect, useState } from "react";
+import { ArrowRightLeft, BookOpen } from "lucide-react";
 import { C, ACCENT } from "../theme";
-import { ALL_WORKOUTS, DIFF_COLOR } from "../data/workouts";
+import { ALL_WORKOUTS } from "../data/workouts";
 import { SwipeToDelete } from "../components/SwipeToDelete";
 import { Glyph } from "../components/Glyph";
 import { AICoachPanel } from "../components/AICoachPanel";
@@ -9,11 +9,14 @@ import { MonthCalendar, type DayLook } from "../components/MonthCalendar";
 import { CustomWorkoutModal } from "../components/CustomWorkoutModal";
 import { WorkoutGuide, type GuideTarget } from "../components/WorkoutGuide";
 import { WorkoutInsights } from "../components/WorkoutInsights";
+import { WorkoutThumb } from "../components/WorkoutThumb";
+import { BrowseTab } from "../components/BrowseTab";
 import type { CycleInfo, LoggableWorkout, PhaseId, Measurements, Schedule, ScheduledWorkout, Setter, ShowToast, Workout, WorkoutLogEntry, WorkoutLogForm } from "../types";
 import { localDateKey } from "../lib/date";
 import { load, save } from "../lib/storage";
 import { addDays, groupLogByDate, logStreak, monthStats, moveInSchedule, weekOf } from "../lib/workouts";
 import { builtInGuide, cachedFormTips, findLibraryWorkout } from "../lib/formTips";
+import { groupDayItems } from "../lib/sessions";
 
 type WorkoutsTab = "schedule" | "browse" | "ai" | "history";
 type ScheduleView = "week" | "month";
@@ -53,6 +56,8 @@ const shortDate = (date: string) => new Date(date+"T12:00").toLocaleDateString("
 /** Timestamp id for a new log entry (kept outside the component so the React compiler's purity check doesn't flag the click handler). */
 const newLogId = () => Date.now();
 const EMPTY_LOG_FORM: WorkoutLogForm = { sets:"", reps:"", weight:"", notes:"", duration:"" };
+/** Visible keyboard focus for everything on the Workouts tab (inline styles can't express :focus-visible). */
+const FOCUS_CSS = `.workouts-page :is(button,a,[tabindex],input,select,textarea):focus-visible{outline:2px solid ${C.accentInk};outline-offset:2px;}`;
 const iconBtn = { background:"none", border:"none", color:C.textSoft, cursor:"pointer", padding:4, display:"inline-flex", alignItems:"center", justifyContent:"center", borderRadius:8 } as const;
 
 /** A guide target for a scheduled item: the library workout when the name matches one, else the item itself. */
@@ -139,36 +144,9 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
   const stats = monthStats(workoutLog||[], todayStr);
   const streak = logStreak(Object.keys(logByDate), todayStr);
 
-  const renderWorkoutCard = (w: Workout, custom: boolean) => {
-    const dc=DIFF_COLOR[w.difficulty] ?? DIFF_COLOR.Beginner;
-    const inPlan=workoutPlan.some(p=>p.id===w.id);
-    return(
-      <div key={w.id} className="workout-card">
-        <div className="row-between" style={{gap:8}}>
-          <div className="row" style={{minWidth:0}}><Glyph emoji={w.emoji} size={17}/><div style={{minWidth:0}}><div style={{fontWeight:600,fontSize:15}}>{w.name}</div><div style={{fontSize:12,color:C.textSoft,fontWeight:500}}>{w.muscle}{w.duration?` · ${w.duration}`:""}</div></div></div>
-          <div className="row" style={{gap:4,flexShrink:0}}>
-            {custom&&<span style={{fontSize:11,fontWeight:600,padding:"3px 10px",borderRadius:99,background:C.lavender,color:"#A95C76"}}>Yours</span>}
-            <span style={{fontSize:11,fontWeight:700,padding:"3px 10px",borderRadius:99,background:dc.bg,color:dc.text}}>{w.difficulty}</span>
-          </div>
-        </div>
-        {w.achieve&&<div style={{fontSize:12,color:C.textMid,fontWeight:500,lineHeight:1.5,background:C.bgDeep,borderRadius:10,padding:"6px 10px"}}>{w.achieve}</div>}
-        <div className="row" style={{gap:8}}>
-          <button className={`btn btn-sm ${inPlan?"btn-ghost":"btn-primary"}`} style={{flex:1}} onClick={()=>{if(inPlan){setWorkoutPlan(p=>p.filter(x=>x.id!==w.id));showToast("Removed");}else{setWorkoutPlan(p=>[...p,w]);showToast("Added!");}}}>
-            {inPlan?"✓ In plan":"+ Add to plan"}
-          </button>
-          <button className="btn btn-sm" style={{flex:1,background:C.butter,color:ACCENT.carbs.text,border:"none"}} onClick={()=>openLog(w)}>Log workout</button>
-          <button className="btn btn-ghost btn-sm" style={{flexShrink:0,padding:"8px 12px"}} onClick={()=>setGuideFor(w)} aria-label={`How to do ${w.name}: form guide`}><BookOpen size={14} strokeWidth={1.8} aria-hidden="true"/>Guide</button>
-          {custom&&<>
-            <button style={iconBtn} onClick={()=>setCustomModal({initial:w})} aria-label={`Edit ${w.name}`}><Pencil size={15} strokeWidth={1.8}/></button>
-            <SwipeToDelete onDelete={()=>deleteCustomWorkout(w.id)}/>
-          </>}
-        </div>
-      </div>
-    );
-  };
-
   return (
-    <div className="scroll" style={{padding:"24px 24px 40px"}}>
+    <div className="scroll workouts-page" style={{padding:"24px 24px 40px"}}>
+      <style>{FOCUS_CSS}</style>
       <div className="h-display" style={{fontSize:32,color:C.text,marginBottom:16}}>Workouts</div>
       <TabRow tab={tab} setTab={setTab}/>
 
@@ -186,7 +164,9 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
                   const cue = firstCue(target);
                   return (
                     <div key={i} className="row" style={{gap:10,background:C.bgDeep,borderRadius:12,padding:"10px 12px"}}>
-                      <Glyph emoji={item.emoji||"🏋️"} size={14}/>
+                      <button onClick={()=>setGuideFor(target)} aria-label={`Open guide for ${item.name}`} style={{background:"none",border:"none",padding:0,cursor:"pointer",display:"inline-flex",borderRadius:12,flexShrink:0}}>
+                        <WorkoutThumb workout={{...target,emoji:item.emoji||target.emoji}} size={44} radius={10} decorative/>
+                      </button>
                       <div style={{flex:1,minWidth:0}}>
                         <div style={{fontWeight:700,fontSize:13,color:C.text}}>{item.name}</div>
                         <div style={{fontSize:12,color:C.textMid,fontWeight:500,lineHeight:1.45}}>{cue ?? "Open the guide for form cues and what to eat."}</div>
@@ -263,47 +243,61 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
                   <span style={{fontSize:13,color:C.textSoft,fontWeight:600}}>{items.length?`${items.length} workout${items.length>1?"s":""}` : "Rest day"}</span>
                 </div>
 
-                {/* Workouts for this day */}
-                {items.map((item,idx)=>(
-                  <div key={idx} style={{background:C.bgDeep,borderRadius:12,marginBottom:8}}>
-                    <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px"}}>
-                      <Glyph emoji={item.emoji||"🏋️"} size={15}/>
-                      <div style={{flex:1,minWidth:0}}>
-                        <div style={{fontWeight:700,fontSize:13}}>{item.name}</div>
-                        {item.detail&&<div style={{fontSize:11,color:C.textSoft,fontWeight:500}}>{item.detail}</div>}
+                {/* Workouts for this day, grouped under their session when added as one */}
+                {groupDayItems(items).map((b,bi)=>{
+                  const renderItem = (item: ScheduledWorkout, idx: number) => (
+                    <div key={idx} style={{background:C.bgDeep,borderRadius:12,marginBottom:8}}>
+                      <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px"}}>
+                        <WorkoutThumb workout={{...guideTargetFor(item),emoji:item.emoji||"🏋️"}} size={40} radius={10}/>
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontWeight:700,fontSize:13}}>{item.name}</div>
+                          {item.detail&&<div style={{fontSize:11,color:C.textSoft,fontWeight:500}}>{item.detail}</div>}
+                        </div>
+                        <div className="row" style={{gap:4}}>
+                          {isToday&&<button className="btn btn-sm" style={{background:completedToday.has(item.name)?C.rose:C.petal,color:completedToday.has(item.name)?C.accentInk:C.text,border:"none",fontSize:11}} aria-label={completedToday.has(item.name)?`${item.name} logged today, log again`:`Log ${item.name}`} onClick={()=>openLog(item)}>
+                            {completedToday.has(item.name)?"✓ Done":"Log"}
+                          </button>}
+                          <button style={iconBtn} aria-label={`Form guide for ${item.name}`} onClick={()=>setGuideFor(guideTargetFor(item))}>
+                            <BookOpen size={15} strokeWidth={1.8} aria-hidden="true"/>
+                          </button>
+                          <button style={{...iconBtn,color:movingIdx===idx?"#A95C76":C.textSoft,background:movingIdx===idx?C.lavender:"none"}} aria-label={`Move ${item.name} to another day`} aria-expanded={movingIdx===idx} onClick={()=>{setMovingIdx(movingIdx===idx?null:idx);setMoveDate("");}}>
+                            <ArrowRightLeft size={15} strokeWidth={1.8}/>
+                          </button>
+                          <button style={{...iconBtn,fontSize:16}} aria-label={`Remove ${item.name}`} onClick={()=>removeFromDay(pickingDay,idx)}>×</button>
+                        </div>
                       </div>
-                      <div className="row" style={{gap:4}}>
-                        {isToday&&<button className="btn btn-sm" style={{background:completedToday.has(item.name)?C.rose:C.petal,color:completedToday.has(item.name)?C.accentInk:C.text,border:"none",fontSize:11}} onClick={()=>openLog(item)}>
-                          {completedToday.has(item.name)?"✓ Done":"Log"}
-                        </button>}
-                        <button style={iconBtn} aria-label={`Form guide for ${item.name}`} onClick={()=>setGuideFor(guideTargetFor(item))}>
-                          <BookOpen size={15} strokeWidth={1.8} aria-hidden="true"/>
-                        </button>
-                        <button style={{...iconBtn,color:movingIdx===idx?"#A95C76":C.textSoft,background:movingIdx===idx?C.lavender:"none"}} aria-label={`Move ${item.name} to another day`} aria-expanded={movingIdx===idx} onClick={()=>{setMovingIdx(movingIdx===idx?null:idx);setMoveDate("");}}>
-                          <ArrowRightLeft size={15} strokeWidth={1.8}/>
-                        </button>
-                        <button style={{...iconBtn,fontSize:16}} aria-label={`Remove ${item.name}`} onClick={()=>removeFromDay(pickingDay,idx)}>×</button>
-                      </div>
+                      {movingIdx===idx&&(
+                        <div className="slide-in" style={{padding:"0 12px 12px"}}>
+                          <div style={{fontSize:11,color:C.textSoft,fontWeight:700,marginBottom:6}}>Move to:</div>
+                          <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:4,marginBottom:8}}>
+                            {weekOf(pickingDay).map(d=>{const dt=new Date(d+"T12:00"),cur=d===pickingDay;return(
+                              <button key={d} disabled={cur} onClick={()=>moveItem(pickingDay,idx,d)} aria-label={`Move to ${shortDate(d)}`} style={{padding:"6px 0",borderRadius:10,border:`1.5px solid ${cur?C.border:C.lavenderDeep}`,background:cur?"transparent":C.white,color:cur?C.textSoft:"#8A4862",cursor:cur?"default":"pointer",fontFamily:"DM Sans",display:"flex",flexDirection:"column",alignItems:"center",lineHeight:1.2,opacity:cur?.5:1}}>
+                                <span style={{fontSize:9,fontWeight:600}}>{dt.toLocaleDateString("en-US",{weekday:"short"})}</span>
+                                <span style={{fontSize:12,fontWeight:700}}>{dt.getDate()}</span>
+                              </button>
+                            );})}
+                          </div>
+                          <div className="row" style={{gap:8}}>
+                            <input className="input" type="date" aria-label="Move to another date" value={moveDate} onChange={e=>setMoveDate(e.target.value)} style={{fontSize:13,padding:"8px 12px"}}/>
+                            <button className="btn btn-primary btn-sm" style={{flexShrink:0}} disabled={!moveDate||moveDate===pickingDay} onClick={()=>moveItem(pickingDay,idx,moveDate)}>Move</button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    {movingIdx===idx&&(
-                      <div className="slide-in" style={{padding:"0 12px 12px"}}>
-                        <div style={{fontSize:11,color:C.textSoft,fontWeight:700,marginBottom:6}}>Move to:</div>
-                        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:4,marginBottom:8}}>
-                          {weekOf(pickingDay).map(d=>{const dt=new Date(d+"T12:00"),cur=d===pickingDay;return(
-                            <button key={d} disabled={cur} onClick={()=>moveItem(pickingDay,idx,d)} aria-label={`Move to ${shortDate(d)}`} style={{padding:"6px 0",borderRadius:10,border:`1.5px solid ${cur?C.border:C.lavenderDeep}`,background:cur?"transparent":C.white,color:cur?C.textSoft:"#8A4862",cursor:cur?"default":"pointer",fontFamily:"DM Sans",display:"flex",flexDirection:"column",alignItems:"center",lineHeight:1.2,opacity:cur?.5:1}}>
-                              <span style={{fontSize:9,fontWeight:600}}>{dt.toLocaleDateString("en-US",{weekday:"short"})}</span>
-                              <span style={{fontSize:12,fontWeight:700}}>{dt.getDate()}</span>
-                            </button>
-                          );})}
-                        </div>
-                        <div className="row" style={{gap:8}}>
-                          <input className="input" type="date" aria-label="Move to another date" value={moveDate} onChange={e=>setMoveDate(e.target.value)} style={{fontSize:13,padding:"8px 12px"}}/>
-                          <button className="btn btn-primary btn-sm" style={{flexShrink:0}} disabled={!moveDate||moveDate===pickingDay} onClick={()=>moveItem(pickingDay,idx,moveDate)}>Move</button>
-                        </div>
+                  );
+                  if (!b.group) return <Fragment key={`u-${bi}`}>{b.entries.map(({item,index})=>renderItem(item,index))}</Fragment>;
+                  return (
+                    <section key={`g-${bi}`} aria-label={`${b.group} session`} style={{marginBottom:10}}>
+                      <div className="row" style={{gap:6,margin:"4px 2px 6px"}}>
+                        <span style={{fontSize:12,fontWeight:700,color:C.accentInk}}>{b.group}</span>
+                        <span style={{fontSize:11,fontWeight:600,color:C.textSoft}}>· {b.entries.length} exercise{b.entries.length===1?"":"s"}</span>
                       </div>
-                    )}
-                  </div>
-                ))}
+                      <div style={{borderLeft:`2px solid ${C.roseDeep}`,paddingLeft:8}}>
+                        {b.entries.map(({item,index})=>renderItem(item,index))}
+                      </div>
+                    </section>
+                  );
+                })}
 
                 {/* Add workout */}
                 <div style={{marginTop:8}}>
@@ -339,20 +333,10 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
       )}
 
       {tab==="browse" && (
-        <div>
-          {cycleInfo&&<div style={{background:cycleInfo.phase.bg,borderRadius:14,padding:"10px 14px",marginBottom:14,border:`1.5px solid ${cycleInfo.phase.color}`}}>
-            <div style={{fontSize:11,fontWeight:600,color:cycleInfo.phase.textColor,marginBottom:4}}><Glyph emoji={cycleInfo.phase.emoji} chip={false} size={12} color={cycleInfo.phase.textColor}/> Best for your {cycleInfo.phase.label.toLowerCase()} phase</div>
-            <div style={{fontSize:12,color:cycleInfo.phase.textColor,fontWeight:500,opacity:.9}}>{cycleInfo.phase.workouts[0]} · {cycleInfo.phase.workouts[1]}</div>
-          </div>}
-          <button onClick={()=>setCustomModal({initial:null})} style={{width:"100%",display:"flex",alignItems:"center",gap:12,padding:"14px 16px",marginBottom:10,borderRadius:18,border:`1.5px dashed ${C.lavenderDeep}`,background:C.lavender+"60",cursor:"pointer",fontFamily:"DM Sans",textAlign:"left"}}>
-            <span style={{width:34,height:34,borderRadius:"50%",background:C.lavender,display:"inline-flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Plus size={18} color="#A95C76" strokeWidth={2.4} aria-hidden="true"/></span>
-            <span><span style={{display:"block",fontWeight:600,fontSize:15,color:"#8A4862"}}>Create workout</span><span style={{display:"block",fontSize:12,color:C.textSoft,fontWeight:500}}>Add your own session, with its own icon</span></span>
-          </button>
-          <div style={{display:"flex",flexDirection:"column",gap:10}}>
-            {customWorkouts.map(w=>renderWorkoutCard(w,true))}
-            {ALL_WORKOUTS.map(w=>renderWorkoutCard(w,false))}
-          </div>
-        </div>
+        <BrowseTab library={ALL_WORKOUTS} customWorkouts={customWorkouts} cycleInfo={cycleInfo}
+          workoutPlan={workoutPlan} setWorkoutPlan={setWorkoutPlan} schedule={schedule} setSchedule={setSchedule}
+          today={todayStr} showToast={showToast} onLog={openLog} onGuide={setGuideFor}
+          onCreateWorkout={()=>setCustomModal({initial:null})} onEditWorkout={w=>setCustomModal({initial:w})} onDeleteWorkout={deleteCustomWorkout}/>
       )}
 
       {tab==="history" && (

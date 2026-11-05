@@ -15,6 +15,7 @@ Formly is a mobile-first fitness app that combines workout planning, food guidan
 <p align="center">
   <img src="docs/screenshots/home.png" width="240" alt="Home: phase-tinted screen with the cycle ring, mascot, week strip and next period">
   <img src="docs/screenshots/body.png" width="240" alt="Body: next-period prediction and the monthly cycle calendar">
+  <img src="docs/screenshots/browse.png" width="240" alt="Browse: workouts that suit your phase, muscle-group filters and exercise pictures">
   <img src="docs/screenshots/workouts.png" width="240" alt="Workouts: history with insights, stats and a month calendar">
 </p>
 <p align="center">
@@ -43,6 +44,9 @@ Formly is a mobile-first fitness app that combines workout planning, food guidan
 - **Workout guides**: for every workout, a demonstration image, how it helps, how it fits your current phase, three form cues, a common mistake to avoid, a YouTube form video link, and what to eat before and after (adjusted for your phase), with a one-tap question to the food coach; custom workouts get AI-written form tips
 - **Form tips for today**: the Schedule tab highlights a key cue for each workout you have planned
 - **Your own workouts**: create, edit and delete custom workouts with an icon (suggested from the name)
+- **Exercise library**: about 50 exercises across glutes, legs, back, chest, shoulders, arms, core, cardio and recovery, filterable by muscle group, each with a demonstration picture where one exists
+- **For your phase**: Browse opens with workouts that suit your current phase, each with a one-line reason
+- **Sessions**: ready-made sessions (Glute day, Leg day, Upper body, Period-friendly flow and more) or your own; add a whole session to a day in one tap, shown grouped on the schedule while each exercise keeps its own log
 - **AI coach**: personalised plans from your goal, activity level, focus areas and current phase
 
 **Nutrition**
@@ -126,7 +130,7 @@ The frontend reads the public Supabase URL and anon key from `GET /api/config`, 
 | `GET` | `/api/config` | Public Supabase URL and anon key (if accounts are enabled) |
 | `GET` | `/api/health` | Health check |
 
-Exercise demonstration images come from [wger](https://wger.de), an open exercise database (CC BY-SA), shown with their author and licence; they ship with the app in `src/data/workoutImages.ts` (regenerated with `python scripts/fetch_workout_images.py`).
+Exercise demonstration images come from [wger](https://wger.de), an open exercise database (CC BY-SA), shown with their author and licence. They ship with the app: `src/data/workoutImages.ts` for the library and `src/data/exerciseImageIndex.ts`, an index of ~280 wger exercises used to find a picture for any workout name you type (regenerate with `python scripts/fetch_exercise_index.py` and `python scripts/fetch_workout_images.py`).
 
 Recipe photos are Creative Commons or public-domain images found through [Openverse](https://openverse.org); each one is shown with its photographer, licence and a link to the source. Photos for the built-in recipes ship with the app (`src/data/recipePhotos.ts`, regenerated with `python scripts/fetch_recipe_photos.py`); photos for AI recipes are looked up from the browser, so each user has their own Openverse rate limit.
 

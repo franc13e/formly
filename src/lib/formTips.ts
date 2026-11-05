@@ -2,6 +2,7 @@ import { ALL_WORKOUTS } from "../data/workouts";
 import { WORKOUT_GUIDES } from "../data/workoutGuides";
 import { WORKOUT_IMAGES } from "../data/workoutImages";
 import type { FormTips, Workout, WorkoutGuide, WorkoutImage } from "../types";
+import { findExerciseImage } from "./exerciseImages";
 import { load, save } from "./storage";
 
 // ─── Workout guides: built-in content, AI form tips and their cache ─────────
@@ -23,6 +24,17 @@ export function builtInGuide(w: Workout | undefined): { guide?: WorkoutGuide; im
   if (!w) return {};
   const image = WORKOUT_IMAGES[String(w.id)];
   return { guide: WORKOUT_GUIDES[w.id], image: image?.url.startsWith("https://") ? image : undefined };
+}
+
+/**
+ * The picture for any workout: the built-in image of the matching library workout,
+ * else the best wger match for its name; null when there's none (show the glyph).
+ */
+export function workoutPicture(w: { id?: number; name: string }): WorkoutImage | null {
+  const builtIn = builtInGuide(findLibraryWorkout(w)).image;
+  if (builtIn) return builtIn;
+  const found = findExerciseImage(w.name);
+  return found?.url.startsWith("https://") ? found : null;
 }
 
 /** YouTube search for a workout's form videos. */

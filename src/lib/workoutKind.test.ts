@@ -8,23 +8,66 @@ const KINDS: WorkoutKind[] = ["strength", "cardio", "recovery"];
 
 describe("workoutKind", () => {
   it("classifies every built-in workout", () => {
-    const expected: Record<string, WorkoutKind> = {
-      "Push-Up Progression": "strength",
-      "Barbell Squat": "strength",
-      "Glute Bridge Circuit": "strength",
-      "HIIT Cardio Blast": "cardio",
-      "Pull Day": "strength",
-      "Yoga Flow": "recovery",
-      "Shoulder Sculpt": "strength",
-      "Core Destroyer": "strength",
-      "Zone 2 Run": "cardio",
-      "Hip Thrust": "strength",
-      "Romanian Deadlift": "strength",
-      // Low-intensity, controlled work: treated as recovery.
-      "Pilates Core": "recovery",
+    // Library id → expected kind.
+    const expected: Record<number, WorkoutKind> = {
+      1: "strength", // Push-Up Progression
+      2: "strength", // Barbell Squat
+      3: "strength", // Glute Bridge Circuit
+      4: "cardio", // HIIT Cardio Blast
+      5: "strength", // Pull Day
+      6: "recovery", // Yoga Flow
+      7: "strength", // Shoulder Sculpt
+      8: "strength", // Core Destroyer
+      9: "cardio", // Zone 2 Run
+      10: "strength", // Hip Thrust
+      11: "strength", // Romanian Deadlift
+      12: "recovery", // Pilates Core: low-intensity, controlled work
+      13: "strength", // Bulgarian Split Squat
+      14: "strength", // Cable Kickback
+      15: "strength", // Sumo Squat
+      16: "strength", // Step-Ups
+      17: "strength", // Goblet Squat
+      18: "strength", // Walking Lunges ("walking" alone would read as recovery)
+      19: "strength", // Leg Press
+      20: "strength", // Calf Raise
+      21: "strength", // Lat Pulldown
+      22: "strength", // Seated Cable Row
+      23: "strength", // Dumbbell Row
+      24: "strength", // Back Extension
+      25: "strength", // Dumbbell Bench Press
+      26: "strength", // Incline Dumbbell Press
+      27: "strength", // Chest Fly
+      28: "strength", // Dumbbell Floor Press
+      29: "strength", // Lateral Raise
+      30: "strength", // Arnold Press
+      31: "strength", // Face Pull
+      32: "strength", // Front Raise
+      33: "strength", // Bicep Curl
+      34: "strength", // Tricep Dip
+      35: "strength", // Hammer Curl
+      36: "strength", // Tricep Pushdown
+      37: "strength", // Overhead Tricep Extension
+      38: "strength", // Dead Bug
+      39: "strength", // Russian Twist
+      40: "strength", // Side Plank
+      41: "strength", // Bird Dog
+      42: "cardio", // Cycling Intervals
+      43: "cardio", // Jump Rope
+      44: "cardio", // Incline Walk ("walk" alone would read as recovery)
+      45: "cardio", // Rowing Machine
+      46: "recovery", // Mobility Flow
+      47: "recovery", // Foam Rolling
+      48: "recovery", // Gentle Walk
+      49: "recovery", // Stretch & Breathe
     };
-    expect(ALL_WORKOUTS).toHaveLength(12);
-    for (const w of ALL_WORKOUTS) expect([w.name, workoutKind(w)]).toEqual([w.name, expected[w.name]]);
+    expect(ALL_WORKOUTS.map(w => w.id).sort((a, b) => a - b)).toEqual(Object.keys(expected).map(Number));
+    for (const w of ALL_WORKOUTS) expect([w.id, w.name, workoutKind(w)]).toEqual([w.id, w.name, expected[w.id]]);
+  });
+
+  it("keeps walking lunges strength and incline walks cardio", () => {
+    expect(workoutKind({ name: "Dumbbell walking lunge" })).toBe("strength");
+    expect(workoutKind({ name: "Incline treadmill walk" })).toBe("cardio");
+    expect(workoutKind({ name: "Walk" })).toBe("recovery");
   });
 
   it("classifies custom and scheduled workouts", () => {

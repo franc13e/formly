@@ -38,12 +38,19 @@ export const WORKOUT_IMAGES: Partial<Record<string, WorkoutImage>> = {
     "license": "CC BY-SA 4",
     "source_url": "https://wger.de/en/exercise/475/view-base"
   },
+  "6": {
+    "url": "https://wger.de/media/exercise-images/1002/ddf91765-8045-4087-bece-de17f33332ce.png",
+    "title": "Child's pose",
+    "author": "wger contributors",
+    "license": "CC BY-SA 4",
+    "source_url": "https://wger.de/en/exercise/1002/view-base"
+  },
   "7": {
-    "url": "https://wger.de/media/exercise-images/119/seated-barbell-shoulder-press-large-1.png",
-    "title": "Shoulder Press, Barbell",
+    "url": "https://wger.de/media/exercise-images/123/dumbbell-shoulder-press-large-1.png",
+    "title": "Shoulder Press, Dumbbells",
     "author": "Everkinetic",
     "license": "CC BY-SA 3",
-    "source_url": "https://wger.de/en/exercise/566/view-base"
+    "source_url": "https://wger.de/en/exercise/567/view-base"
   },
   "8": {
     "url": "https://wger.de/media/exercise-images/458/b7bd9c28-9f1d-4647-bd17-ab6a3adf5770.png",
@@ -52,12 +59,19 @@ export const WORKOUT_IMAGES: Partial<Record<string, WorkoutImage>> = {
     "license": "CC BY-SA 4",
     "source_url": "https://wger.de/en/exercise/458/view-base"
   },
-  "10": {
-    "url": "https://wger.de/media/exercise-images/265/7528acb4-b2cc-4b75-b6ae-d514cbd4f78b.png",
-    "title": "Glute Bridge",
-    "author": "tdprice12",
+  "9": {
+    "url": "https://wger.de/media/exercise-images/1615/7792295c-83b6-4ea8-9353-ce02f0ad2559.jpg",
+    "title": "Treadmill Cardio",
+    "author": "Tierrasverdes",
     "license": "CC BY-SA 4",
-    "source_url": "https://wger.de/en/exercise/265/view-base"
+    "source_url": "https://wger.de/en/exercise/1615/view-base"
+  },
+  "10": {
+    "url": "https://wger.de/media/exercise-images/1642/a81ad922-caf5-47f8-99b4-640cb0717436.webp",
+    "title": "Dumbbell Hip Thrust",
+    "author": "AlucardEvil40",
+    "license": "CC BY-SA 4",
+    "source_url": "https://wger.de/en/exercise/1642/view-base"
   },
   "11": {
     "url": "https://wger.de/media/exercise-images/507/13d526ab-12fc-461e-828a-051dd7c13fb1.png",
@@ -65,5 +79,222 @@ export const WORKOUT_IMAGES: Partial<Record<string, WorkoutImage>> = {
     "author": "pjwirth",
     "license": "CC BY-SA 4",
     "source_url": "https://wger.de/en/exercise/507/view-base"
+  },
+  "13": {
+    "url": "https://wger.de/media/exercise-images/988/6283b258-a4d7-4833-84f7-a38987022d3d.png",
+    "title": "Bulgarian split squats left",
+    "author": "Franpol",
+    "license": "CC BY-SA 4",
+    "source_url": "https://wger.de/en/exercise/988/view-base"
+  },
+  "14": {
+    "url": "https://wger.de/media/exercise-images/1131/3bcf3024-2dcc-4995-9694-55aa2c2e4a9a.png",
+    "title": "Cable glute extension",
+    "author": "Franpol",
+    "license": "CC BY-SA 4",
+    "source_url": "https://wger.de/en/exercise/1131/view-base"
+  },
+  "16": {
+    "url": "https://wger.de/media/exercise-images/981/f9377a7e-eb58-4cca-b805-2d36863aeb03.png",
+    "title": "Step-ups",
+    "author": "wger contributors",
+    "license": "CC BY-SA 4",
+    "source_url": "https://wger.de/en/exercise/981/view-base"
+  },
+  "17": {
+    "url": "https://wger.de/media/exercise-images/203/1c052351-2af0-4227-aeb0-244008e4b0a8.jpeg",
+    "title": "Dumbbell Goblet Squat",
+    "author": "philip",
+    "license": "CC BY-SA 4",
+    "source_url": "https://wger.de/en/exercise/203/view-base"
+  },
+  "18": {
+    "url": "https://wger.de/media/exercise-images/113/Walking-lunges-1.png",
+    "title": "Dumbbell Lunges Walking",
+    "author": "Everkinetic",
+    "license": "CC BY-SA 3",
+    "source_url": "https://wger.de/en/exercise/206/view-base"
+  },
+  "19": {
+    "url": "https://wger.de/media/exercise-images/371/d2136f96-3a43-4d4c-9944-1919c4ca1ce1.webp",
+    "title": "Leg Press",
+    "author": "BFad07",
+    "license": "CC BY-SA 4",
+    "source_url": "https://wger.de/en/exercise/371/view-base"
+  },
+  "20": {
+    "url": "https://wger.de/media/exercise-images/622/9a429bd0-afd3-4ad0-8043-e9beec901c81.jpeg",
+    "title": "Standing Calf Raises",
+    "author": "clafal",
+    "license": "CC BY-SA 4",
+    "source_url": "https://wger.de/en/exercise/622/view-base"
+  },
+  "21": {
+    "url": "https://wger.de/media/exercise-images/158/0d51a0f2-622f-434b-beb8-1a003c54712a.png",
+    "title": "Close-grip Lat Pull Down",
+    "author": "Franpol",
+    "license": "CC BY-SA 4",
+    "source_url": "https://wger.de/en/exercise/158/view-base"
+  },
+  "22": {
+    "url": "https://wger.de/media/exercise-images/1117/2555c4c3-a84d-47db-b83b-cbf721f12e45.png",
+    "title": "Seated Cable Row",
+    "author": "Franpol",
+    "license": "CC BY-SA 4",
+    "source_url": "https://wger.de/en/exercise/1117/view-base"
+  },
+  "23": {
+    "url": "https://wger.de/media/exercise-images/81/a751a438-ae2d-4751-8d61-cef0e9292174.png",
+    "title": "Bent Over Dumbbell Rows (Single Arm)",
+    "author": "Franpol",
+    "license": "CC BY-SA 4",
+    "source_url": "https://wger.de/en/exercise/81/view-base"
+  },
+  "24": {
+    "url": "https://wger.de/media/exercise-images/1348/a3769120-2445-49f2-97d3-afc1238bfc2a.webp",
+    "title": "Lower Back Extensions",
+    "author": "Anastasious",
+    "license": "CC BY-SA 4",
+    "source_url": "https://wger.de/en/exercise/1348/view-base"
+  },
+  "25": {
+    "url": "https://wger.de/media/exercise-images/97/Dumbbell-bench-press-1.png",
+    "title": "Benchpress Dumbbells",
+    "author": "Everkinetic",
+    "license": "CC BY-SA 3",
+    "source_url": "https://wger.de/en/exercise/75/view-base"
+  },
+  "26": {
+    "url": "https://wger.de/media/exercise-images/16/Incline-press-1.png",
+    "title": "Incline Bench Press - Dumbbell",
+    "author": "Everkinetic",
+    "license": "CC BY-SA 3",
+    "source_url": "https://wger.de/en/exercise/537/view-base"
+  },
+  "27": {
+    "url": "https://wger.de/media/exercise-images/238/2fc242d3-5bdd-4f97-99bd-678adb8c96fc.png",
+    "title": "Fly With Dumbbells",
+    "author": "cshep442",
+    "license": "CC BY-SA 4",
+    "source_url": "https://wger.de/en/exercise/238/view-base"
+  },
+  "28": {
+    "url": "https://wger.de/media/exercise-images/1084/91dd5a95-1c45-46f2-a074-de41b6ad599b.jpg",
+    "title": "Dumbbell Floor Press",
+    "author": "admin",
+    "license": "CC BY-SA 4",
+    "source_url": "https://wger.de/en/exercise/1084/view-base"
+  },
+  "29": {
+    "url": "https://wger.de/media/exercise-images/148/lateral-dumbbell-raises-large-2.png",
+    "title": "Lateral Raises",
+    "author": "Everkinetic",
+    "license": "CC BY-SA 3",
+    "source_url": "https://wger.de/en/exercise/348/view-base"
+  },
+  "30": {
+    "url": "https://wger.de/media/exercise-images/123/dumbbell-shoulder-press-large-1.png",
+    "title": "Shoulder Press, Dumbbells",
+    "author": "Everkinetic",
+    "license": "CC BY-SA 3",
+    "source_url": "https://wger.de/en/exercise/567/view-base"
+  },
+  "31": {
+    "url": "https://wger.de/media/exercise-images/1732/d13b9adb-968e-4f73-95e6-b16690bcf616.jpg",
+    "title": "Face pulls with yellow/green band",
+    "author": "54str",
+    "license": "CC BY-SA 4",
+    "source_url": "https://wger.de/en/exercise/1732/view-base"
+  },
+  "32": {
+    "url": "https://wger.de/media/exercise-images/256/b7def5bc-2352-499b-b9e5-fff741003831.png",
+    "title": "Front Raises",
+    "author": "philip",
+    "license": "CC BY-SA 4",
+    "source_url": "https://wger.de/en/exercise/256/view-base"
+  },
+  "33": {
+    "url": "https://wger.de/media/exercise-images/81/Biceps-curl-1.png",
+    "title": "Biceps Curls With Dumbbell",
+    "author": "Everkinetic",
+    "license": "CC BY-SA 3",
+    "source_url": "https://wger.de/en/exercise/92/view-base"
+  },
+  "34": {
+    "url": "https://wger.de/media/exercise-images/83/Bench-dips-1.png",
+    "title": "Dips Between Two Benches",
+    "author": "Everkinetic",
+    "license": "CC BY-SA 3",
+    "source_url": "https://wger.de/en/exercise/197/view-base"
+  },
+  "35": {
+    "url": "https://wger.de/media/exercise-images/86/Bicep-hammer-curl-1.png",
+    "title": "Hammer Curls",
+    "author": "Everkinetic",
+    "license": "CC BY-SA 3",
+    "source_url": "https://wger.de/en/exercise/272/view-base"
+  },
+  "36": {
+    "url": "https://wger.de/media/exercise-images/1185/c5ca283d-8958-4fd8-9d59-a3f52a3ac66b.jpg",
+    "title": "Triceps Pushdown",
+    "author": "anto.kreegyr",
+    "license": "CC BY-SA 4",
+    "source_url": "https://wger.de/en/exercise/1185/view-base"
+  },
+  "37": {
+    "url": "https://wger.de/media/exercise-images/1336/ebf88217-df26-4ef7-94cb-f0c2220c6abe.webp",
+    "title": "Triceps Overhead (Dumbbell)",
+    "author": "Anastasious",
+    "license": "CC BY-SA 4",
+    "source_url": "https://wger.de/en/exercise/1336/view-base"
+  },
+  "39": {
+    "url": "https://wger.de/media/exercise-images/1193/70ca5d80-3847-4a8c-8882-c6e9e485e29e.png",
+    "title": "Russian Twist",
+    "author": "lion",
+    "license": "CC BY-SA 4",
+    "source_url": "https://wger.de/en/exercise/1193/view-base"
+  },
+  "41": {
+    "url": "https://wger.de/media/exercise-images/1572/3d14e761-a73d-49da-8804-f3016a7573ff.png",
+    "title": "Bird Dog",
+    "author": "Settebello",
+    "license": "CC BY-SA 4",
+    "source_url": "https://wger.de/en/exercise/1572/view-base"
+  },
+  "42": {
+    "url": "https://wger.de/media/exercise-images/1618/c18baedc-ff98-4fb2-b4f5-38a05c12f637.png",
+    "title": "Stationary bike cardio",
+    "author": "Tierrasverdes",
+    "license": "CC BY-SA 4",
+    "source_url": "https://wger.de/en/exercise/1618/view-base"
+  },
+  "44": {
+    "url": "https://wger.de/media/exercise-images/1615/7792295c-83b6-4ea8-9353-ce02f0ad2559.jpg",
+    "title": "Treadmill Cardio",
+    "author": "Tierrasverdes",
+    "license": "CC BY-SA 4",
+    "source_url": "https://wger.de/en/exercise/1615/view-base"
+  },
+  "46": {
+    "url": "https://wger.de/media/exercise-images/1862/93d993f8-1d8c-4e21-99c6-08b2fe424a17.png",
+    "title": "Hip Circles",
+    "author": "Davidgj32",
+    "license": "CC BY-SA 4",
+    "source_url": "https://wger.de/en/exercise/1862/view-base"
+  },
+  "47": {
+    "url": "https://wger.de/media/exercise-images/1858/058b6fdb-8093-4b6d-a504-cbf869f3e3d3.jpg",
+    "title": "Foam Roller quadriceps",
+    "author": "Davidgj32",
+    "license": "CC BY-SA 4",
+    "source_url": "https://wger.de/en/exercise/1858/view-base"
+  },
+  "49": {
+    "url": "https://wger.de/media/exercise-images/1452/85a6b9de-4eec-445b-8ebb-f1950b076aba.png",
+    "title": "Knee to Chest Stretch",
+    "author": "Davidgj32",
+    "license": "CC BY-SA 4",
+    "source_url": "https://wger.de/en/exercise/1452/view-base"
   }
 };

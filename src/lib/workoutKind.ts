@@ -10,7 +10,13 @@ const RECOVERY = /\b(yoga|pilates|stretch(es|ing)?|mobility|recovery|restorative
 // "row" alone is left out so "Barbell row" stays strength.
 const CARDIO = /\b(run(s|ning)?|jog(s|ging)?|hiit|cardio|cycl(e|es|ing)|bike|biking|spin(ning)?|swim(s|ming)?|rowing|rower|erg|aerobic|zumba|dance|dancing|boxing|kickboxing|sprints?|skipping|jump rope|hik(e|es|ing)|elliptical|stair ?master|intervals?|zone ?2)\b/i;
 
+// Names where a keyword above would mislead: walking lunges are strength, an incline walk is cardio.
+const STRENGTH_OVERRIDE = /\bwalking lunges?\b/i;
+const CARDIO_OVERRIDE = /\bincline (treadmill )?walk(s|ing)?\b/i;
+
 function classify(text: string): WorkoutKind | null {
+  if (STRENGTH_OVERRIDE.test(text)) return "strength";
+  if (CARDIO_OVERRIDE.test(text)) return "cardio";
   if (RECOVERY.test(text)) return "recovery";
   if (CARDIO.test(text)) return "cardio";
   return null;

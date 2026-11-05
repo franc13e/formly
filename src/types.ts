@@ -204,6 +204,22 @@ export interface ScheduledWorkout {
   emoji: string;
   /** e.g. "Glutes · 25 min"; absent for custom entries. */
   detail?: string;
+  /** Name of the session this was added with (e.g. "Glute day"), so the day can show it grouped. */
+  group?: string;
+}
+
+/** A named group of exercises added to a day in one go; each exercise still logs on its own. */
+export interface WorkoutSession {
+  /** Presets use "p-…" ids; your own sessions use "s-<Date.now()>". */
+  id: string;
+  name: string;
+  emoji: string;
+  /** Short focus line, e.g. "Glutes and hamstrings". */
+  focus: string;
+  /** Workout ids from the library or your custom workouts, in order. */
+  workoutIds: number[];
+  /** Optional note on when it suits best, e.g. "Great in follicular and ovulation". */
+  phaseNote?: string;
 }
 
 /** A day in the schedule: a list of workouts, or the literal "rest". */

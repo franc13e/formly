@@ -5,7 +5,7 @@ import { Glyph } from "./Glyph";
 import { glyphFor, TONES } from "./glyphs";
 import { YouTubeLogo } from "./RecipeMedia";
 import { callFormTips } from "../lib/api";
-import { builtInGuide, cachedFormTips, findLibraryWorkout, formVideoUrl, parseFormTips, rememberFormTips } from "../lib/formTips";
+import { builtInGuide, cachedFormTips, findLibraryWorkout, formVideoUrl, parseFormTips, rememberFormTips, workoutPicture } from "../lib/formTips";
 import { phaseFit, workoutFood, workoutKind, type FoodTip } from "../lib/workoutKind";
 import type { FormTips, PhaseId, WorkoutImage } from "../types";
 
@@ -94,7 +94,9 @@ type AiTips = { status: "ready"; tips: FormTips } | { status: "loading" } | { st
  */
 export function WorkoutGuide({ workout, phase, onClose, onAskCoach }: WorkoutGuideProps) {
   const library = findLibraryWorkout(workout);
-  const { guide, image } = builtInGuide(library);
+  const { guide } = builtInGuide(library);
+  // The library workout's own image, else the best wger match for the name (custom or typed workouts).
+  const image = workoutPicture(workout) ?? undefined;
   const emoji = workout.emoji || library?.emoji || "🏋️";
   const muscle = workout.muscle || library?.muscle || "";
   const duration = workout.duration || library?.duration || "";
