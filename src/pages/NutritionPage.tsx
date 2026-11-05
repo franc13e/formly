@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { C, ACCENT } from "../theme";
 import { CYCLE_FOODS } from "../data/nutrition";
 import { Glyph } from "../components/Glyph";
@@ -11,6 +11,9 @@ type NutritionSubTab = "cycle" | "goals" | "recipes";
 interface NutritionPageProps {
   cycleInfo: CycleInfo | null;
   showToast: ShowToast;
+  /** A question to pre-fill in the Ask chat (null = none; "" just opens Ask). Cleared once picked up. */
+  askDraft?: string | null;
+  clearAskDraft?: () => void;
 }
 
 /** The This Phase / Ask / Recipes switcher at the top of the Nutrition tab. */
@@ -27,8 +30,28 @@ function SubTabs({ subTab, setSubTab }: { subTab: NutritionSubTab; setSubTab: (t
 // ══════════════════════════════════════════════════════════════════════════════
 // ─── NUTRITION ────────────────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
-export function NutritionPage({ cycleInfo, showToast }: NutritionPageProps) {
-  const [subTab, setSubTab] = useState<NutritionSubTab>("cycle");
+export function NutritionPage({ cycleInfo, showToast, askDraft = null, clearAskDraft }: NutritionPageProps) {
+  const [subTab, setSubTab] = useState<NutritionSubTab>(askDraft !== null ? "goals" : "cycle");
+  // The draft handed to the chat; `chatKey` remounts the chat so a new draft lands in its input.
+  const [draft, setDraft] = useState<string | null>(askDraft || null);
+  const [chatKey, setChatKey] = useState(0);
+  const [seenDraft, setSeenDraft] = useState<string | null>(askDraft);
+  if (askDraft !== seenDraft) {
+    // A new request while the page is already open.
+    setSeenDraft(askDraft);
+    if (askDraft !== null) {
+      setSubTab("goals");
+      setDraft(askDraft || null);
+      setChatKey(k => k + 1);
+    }
+  }
+  // Hand-off done: clear the app-level draft so it isn't applied again.
+  useEffect(() => { if (askDraft !== null) clearAskDraft?.(); }, [askDraft, clearAskDraft]);
+  const changeSubTab = (tab: NutritionSubTab) => {
+    // A draft is only offered once; leaving the chat drops it.
+    if (tab !== subTab) setDraft(null);
+    setSubTab(tab);
+  };
   // Note: the old "food-diary", "ai-goal-foods" and "food-goal" keys are left in storage untouched;
   // the food chat still reads "food-goal" for context.
 
@@ -40,7 +63,7 @@ export function NutritionPage({ cycleInfo, showToast }: NutritionPageProps) {
       <div style={{padding:"24px 24px 0",background:C.bg}}>
         <div className="row" style={{marginBottom:2}}><div className="h-display" style={{fontSize:32,color:C.text}}>Nutrition</div></div>
         <div style={{fontSize:13,color:C.textSoft,fontWeight:500,marginBottom:14}}>Food insights for your cycle and goals</div>
-        <SubTabs subTab={subTab} setSubTab={setSubTab}/>
+        <SubTabs subTab={subTab} setSubTab={changeSubTab}/>
       </div>
 
       <div style={{padding:"16px 16px 0"}}>
@@ -91,7 +114,7 @@ export function NutritionPage({ cycleInfo, showToast }: NutritionPageProps) {
         )}
 
         {/* GOAL TAB: food chat */}
-        {subTab==="goals" && <FoodChat cycleInfo={cycleInfo}/>}
+        {subTab==="goals" && <FoodChat key={chatKey} cycleInfo={cycleInfo} initialDraft={draft ?? undefined}/>}
 
         {/* RECIPES TAB */}
         {subTab==="recipes" && <RecipesTab cycleInfo={cycleInfo} showToast={showToast}/>}

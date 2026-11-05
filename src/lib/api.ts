@@ -88,3 +88,8 @@ export async function getRecipePhoto(name: string): Promise<RecipePhoto | null> 
     clearTimeout(timeout);
   }
 }
+
+/** Asks /api/form-tips for form tips for a workout; returns its plain-text reply (see `parseFormTips`). Errors are thrown like `callAI`'s. */
+export function callFormTips(name: string, muscle?: string): Promise<string> {
+  return postForResult("/api/form-tips", { name: name.trim().slice(0, 80), muscle: muscle?.trim().slice(0, 40) || undefined }, "callFormTips");
+}

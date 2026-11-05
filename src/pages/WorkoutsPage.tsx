@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowRightLeft, Pencil, Plus } from "lucide-react";
+import { ArrowRightLeft, BookOpen, Pencil, Plus } from "lucide-react";
 import { C, ACCENT } from "../theme";
 import { ALL_WORKOUTS, DIFF_COLOR } from "../data/workouts";
 import { SwipeToDelete } from "../components/SwipeToDelete";
@@ -7,10 +7,13 @@ import { Glyph } from "../components/Glyph";
 import { AICoachPanel } from "../components/AICoachPanel";
 import { MonthCalendar, type DayLook } from "../components/MonthCalendar";
 import { CustomWorkoutModal } from "../components/CustomWorkoutModal";
-import type { CycleInfo, LoggableWorkout, Measurements, Schedule, ScheduledWorkout, Setter, ShowToast, Workout, WorkoutLogEntry, WorkoutLogForm } from "../types";
+import { WorkoutGuide, type GuideTarget } from "../components/WorkoutGuide";
+import { WorkoutInsights } from "../components/WorkoutInsights";
+import type { CycleInfo, LoggableWorkout, PhaseId, Measurements, Schedule, ScheduledWorkout, Setter, ShowToast, Workout, WorkoutLogEntry, WorkoutLogForm } from "../types";
 import { localDateKey } from "../lib/date";
 import { load, save } from "../lib/storage";
-import { groupLogByDate, logStreak, monthStats, moveInSchedule, weekOf } from "../lib/workouts";
+import { addDays, groupLogByDate, logStreak, monthStats, moveInSchedule, weekOf } from "../lib/workouts";
+import { builtInGuide, cachedFormTips, findLibraryWorkout } from "../lib/formTips";
 
 type WorkoutsTab = "schedule" | "browse" | "ai" | "history";
 type ScheduleView = "week" | "month";
@@ -28,6 +31,10 @@ interface WorkoutsPageProps {
   measurements: Measurements;
   cycleInfo: CycleInfo | null;
   showToast: ShowToast;
+  /** Opens the food coach with a question (from a workout guide's "Ask the food coach"). */
+  onAskCoach?: (question: string) => void;
+  /** Cycle phase on a YYYY-MM-DD date, or null when unknown; feeds the History insights. */
+  phaseOn?: (date: string) => PhaseId | null;
 }
 
 /** The Schedule / Browse / AI Coach / History switcher at the top of the Workouts tab. */
@@ -48,9 +55,14 @@ const newLogId = () => Date.now();
 const EMPTY_LOG_FORM: WorkoutLogForm = { sets:"", reps:"", weight:"", notes:"", duration:"" };
 const iconBtn = { background:"none", border:"none", color:C.textSoft, cursor:"pointer", padding:4, display:"inline-flex", alignItems:"center", justifyContent:"center", borderRadius:8 } as const;
 
+/** A guide target for a scheduled item: the library workout when the name matches one, else the item itself. */
+const guideTargetFor = (item: ScheduledWorkout): GuideTarget => findLibraryWorkout(item) ?? { name:item.name, emoji:item.emoji };
+/** The first form cue for a workout: built-in, or cached AI tips; undefined when there are none yet. */
+const firstCue = (w: GuideTarget) => builtInGuide(findLibraryWorkout(w)).guide?.cues[0] ?? cachedFormTips(w.name)?.cues[0];
+
 // ══════════════════════════════════════════════════════════════════════════════
 // ─── WORKOUTS ─────────────────────────────────────────────────────────────────
-export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedule, workoutLog, setWorkoutLog, aiPlan, setAiPlan, measurements, cycleInfo, showToast }: WorkoutsPageProps) {
+export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedule, workoutLog, setWorkoutLog, aiPlan, setAiPlan, measurements, cycleInfo, showToast, onAskCoach, phaseOn }: WorkoutsPageProps) {
   const [tab, setTab] = useState<WorkoutsTab>("schedule");
   const [logModal, setLogModal] = useState<LoggableWorkout | null>(null);
   const [logForm, setLogForm] = useState<WorkoutLogForm>(EMPTY_LOG_FORM);
@@ -62,10 +74,17 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
   const [historyDay, setHistoryDay] = useState<string | null>(null);
   const [customWorkouts, setCustomWorkouts] = useState<Workout[]>(()=>load("custom-workouts",[]));
   const [customModal, setCustomModal] = useState<{ initial: Workout | null } | null>(null);
+  const [guideFor, setGuideFor] = useState<GuideTarget | null>(null);
   useEffect(()=>{save("custom-workouts",customWorkouts);},[customWorkouts]);
 
   const todayStr = localDateKey();
   const completedToday = new Set((workoutLog||[]).filter(e=>e.date===todayStr).map(e=>e.name));
+
+  const currentPhase: PhaseId | null = cycleInfo?.phase.id ?? null;
+  // "Form tips for today": today's planned workouts, else the next planned day within a week.
+  const tipsDay = Array.from({length:7},(_,i)=>addDays(todayStr,i)).find(d=>{const e=schedule[d];return Array.isArray(e)&&e.length>0;});
+  const tipsEntry = tipsDay ? schedule[tipsDay] : undefined;
+  const tipsItems = Array.isArray(tipsEntry) ? tipsEntry : [];
 
   const DAYS = weekOf(todayStr).map((date,i) => ({ date, label:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][i], num: new Date(date+"T12:00").getDate() }));
 
@@ -105,7 +124,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
   const scheduleLook = (date: string): DayLook => {
     const entry = schedule[date];
     const isToday = date===todayStr;
-    if (entry==="rest") return { background:C.sage, border:`1.5px solid ${C.sageDeep}`, content:<Glyph emoji="🌿" chip={false} size={11}/> };
+    if (entry==="rest") return { background:C.bgDeep, border:`1.5px solid ${C.border}`, content:<Glyph emoji="🌿" chip={false} size={11}/> };
     if (!Array.isArray(entry) || entry.length===0) return {};
     return {
       background: isToday ? C.lavender : C.lavender+"60", border:`1.5px solid ${C.lavenderDeep}`,
@@ -138,6 +157,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
             {inPlan?"✓ In plan":"+ Add to plan"}
           </button>
           <button className="btn btn-sm" style={{flex:1,background:C.butter,color:ACCENT.carbs.text,border:"none"}} onClick={()=>openLog(w)}>Log workout</button>
+          <button className="btn btn-ghost btn-sm" style={{flexShrink:0,padding:"8px 12px"}} onClick={()=>setGuideFor(w)} aria-label={`How to do ${w.name}: form guide`}><BookOpen size={14} strokeWidth={1.8} aria-hidden="true"/>Guide</button>
           {custom&&<>
             <button style={iconBtn} onClick={()=>setCustomModal({initial:w})} aria-label={`Edit ${w.name}`}><Pencil size={15} strokeWidth={1.8}/></button>
             <SwipeToDelete onDelete={()=>deleteCustomWorkout(w.id)}/>
@@ -154,11 +174,29 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
 
       {tab==="schedule" && (
         <div>
-          {aiPlan && (
-            <div style={{background:`linear-gradient(135deg,${C.lavender},${C.rose})`,borderRadius:16,padding:"12px 14px",marginBottom:14,border:`1.5px solid ${C.lavenderDeep}`}}>
-              <div style={{fontSize:11,fontWeight:600,color:"#A95C76",marginBottom:2}}><Glyph emoji="✨" chip={false} size={12} color="#A95C76"/> AI plan active</div>
-              <div style={{fontSize:12,color:C.textMid,fontWeight:500}}>Tap any day to add workouts to your schedule.</div>
-            </div>
+          {tipsDay && (
+            <section className="card" aria-labelledby="form-tips-today" style={{padding:"14px 16px",marginBottom:14}}>
+              <div className="row-between" style={{marginBottom:10}}>
+                <h2 id="form-tips-today" style={{fontSize:14,fontWeight:700,color:C.text}}>{tipsDay===todayStr?"Form tips for today":`Form tips for ${shortDate(tipsDay)}`}</h2>
+                {tipsDay!==todayStr&&<span style={{fontSize:11,fontWeight:600,color:C.textSoft}}>Next planned</span>}
+              </div>
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                {tipsItems.map((item,i)=>{
+                  const target = guideTargetFor(item);
+                  const cue = firstCue(target);
+                  return (
+                    <div key={i} className="row" style={{gap:10,background:C.bgDeep,borderRadius:12,padding:"10px 12px"}}>
+                      <Glyph emoji={item.emoji||"🏋️"} size={14}/>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontWeight:700,fontSize:13,color:C.text}}>{item.name}</div>
+                        <div style={{fontSize:12,color:C.textMid,fontWeight:500,lineHeight:1.45}}>{cue ?? "Open the guide for form cues and what to eat."}</div>
+                      </div>
+                      <button className="btn btn-ghost btn-sm" style={{flexShrink:0,padding:"6px 12px",fontSize:11}} onClick={()=>setGuideFor(target)} aria-label={`See guide for ${item.name}`}>See guide</button>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
           )}
 
           {/* Week / Month toggle */}
@@ -190,8 +228,8 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
                 return (
                   <button key={day.date} onClick={()=>selectDay(day.date)} aria-pressed={isPicking} aria-label={`${day.label} ${day.num}`} style={{
                     borderRadius:12, padding:"8px 4px", display:"flex", flexDirection:"column", alignItems:"center", gap:3, minHeight:44, fontFamily:"DM Sans",
-                    cursor:"pointer", border:`1.5px solid ${isPicking?"#B9728A":isToday?C.lavenderDeep:items==="rest"?C.sageDeep:items.length?C.lavenderDeep:C.border}`,
-                    background:isPicking?"#B9728A":isToday?C.lavender:items==="rest"?C.sage:items.length?C.lavender+"60":C.white,
+                    cursor:"pointer", border:`1.5px solid ${isPicking?"#B9728A":isToday?C.lavenderDeep:items==="rest"?C.border:items.length?C.lavenderDeep:C.border}`,
+                    background:isPicking?"#B9728A":isToday?C.lavender:items==="rest"?C.bgDeep:items.length?C.lavender+"60":C.white,
                     transition:"all .15s",
                   }}>
                     <div style={{fontSize:11,fontWeight:700,color:isPicking?"white":isToday?"#A95C76":C.text}}>{day.num}</div>
@@ -235,9 +273,12 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
                         {item.detail&&<div style={{fontSize:11,color:C.textSoft,fontWeight:500}}>{item.detail}</div>}
                       </div>
                       <div className="row" style={{gap:4}}>
-                        {isToday&&<button className="btn btn-sm" style={{background:completedToday.has(item.name)?C.sage:C.butter,color:completedToday.has(item.name)?ACCENT.fiber.text:ACCENT.carbs.text,border:"none",fontSize:11}} onClick={()=>openLog(item)}>
+                        {isToday&&<button className="btn btn-sm" style={{background:completedToday.has(item.name)?C.rose:C.petal,color:completedToday.has(item.name)?C.accentInk:C.text,border:"none",fontSize:11}} onClick={()=>openLog(item)}>
                           {completedToday.has(item.name)?"✓ Done":"Log"}
                         </button>}
+                        <button style={iconBtn} aria-label={`Form guide for ${item.name}`} onClick={()=>setGuideFor(guideTargetFor(item))}>
+                          <BookOpen size={15} strokeWidth={1.8} aria-hidden="true"/>
+                        </button>
                         <button style={{...iconBtn,color:movingIdx===idx?"#A95C76":C.textSoft,background:movingIdx===idx?C.lavender:"none"}} aria-label={`Move ${item.name} to another day`} aria-expanded={movingIdx===idx} onClick={()=>{setMovingIdx(movingIdx===idx?null:idx);setMoveDate("");}}>
                           <ArrowRightLeft size={15} strokeWidth={1.8}/>
                         </button>
@@ -330,12 +371,14 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
                 ))}
               </div>
 
+              <WorkoutInsights workoutLog={workoutLog} phaseOn={phaseOn}/>
+
               <div className="card" style={{padding:14,marginBottom:16}}>
                 <MonthCalendar selected={shownHistoryDay} onSelect={setHistoryDay} initialMonth={shownHistoryDay} renderDay={date=>{
                   const entries = logByDate[date];
                   if (!entries) return {};
                   return {
-                    background:C.sage, border:`1.5px solid ${C.sageDeep}`,
+                    background:C.rose, border:`1.5px solid ${C.roseDeep}`,
                     content:<span style={{display:"inline-flex",alignItems:"center",gap:1}}><Glyph emoji={entries[0].emoji||"🏋️"} chip={false} size={12}/>{entries.length>1&&<span style={{fontSize:9,fontWeight:600,color:ACCENT.fiber.text}}>+{entries.length-1}</span>}</span>,
                   };
                 }}/>
@@ -384,7 +427,8 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
         <div className="modal-handle"/>
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
           <Glyph emoji={logModal.emoji||"🏋️"} size={20}/>
-          <div><div className="modal-title" style={{marginBottom:0}}>{logModal.name}</div><div style={{fontSize:12,color:C.textSoft,fontWeight:500}}>{logModal.muscle||""}{logModal.duration?` · ${logModal.duration}`:""}</div></div>
+          <div style={{flex:1,minWidth:0}}><div className="modal-title" style={{marginBottom:0}}>{logModal.name}</div><div style={{fontSize:12,color:C.textSoft,fontWeight:500}}>{logModal.muscle||""}{logModal.duration?` · ${logModal.duration}`:""}</div></div>
+          <button onClick={()=>setGuideFor(findLibraryWorkout(logModal) ?? { name:logModal.name, emoji:logModal.emoji, muscle:logModal.muscle, duration:logModal.duration })} style={{background:"none",border:"none",padding:4,cursor:"pointer",fontFamily:"DM Sans",fontSize:12,fontWeight:700,color:C.accentInk,textDecoration:"underline",flexShrink:0}}>Form guide</button>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
           {([["sets","Sets","e.g. 3"],["reps","Reps","e.g. 12"],["weight","Weight (kg)","e.g. 40"],["duration","Duration","e.g. 30 min"]] as const).map(([k,lbl,ph])=>(
@@ -395,6 +439,8 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
         {cycleInfo&&<div style={{background:cycleInfo.phase.bg,borderRadius:12,padding:"8px 12px",marginBottom:14,fontSize:12,fontWeight:600,color:cycleInfo.phase.textColor}}><Glyph emoji={cycleInfo.phase.emoji} chip={false} size={12} color={cycleInfo.phase.textColor}/> {cycleInfo.phase.label} phase: {cycleInfo.phase.workouts[0]}</div>}
         <div className="row" style={{gap:10}}><button className="btn btn-ghost" style={{flex:1}} onClick={()=>setLogModal(null)}>Cancel</button><button className="btn btn-primary" style={{flex:2}} onClick={logWorkout}>Save workout ✓</button></div>
       </div></div>}
+
+      {guideFor&&<WorkoutGuide key={guideFor.name} workout={guideFor} phase={currentPhase} onClose={()=>setGuideFor(null)} onAskCoach={onAskCoach}/>}
     </div>
   );
 }

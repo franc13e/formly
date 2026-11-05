@@ -248,6 +248,37 @@ export interface WorkoutLogForm {
   duration: string;
 }
 
+// ─── Workout guides ───────────────────────────────────────────────────────────
+
+/** Form tips for a workout: built-in (`WORKOUT_GUIDES`) or from /api/form-tips (cached under "form-tips"). */
+export interface FormTips {
+  /** Three short form cues. */
+  cues: string[];
+  /** One common mistake and its fix. */
+  mistake: string;
+  /** What it builds and why it's worth doing. */
+  helps: string;
+}
+
+/** Built-in guide content for a library workout. */
+export interface WorkoutGuide extends FormTips {
+  /** YouTube search terms, e.g. "barbell back squat proper form". */
+  videoQuery: string;
+}
+
+/** A wger demonstration image for a library workout (see scripts/fetch_workout_images.py). */
+export interface WorkoutImage {
+  /** https image url */
+  url: string;
+  /** The wger exercise shown, e.g. "Push-Up". */
+  title: string;
+  author: string;
+  /** e.g. "CC BY-SA 4" */
+  license: string;
+  /** The exercise's page on wger. */
+  source_url: string;
+}
+
 // ─── AI coach ─────────────────────────────────────────────────────────────────
 
 /** A selectable card (goal / activity level) in the AI coach form. */

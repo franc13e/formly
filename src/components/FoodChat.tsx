@@ -9,6 +9,8 @@ import type { ChatMessage, CycleInfo } from "../types";
 
 interface FoodChatProps {
   cycleInfo: CycleInfo | null;
+  /** Pre-fills the input (e.g. a question from a workout guide); not sent automatically. */
+  initialDraft?: string;
 }
 
 const PURPLE = "#A95C76";
@@ -25,9 +27,9 @@ function TypingDots() {
 }
 
 /** The "Ask" sub-tab: a cycle-aware food coach chat, persisted under "food-chat". */
-export function FoodChat({ cycleInfo }: FoodChatProps) {
+export function FoodChat({ cycleInfo, initialDraft }: FoodChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>(() => trimHistory(load<ChatMessage[]>("food-chat", [])));
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(() => (initialDraft ?? "").slice(0, MAX_USER_CHARS));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // The goal picked under the old "My Goal" list; there is no picker anymore but the coach still uses it.
@@ -130,7 +132,7 @@ export function FoodChat({ cycleInfo }: FoodChatProps) {
       )}
 
       <form className="row" style={{gap:8}} onSubmit={e => { e.preventDefault(); send(input); }}>
-        <input className="input" aria-label="Ask a food question" placeholder="Ask about food, cravings, snacks..." value={input} maxLength={MAX_USER_CHARS} onChange={e => setInput(e.target.value)} style={{fontSize:13}}/>
+        <input className="input" aria-label="Ask a food question" placeholder="Ask about food, cravings, snacks..." autoFocus={!!initialDraft} value={input} maxLength={MAX_USER_CHARS} onChange={e => setInput(e.target.value)} style={{fontSize:13}}/>
         <button type="submit" className="btn btn-primary" aria-label="Send" disabled={loading || !input.trim()} style={{flexShrink:0,width:44,height:44,padding:0,opacity:loading||!input.trim()?0.6:1}}>
           {loading ? <div className="spin"/> : <SendHorizontal size={18} aria-hidden="true"/>}
         </button>

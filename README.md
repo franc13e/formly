@@ -6,7 +6,7 @@ Formly is a mobile-first fitness app that combines workout planning, food guidan
 
 **Live demo:** https://formly-teal.vercel.app
 
-**Tech Stack:** React 19 · TypeScript · Vite · Vitest · FastAPI · Groq LLM API · Supabase (auth + Postgres) · Openverse (recipe photos) · Vercel (frontend + serverless API)
+**Tech Stack:** React 19 · TypeScript · Vite · Vitest · FastAPI · Groq LLM API · Supabase (auth + Postgres) · Openverse (recipe photos) · wger (exercise images) · Vercel (frontend + serverless API)
 
 ---
 
@@ -15,11 +15,12 @@ Formly is a mobile-first fitness app that combines workout planning, food guidan
 <p align="center">
   <img src="docs/screenshots/home.png" width="240" alt="Home: phase-tinted screen with the cycle ring, mascot, week strip and next period">
   <img src="docs/screenshots/body.png" width="240" alt="Body: next-period prediction and the monthly cycle calendar">
-  <img src="docs/screenshots/workouts.png" width="240" alt="Workouts: history as a month calendar with stats and streak">
+  <img src="docs/screenshots/workouts.png" width="240" alt="Workouts: history with insights, stats and a month calendar">
 </p>
 <p align="center">
   <img src="docs/screenshots/ask.png" width="240" alt="Ask: the cycle-aware food coach chat">
   <img src="docs/screenshots/recipes.png" width="240" alt="Recipes: meals and drinks for the current phase with photos and video links">
+  <img src="docs/screenshots/guide.png" width="240" alt="Workout guide: demo image, how it helps, phase fit, form cues, video link and pre/post-workout food">
 </p>
 <p align="center">
   <img src="docs/screenshots/measurements.png" width="240" alt="Body: measurements, weight trend and measurement history">
@@ -38,6 +39,9 @@ Formly is a mobile-first fitness app that combines workout planning, food guidan
 **Workouts**
 - **Week / month schedule**: plan workouts on any day, mark rest days and move planned workouts to another day
 - **History calendar**: each logged workout's icon on the day you did it, plus monthly totals and your streak
+- **Insights**: this week or month at a glance: muscle groups trained (and not yet), strength / cardio / recovery balance, training by cycle phase and one gentle suggestion
+- **Workout guides**: for every workout, a demonstration image, how it helps, how it fits your current phase, three form cues, a common mistake to avoid, a YouTube form video link, and what to eat before and after (adjusted for your phase), with a one-tap question to the food coach; custom workouts get AI-written form tips
+- **Form tips for today**: the Schedule tab highlights a key cue for each workout you have planned
 - **Your own workouts**: create, edit and delete custom workouts with an icon (suggested from the name)
 - **AI coach**: personalised plans from your goal, activity level, focus areas and current phase
 
@@ -112,6 +116,7 @@ The frontend reads the public Supabase URL and anon key from `GET /api/config`, 
 |---|---|---|
 | `POST` | `/api/food-chat` | Cycle-aware food coach chat |
 | `POST` | `/api/recipe` | Generate a recipe for a phase from optional ingredients |
+| `POST` | `/api/form-tips` | AI form cues, a common mistake and benefits for a custom workout |
 | `GET` | `/api/recipe-photo?q=` | An openly licensed food photo with credit (Openverse; Pexels if `PEXELS_API_KEY` is set) |
 | `POST` | `/api/ai-plan` | Generate a personalised workout and nutrition plan |
 | `POST` | `/api/body-insight` | Cycle-aware feedback on body measurements |
@@ -120,6 +125,8 @@ The frontend reads the public Supabase URL and anon key from `GET /api/config`, 
 | `POST` | `/api/suggest-goals` | Nutrient priorities for the user's goals |
 | `GET` | `/api/config` | Public Supabase URL and anon key (if accounts are enabled) |
 | `GET` | `/api/health` | Health check |
+
+Exercise demonstration images come from [wger](https://wger.de), an open exercise database (CC BY-SA), shown with their author and licence; they ship with the app in `src/data/workoutImages.ts` (regenerated with `python scripts/fetch_workout_images.py`).
 
 Recipe photos are Creative Commons or public-domain images found through [Openverse](https://openverse.org); each one is shown with its photographer, licence and a link to the source. Photos for the built-in recipes ship with the app (`src/data/recipePhotos.ts`, regenerated with `python scripts/fetch_recipe_photos.py`); photos for AI recipes are looked up from the browser, so each user has their own Openverse rate limit.
 

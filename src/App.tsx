@@ -1,14 +1,14 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { C, CSS } from "./theme";
 import { load, save } from "./lib/storage";
-import { cycleStats, getCycleInfo, periodContaining, periodLengthFrom, periodStarts } from "./lib/cycle";
+import { cycleDayOn, cycleStats, getCycleInfo, periodContaining, periodLengthFrom, periodStarts } from "./lib/cycle";
 import { useToast } from "./hooks/useToast";
 import { TABS } from "./data/tabs";
 import { Icon } from "./components/Icon";
 import { Icons } from "./components/icons";
 import { Glyph } from "./components/Glyph";
 import { localDateKey } from "./lib/date";
-import { markNoFlow, setFlow, setPeriodEnd } from "./lib/periodFlow";
+import { bleedEnds, markNoFlow, setFlow, setPeriodEnd, withCurrentStart } from "./lib/periodFlow";
 import { seedHistory, weightHistoryFrom } from "./lib/measurementHistory";
 import { OnboardingFlow } from "./pages/OnboardingFlow";
 import { Dashboard } from "./pages/Dashboard";
@@ -16,7 +16,7 @@ import { NutritionPage } from "./pages/NutritionPage";
 import { BodyPage } from "./pages/BodyPage";
 import { WorkoutsPage } from "./pages/WorkoutsPage";
 import { SettingsPage } from "./pages/SettingsPage";
-import type { FlowLevel, MeasurementSnapshot, Measurements, PeriodEntry, Schedule, TabId, WeightEntry, Workout, WorkoutLogEntry } from "./types";
+import type { FlowLevel, MeasurementSnapshot, PhaseId, Measurements, PeriodEntry, Schedule, TabId, WeightEntry, Workout, WorkoutLogEntry } from "./types";
 
 // ══════════════════════════════════════════════════════════════════════════════
 // ─── ROOT APP ─────────────────────────────────────────────────────────────────
@@ -40,12 +40,19 @@ export default function App() {
   const [aiPlan,setAiPlan]=useState<string | null>(()=>load<string | null>("ai-plan",null));
   const [toast,showToast]=useToast();
   const [addOpen,setAddOpen]=useState(false);
+  // A question to pre-fill in the Nutrition "Ask" chat (null = none; "" just opens the chat).
+  const [askDraft,setAskDraft]=useState<string | null>(null);
+  const onAskCoach=useCallback((question: string)=>{setAskDraft(question);setTab("nutrition");},[]);
+  const clearAskDraft=useCallback(()=>setAskDraft(null),[]);
 
   // Predict with the cycle length learned from logged periods; the setting is the fallback.
   const starts=periodStarts(periodHistory,periodStart);
   const stats=cycleStats(starts,cycleLength);
   const periodLen=periodLengthFrom(periodHistory,periodLengthSetting);
   const cycleInfo=getCycleInfo(periodStart,stats.length,periodLen.length);
+  // Phase on any date (for workout insights); null without cycle data.
+  const ends=bleedEnds(withCurrentStart(periodHistory,periodStart),periodLen.length);
+  const phaseOn=(date: string): PhaseId | null=>starts.length?cycleDayOn(date,starts,stats.length,periodLen.length,ends)?.phase??null:null;
 
   /** Records a period that started on `date` (YYYY-MM-DD); the latest start drives the cycle. */
   const logPeriodStart=(date: string)=>{
@@ -97,7 +104,7 @@ export default function App() {
     ...(starts.includes(todayKey)?[]:[{emoji:"💧",label:"My period started today",run:()=>{logPeriodStart(todayKey);showToast("Period logged");}}]),
     ...(cycleInfo&&cycleInfo.daysLate===0&&cycleInfo.dayOfCycle>1&&cycleInfo.dayOfCycle<=10&&!periodContaining(periodHistory,todayKey)?.end?[{emoji:"🌸",label:"My period ended today",run:()=>{logPeriodEnd(todayKey);showToast("Period end logged");}}]:[]),
     {emoji:"🏋️",label:"Log a workout",run:()=>setTab("workouts")},
-    {emoji:"✨",label:"Ask the food coach",run:()=>setTab("nutrition")},
+    {emoji:"✨",label:"Ask the food coach",run:()=>onAskCoach("")},
     {emoji:"📏",label:"Update measurements",run:()=>setTab("body")},
   ];
 
@@ -127,9 +134,9 @@ export default function App() {
         </div>
         <div className="desktop-content">
         {tab==="home"&&<Dashboard schedule={schedule} weightHistory={weightHistory} cycleInfo={cycleInfo} workoutLog={workoutLog} userName={userName} predictionSpread={stats.spread} onPeriodStarted={()=>{logPeriodStart(localDateKey());showToast("Period logged");}} onOpenBody={()=>setTab("body")}/>}
-        {tab==="nutrition"&&<NutritionPage cycleInfo={cycleInfo} showToast={showToast}/>}
+        {tab==="nutrition"&&<NutritionPage cycleInfo={cycleInfo} showToast={showToast} askDraft={askDraft} clearAskDraft={clearAskDraft}/>}
         {tab==="body"&&<BodyPage measurements={measurements} setMeasurements={setMeasurements} measurementHistory={measurementHistory} setMeasurementHistory={setMeasurementHistory} weightHistory={weightHistory} cycleInfo={cycleInfo} periodStart={periodStart} setPeriodStart={setPeriodStart} periodHistory={periodHistory} setPeriodHistory={setPeriodHistory} cycleLength={cycleLength} setCycleLength={setCycleLength} starts={starts} stats={stats} logPeriodStart={logPeriodStart} periodLength={periodLen} periodLengthSetting={periodLengthSetting} setPeriodLengthSetting={setPeriodLengthSetting} logPeriodEnd={logPeriodEnd} logPeriodFlow={logPeriodFlow} showToast={showToast}/>}
-        {tab==="workouts"&&<WorkoutsPage workoutPlan={workoutPlan} setWorkoutPlan={setWorkoutPlan} schedule={schedule} setSchedule={setSchedule} workoutLog={workoutLog} setWorkoutLog={setWorkoutLog} aiPlan={aiPlan} setAiPlan={setAiPlan} measurements={measurements} cycleInfo={cycleInfo} showToast={showToast}/>}
+        {tab==="workouts"&&<WorkoutsPage workoutPlan={workoutPlan} setWorkoutPlan={setWorkoutPlan} schedule={schedule} setSchedule={setSchedule} workoutLog={workoutLog} setWorkoutLog={setWorkoutLog} aiPlan={aiPlan} setAiPlan={setAiPlan} measurements={measurements} cycleInfo={cycleInfo} showToast={showToast} onAskCoach={onAskCoach} phaseOn={phaseOn}/>}
         {tab==="settings"&&<SettingsPage userName={userName} setUserName={setUserName} showToast={showToast} cycle={periodStart?{length:stats.length,cyclesLogged:stats.cyclesLogged,periodLength:periodLen.length,periodsLogged:periodLen.logged}:null} onOpenCycle={()=>setTab("body")}/>}
         <nav className="bottom-nav" aria-label="Main">
           <div className="nav-pill">

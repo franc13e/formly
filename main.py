@@ -312,6 +312,35 @@ async def recipe(req: RecipeRequest):
     return {"result": strip_markdown(text)}
 
 
+# ── Form tips ────────────────────────────────────────────────────────────────
+
+FORM_TIPS_SYSTEM = """You are a certified personal trainer writing short, safe form tips for a beginner-friendly women's fitness app.
+Rules: plain coaching language, no jargon, no markdown or bold. Never make medical or injury-treatment claims,
+never promise specific results, and keep advice safe for a healthy beginner (suggest an easier option where useful).
+If the workout name isn't a real exercise or workout, give general safe tips for a gentle full-body session.
+Reply in plain text using EXACTLY this format:
+CUES:
+1. <short form cue, under 15 words>
+2. <short form cue, under 15 words>
+3. <short form cue, under 15 words>
+AVOID: <one common mistake and how to fix it, one or two sentences>
+HELPS: <two sentences on what it builds and why it's worth doing>"""
+
+
+class FormTipsRequest(BaseModel):
+    name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=80)]
+    muscle: Optional[Annotated[str, StringConstraints(strip_whitespace=True, max_length=40)]] = None
+
+
+@app.post("/api/form-tips")
+async def form_tips(req: FormTipsRequest):
+    prompt = f"Workout: {req.name}"
+    if req.muscle:
+        prompt += f"\nMuscle group: {req.muscle}"
+    text = await call_groq(prompt=prompt, system=FORM_TIPS_SYSTEM, max_tokens=300, temperature=0.4)
+    return {"result": strip_markdown(text)}
+
+
 # ── Recipe photos (Pexels, else Openverse) ───────────────────────────────────
 
 PEXELS_URL = "https://api.pexels.com/v1/search"

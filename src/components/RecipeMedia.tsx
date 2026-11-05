@@ -64,7 +64,7 @@ export function RecipePhotoView({ name, photoQuery, recipeId, emoji, variant }: 
   );
 }
 
-function YouTubeLogo() {
+export function YouTubeLogo() {
   return (
     <svg width="20" height="14" viewBox="0 0 20 14" aria-hidden="true" focusable="false">
       <rect width="20" height="14" rx="4" fill="#FF0000"/>
