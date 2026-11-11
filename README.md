@@ -18,7 +18,7 @@ Formly is a mobile-first fitness app that combines workout planning, food guidan
   <img src="docs/screenshots/home.png" width="240" alt="Home: phase-tinted screen with the cycle ring, mascot, week strip and next period">
   <img src="docs/screenshots/body.png" width="240" alt="Body: next-period prediction and the monthly cycle calendar">
   <img src="docs/screenshots/browse.png" width="240" alt="Browse: workouts that suit your phase, muscle-group filters and exercise pictures">
-  <img src="docs/screenshots/workouts.png" width="240" alt="Workouts: history with insights, stats and a month calendar">
+  <img src="docs/screenshots/workouts.png" width="240" alt="Workouts: weekly streak, insights on what your training did for your body, and what to train next">
 </p>
 <p align="center">
   <img src="docs/screenshots/ask.png" width="240" alt="Ask: the cycle-aware food coach chat">
@@ -57,7 +57,7 @@ These are the same words as the About section on the app's Profile screen.
 ## Features
 
 **Cycle**
-- **Home cycle ring**: the current cycle day and phase in a ring of phases, with a mascot whose colour and mood follow the phase; the whole screen is tinted by phase
+- **Home cycle ring**: the current cycle day and phase in a ring of phases, with an animated mascot whose colour, mood and movement follow the phase (sleepy and slow on period days, bouncy around ovulation; it blinks, glances around and wobbles when tapped, and stays still if your device asks for reduced motion); the whole screen is tinted by phase
 - **Monthly cycle calendar**: logged periods (with flow level), predicted periods and ovulation days; tap any day to start a period, mark its flow as light, medium or heavy, or mark "no flow" to end it
 - **Learned predictions**: next period shown as a range, based on your own logged cycles (see [How predictions work](#how-predictions-work))
 - **Late periods**: shown as "X days late" with a one-tap "My period started"
@@ -65,10 +65,11 @@ These are the same words as the About section on the app's Profile screen.
 
 **Workouts**
 - **Week / month schedule**: plan workouts on any day, mark rest days and move planned workouts to another day
-- **History calendar**: each logged workout's icon on the day you did it, plus monthly totals and your streak
-- **Insights**: this week or month at a glance: muscle groups trained (and not yet), strength / cardio / recovery balance, training by cycle phase and one gentle suggestion
+- **History calendar**: each logged workout's icon on the day you did it, plus monthly totals and your weekly streak (weeks in a row with at least one workout)
+- **Insights**: this week or month at a glance: muscle groups trained (and not yet), what that training did for your body (e.g. glutes: supports your hips, knees and lower back) with your most-done workout, strength / cardio / recovery balance, training by cycle phase and one gentle suggestion
+- **Train next**: the muscle groups you've rested longest (skipping ones trained in the last two days), each with an exercise picked for your current phase and a one-tap "add to today"
 - **Workout guides**: for every workout, a demonstration image, how it helps, how it fits your current phase, three form cues, a common mistake to avoid, a YouTube form video link, and what to eat before and after (adjusted for your phase), with a one-tap question to the food coach; custom workouts get AI-written form tips
-- **Form tips for today**: the Schedule tab highlights a key cue for each workout you have planned
+- **Form tips for today**: the Schedule tab highlights a key cue for each workout you have planned; once you log a workout its tip drops off, and when today is done it moves on to your next planned day
 - **Your own workouts**: create, edit and delete custom workouts with an icon (suggested from the name)
 - **Exercise library**: about 50 exercises across glutes, legs, back, chest, shoulders, arms, core, cardio and recovery, filterable by muscle group, each with a demonstration picture where one exists
 - **For your phase**: Browse opens with workouts that suit your current phase, each with a one-line reason

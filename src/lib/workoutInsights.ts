@@ -1,5 +1,6 @@
 import type { PhaseId, WorkoutLogEntry } from "../types";
 import { PHASES } from "./cycle";
+import { findLibraryWorkout } from "./formTips";
 import { localDateKey } from "./date";
 import { addDays, weekOf } from "./workouts";
 import { workoutKind, type WorkoutKind } from "./workoutKind";
@@ -35,6 +36,19 @@ export function muscleGroup(muscle: string): string | null {
   return m.charAt(0).toUpperCase() + m.slice(1);
 }
 
+/**
+ * The group a log entry trained: its own muscle value, else the library workout with that name,
+ * else cardio or recovery by kind. Null when nothing tells us.
+ */
+export function entryGroup(e: Pick<WorkoutLogEntry, "name" | "muscle">): string | null {
+  const own = muscleGroup(e.muscle);
+  if (own) return own;
+  const lib = findLibraryWorkout({ name: e.name });
+  if (lib) return muscleGroup(lib.muscle);
+  const kind = workoutKind({ name: e.name, muscle: "" });
+  return kind === "cardio" ? "Cardio" : kind === "recovery" ? "Recovery" : null;
+}
+
 /** Log entries inside this calendar week (Mon to Sun) or month of `today`. */
 export function entriesInWindow(log: WorkoutLogEntry[], window: InsightWindow, today: string = localDateKey()): WorkoutLogEntry[] {
   if (window === "month") {
@@ -46,7 +60,7 @@ export function entriesInWindow(log: WorkoutLogEntry[], window: InsightWindow, t
 }
 
 const entryKind = (e: WorkoutLogEntry) => workoutKind({ name: e.name, muscle: e.muscle });
-const coversLegs = (e: WorkoutLogEntry) => { const g = muscleGroup(e.muscle); return g === "Legs" || g === "Full body"; };
+const coversLegs = (e: WorkoutLogEntry) => { const g = entryGroup(e); return g === "Legs" || g === "Full body"; };
 
 export interface PhaseLine {
   phase: PhaseId;
@@ -126,7 +140,7 @@ export function workoutInsights(log: WorkoutLogEntry[], window: InsightWindow, p
   const entries = entriesInWindow(log, window, today);
   const groupCounts = new Map<string, number>();
   for (const e of entries) {
-    const g = muscleGroup(e.muscle);
+    const g = entryGroup(e);
     if (g) groupCounts.set(g, (groupCounts.get(g) ?? 0) + 1);
   }
   const groups = [...groupCounts].map(([group, count]) => ({ group, count })).sort((a, b) => b.count - a.count || a.group.localeCompare(b.group));

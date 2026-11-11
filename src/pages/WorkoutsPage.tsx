@@ -14,9 +14,9 @@ import { BrowseTab } from "../components/BrowseTab";
 import type { CycleInfo, LoggableWorkout, PhaseId, Measurements, Schedule, ScheduledWorkout, Setter, ShowToast, Workout, WorkoutLogEntry, WorkoutLogForm } from "../types";
 import { localDateKey } from "../lib/date";
 import { load, save } from "../lib/storage";
-import { addDays, groupLogByDate, logStreak, monthStats, moveInSchedule, weekOf } from "../lib/workouts";
+import { addDays, groupLogByDate, weekStreak, monthStats, moveInSchedule, weekOf } from "../lib/workouts";
 import { builtInGuide, cachedFormTips, findLibraryWorkout } from "../lib/formTips";
-import { groupDayItems } from "../lib/sessions";
+import { groupDayItems, toScheduled } from "../lib/sessions";
 
 type WorkoutsTab = "schedule" | "browse" | "ai" | "history";
 type ScheduleView = "week" | "month";
@@ -87,9 +87,12 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
 
   const currentPhase: PhaseId | null = cycleInfo?.phase.id ?? null;
   // "Form tips for today": today's planned workouts, else the next planned day within a week.
-  const tipsDay = Array.from({length:7},(_,i)=>addDays(todayStr,i)).find(d=>{const e=schedule[d];return Array.isArray(e)&&e.length>0;});
-  const tipsEntry = tipsDay ? schedule[tipsDay] : undefined;
-  const tipsItems = Array.isArray(tipsEntry) ? tipsEntry : [];
+  // Workouts already logged today drop out; once all of today's are done it moves on to the next planned day.
+  const notDoneOn = (d: string) => { const e = schedule[d]; return Array.isArray(e) ? e.filter(item => d!==todayStr || !completedToday.has(item.name)) : []; };
+  const tipsDay = Array.from({length:7},(_,i)=>addDays(todayStr,i)).find(d=>notDoneOn(d).length>0);
+  const tipsItems = tipsDay ? notDoneOn(tipsDay) : [];
+  const todayEntry = schedule[todayStr];
+  const plannedToday = new Set(Array.isArray(todayEntry) ? todayEntry.map(i=>i.name) : []);
 
   const DAYS = weekOf(todayStr).map((date,i) => ({ date, label:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][i], num: new Date(date+"T12:00").getDate() }));
 
@@ -142,7 +145,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
   const latestLogged = Object.keys(logByDate).sort().pop();
   const shownHistoryDay = historyDay ?? (logByDate[todayStr] ? todayStr : latestLogged ?? todayStr);
   const stats = monthStats(workoutLog||[], todayStr);
-  const streak = logStreak(Object.keys(logByDate), todayStr);
+  const streak = weekStreak(Object.keys(logByDate), todayStr);
 
   return (
     <div className="scroll workouts-page" style={{padding:"24px 24px 40px"}}>
@@ -257,9 +260,9 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
                           {isToday&&<button className="btn btn-sm" style={{background:completedToday.has(item.name)?C.rose:C.petal,color:completedToday.has(item.name)?C.accentInk:C.text,border:"none",fontSize:11}} aria-label={completedToday.has(item.name)?`${item.name} logged today, log again`:`Log ${item.name}`} onClick={()=>openLog(item)}>
                             {completedToday.has(item.name)?"✓ Done":"Log"}
                           </button>}
-                          <button style={iconBtn} aria-label={`Form guide for ${item.name}`} onClick={()=>setGuideFor(guideTargetFor(item))}>
+                          {!(isToday&&completedToday.has(item.name))&&<button style={iconBtn} aria-label={`Form guide for ${item.name}`} onClick={()=>setGuideFor(guideTargetFor(item))}>
                             <BookOpen size={15} strokeWidth={1.8} aria-hidden="true"/>
-                          </button>
+                          </button>}
                           <button style={{...iconBtn,color:movingIdx===idx?"#A95C76":C.textSoft,background:movingIdx===idx?C.lavender:"none"}} aria-label={`Move ${item.name} to another day`} aria-expanded={movingIdx===idx} onClick={()=>{setMovingIdx(movingIdx===idx?null:idx);setMoveDate("");}}>
                             <ArrowRightLeft size={15} strokeWidth={1.8}/>
                           </button>
@@ -346,7 +349,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
             :<>
               {/* Monthly summary */}
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:16}}>
-                {([["🏋️",stats.workouts,stats.workouts===1?"workout this month":"workouts this month"],["📅",stats.activeDays,stats.activeDays===1?"active day this month":"active days this month"],["🔥",streak,"day streak"]] as const).map(([emoji,value,label])=>(
+                {([["🏋️",stats.workouts,stats.workouts===1?"workout this month":"workouts this month"],["📅",stats.activeDays,stats.activeDays===1?"active day this month":"active days this month"],["🔥",streak,streak===1?"week streak":"weeks in a row"]] as const).map(([emoji,value,label])=>(
                   <div key={emoji} className="card" style={{padding:"12px 10px",borderRadius:16,display:"flex",flexDirection:"column",alignItems:"center",gap:4,textAlign:"center"}}>
                     <Glyph emoji={emoji} size={13}/>
                     <div style={{fontSize:20,fontWeight:700,color:C.text,lineHeight:1.1}}>{value}</div>
@@ -355,7 +358,8 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
                 ))}
               </div>
 
-              <WorkoutInsights workoutLog={workoutLog} phaseOn={phaseOn}/>
+              <WorkoutInsights workoutLog={workoutLog} phaseOn={phaseOn} library={ALL_WORKOUTS} phaseCtx={cycleInfo} plannedToday={plannedToday}
+                onAddToday={w=>{addToDay(todayStr,toScheduled(w));showToast(`${w.name} added to today`);}} onGuide={setGuideFor}/>
 
               <div className="card" style={{padding:14,marginBottom:16}}>
                 <MonthCalendar selected={shownHistoryDay} onSelect={setHistoryDay} initialMonth={shownHistoryDay} renderDay={date=>{

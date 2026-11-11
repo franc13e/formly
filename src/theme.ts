@@ -48,6 +48,34 @@ export const CSS = `
   @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:.7}}
   .slide-in{animation:slideIn .25s cubic-bezier(.34,1.2,.64,1)}
   .pulse-dot{animation:pulse 2s ease-in-out infinite}
+  /* Mascot: float, breathe, blink, glance; a mood per phase; wobble on tap */
+  .mascot,.mascot-body,.mascot-eyes,.mascot-sparkle,.mascot-z{transform-box:fill-box;}
+  .mascot{transform-origin:50% 100%;animation:mFloat 3.6s ease-in-out infinite;}
+  .mascot-body{transform-origin:50% 100%;animation:mBreathe 3.6s ease-in-out infinite;}
+  .mascot-eyes{transform-origin:50% 50%;animation:mBlink 4.8s ease-in-out infinite;}
+  .mascot-face{animation:mLook 9s ease-in-out infinite;}
+  .mascot-shine{animation:mShine 3.6s ease-in-out infinite;}
+  .m-menstrual,.m-menstrual .mascot-body{animation-duration:5.4s;}
+  .m-menstrual .mascot-face{animation:none;}
+  .m-follicular{animation:mFloat 3s ease-in-out infinite,mTilt 6s ease-in-out infinite;}
+  .m-ovulation{animation:mHop 2.6s ease-in-out infinite;}
+  .m-luteal{animation:mSway 5.5s ease-in-out infinite;}
+  .mascot-sparkle{transform-origin:50% 50%;animation:mTwinkle 1.8s ease-in-out infinite;}
+  .mascot-z{opacity:0;animation:mZ 3.2s ease-out infinite;}
+  .mascot-z2{animation-delay:1.6s;}
+  .mascot-body.mascot-boop{animation:mBoop .75s cubic-bezier(.3,1.5,.5,1);}
+  @keyframes mFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+  @keyframes mBreathe{0%,100%{transform:scale(1,1)}50%{transform:scale(1.03,.97)}}
+  @keyframes mBlink{0%,90%,100%{transform:scaleY(1)}93%{transform:scaleY(.1)}96%{transform:scaleY(1)}}
+  @keyframes mLook{0%,38%,100%{transform:translateX(0)}44%,56%{transform:translateX(2.5px)}62%,74%{transform:translateX(-2.5px)}80%{transform:translateX(0)}}
+  @keyframes mShine{0%,100%{opacity:.7}50%{opacity:.95}}
+  @keyframes mTilt{0%,100%{rotate:0deg}30%{rotate:-3deg}60%{rotate:2.5deg}}
+  @keyframes mHop{0%,55%,100%{transform:translateY(0) scale(1,1)}64%{transform:translateY(0) scale(1.07,.92)}75%{transform:translateY(-9px) scale(.95,1.06)}86%{transform:translateY(0) scale(1.05,.95)}93%{transform:translateY(0) scale(.99,1.01)}}
+  @keyframes mSway{0%,100%{transform:rotate(-2.5deg)}50%{transform:rotate(2.5deg)}}
+  @keyframes mTwinkle{0%,100%{transform:scale(.6) rotate(0deg);opacity:.55}50%{transform:scale(1.15) rotate(45deg);opacity:1}}
+  @keyframes mZ{0%{opacity:0;transform:translate(0,0) scale(.7)}20%{opacity:.6}100%{opacity:0;transform:translate(7px,-14px) scale(1.15)}}
+  @keyframes mBoop{0%{transform:scale(1,1)}20%{transform:scale(1.14,.84)}42%{transform:translateY(-7px) scale(.9,1.1)}62%{transform:scale(1.06,.94)}80%{transform:scale(.98,1.02)}100%{transform:scale(1,1)}}
+  @media (prefers-reduced-motion:reduce){.mascot,.mascot *{animation:none !important;}}
   html,body,#root{height:100%;background:#F8E6EA;font-family:'DM Sans',system-ui,sans-serif;color:${C.text};}
   ::-webkit-scrollbar{display:none;}
   .shell{max-width:430px;min-height:100dvh;margin:0 auto;background:${C.bg};display:flex;flex-direction:column;overflow:hidden;}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Schedule, WorkoutLogEntry } from "../types";
-import { addDays, groupLogByDate, logStreak, monthStats, moveInSchedule, suggestWorkoutEmoji, weekOf } from "./workouts";
+import { addDays, groupLogByDate, weekStreak, monthStats, moveInSchedule, suggestWorkoutEmoji, weekOf } from "./workouts";
 
 const run = { name: "Run", emoji: "🏃" };
 const squat = { name: "Squat", emoji: "🦵", detail: "Legs · 30 min" };
@@ -51,20 +51,24 @@ describe("moveInSchedule", () => {
   });
 });
 
-describe("logStreak", () => {
-  const today = "2026-11-05";
-  it("counts consecutive days ending today", () => {
-    expect(logStreak(["2026-11-05", "2026-11-04", "2026-11-03", "2026-11-01"], today)).toBe(3);
+describe("weekStreak", () => {
+  const today = "2026-11-11"; // a Wednesday; its week starts Mon 2026-11-09
+  it("counts consecutive weeks with a workout, ending this week", () => {
+    expect(weekStreak(["2026-11-09", "2026-11-03", "2026-10-26", "2026-10-12"], today)).toBe(3);
   });
-  it("still counts a streak that ended yesterday", () => {
-    expect(logStreak(["2026-11-04", "2026-11-03"], today)).toBe(2);
+  it("still counts a streak that ended last week", () => {
+    expect(weekStreak(["2026-11-08", "2026-11-01"], today)).toBe(2);
   });
-  it("is zero when the last log is older than yesterday", () => {
-    expect(logStreak(["2026-11-03", "2026-11-02"], today)).toBe(0);
-    expect(logStreak([], today)).toBe(0);
+  it("is zero when the last workout was before last week", () => {
+    expect(weekStreak(["2026-10-30"], today)).toBe(0);
+    expect(weekStreak([], today)).toBe(0);
   });
-  it("ignores duplicate dates and crosses month boundaries", () => {
-    expect(logStreak(["2026-11-01", "2026-11-01", "2026-10-31", "2026-10-30"], "2026-11-01")).toBe(3);
+  it("counts several workouts in one week once, across month and year ends", () => {
+    expect(weekStreak(["2026-11-10", "2026-11-11", "2026-11-09"], today)).toBe(1);
+    expect(weekStreak(["2027-01-01", "2026-12-24"], "2027-01-02")).toBe(2);
+  });
+  it("ignores future dates", () => {
+    expect(weekStreak(["2026-11-20"], today)).toBe(0);
   });
 });
 

@@ -32,14 +32,15 @@ export function moveInSchedule(schedule: Schedule, from: string, index: number, 
   return next;
 }
 
-/** Number of consecutive days with at least one log, ending today (or yesterday, if today has none yet). */
-export function logStreak(dates: Iterable<string>, today: string = localDateKey()): number {
-  const days = new Set(dates);
-  let day = days.has(today) ? today : addDays(today, -1);
+/** Number of weeks in a row (Mon to Sun) with at least one log, ending this week (or last week, if this week has none yet). */
+export function weekStreak(dates: Iterable<string>, today: string = localDateKey()): number {
+  const weeks = new Set([...dates].filter(d => d <= today).map(d => weekOf(d)[0]));
+  const thisWeek = weekOf(today)[0];
+  let week = weeks.has(thisWeek) ? thisWeek : addDays(thisWeek, -7);
   let streak = 0;
-  while (days.has(day)) {
+  while (weeks.has(week)) {
     streak++;
-    day = addDays(day, -1);
+    week = addDays(week, -7);
   }
   return streak;
 }
