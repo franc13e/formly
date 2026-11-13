@@ -1,6 +1,10 @@
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import { AuthGate } from './auth/AuthGate'
+import { initAppearance } from './hooks/useAppearance'
+
+// Colours are CSS variables; set them before the first paint.
+initAppearance()
 
 const root = document.getElementById('root')
 if (!root) throw new Error('Missing #root element in index.html')

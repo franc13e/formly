@@ -1,9 +1,11 @@
 import { useState, type ReactNode } from "react";
+import { LogOut } from "lucide-react";
 import { C } from "../theme";
 import { save } from "../lib/storage";
 import { useAuth } from "../auth/AuthContext";
 import { Glyph } from "../components/Glyph";
-import type { Setter, ShowToast } from "../types";
+import { CustomiseCard } from "../components/CustomiseCard";
+import type { PhaseId, Setter, ShowToast } from "../types";
 
 interface CycleSummary {
   /** Cycle length used for predictions, and how many logged cycles it comes from (0 = setting). */
@@ -15,6 +17,8 @@ interface CycleSummary {
 
 interface SettingsPageProps {
   userName: string;
+  /** Current phase, so the mascot previews match Home. */
+  phase?: PhaseId | null;
   setUserName: Setter<string>;
   showToast: ShowToast;
   /** Omitted until cycle tracking is set up. */
@@ -51,7 +55,7 @@ function Section({ label, children, action }: { label: string; children: ReactNo
   );
 }
 
-export function SettingsPage({ userName, setUserName, showToast, cycle, onOpenCycle }: SettingsPageProps) {
+export function SettingsPage({ userName, setUserName, showToast, cycle, onOpenCycle, phase = null }: SettingsPageProps) {
   const [localName, setLocalName] = useState(userName || "");
   const auth = useAuth();
   const initial = (userName || "F").trim().slice(0, 1).toUpperCase();
@@ -71,6 +75,7 @@ export function SettingsPage({ userName, setUserName, showToast, cycle, onOpenCy
         <span style={{ width: 76, height: 76, borderRadius: "50%", background: C.petal, color: C.text, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 30, fontWeight: 700, boxShadow: `0 0 0 6px ${C.white}, 0 10px 24px ${C.shadow}` }}>{initial}</span>
         <div className="h-display" style={{ fontSize: 30, color: C.text, lineHeight: 1.1, marginTop: 10 }}>{userName || "Your profile"}</div>
         <div style={{ fontSize: 13, color: C.textSoft, overflowWrap: "anywhere" }}>{status}</div>
+        {synced && <button className="btn btn-ghost btn-sm" style={{ marginTop: 8 }} onClick={() => { void auth.signOut(); }}><LogOut size={15} aria-hidden="true"/> Log out</button>}
       </div>
 
       <Section label="You">
@@ -81,6 +86,10 @@ export function SettingsPage({ userName, setUserName, showToast, cycle, onOpenCy
             <button className="btn btn-primary btn-sm" style={{ flexShrink: 0 }} onClick={() => { setUserName(localName); save("user-name", localName); showToast("Name saved"); }}>Save</button>
           </div>
         </div>
+      </Section>
+
+      <Section label="Customise">
+        <CustomiseCard phase={phase}/>
       </Section>
 
       <Section label="Your cycle" action={onOpenCycle && <button className="btn btn-ghost btn-sm" onClick={onOpenCycle}>{cycle ? "Edit" : "Set up"}</button>}>
@@ -110,7 +119,7 @@ export function SettingsPage({ userName, setUserName, showToast, cycle, onOpenCy
             {synced ? (
               <>
                 <div style={{ fontSize: 13, color: C.textMid, lineHeight: 1.6, marginBottom: 12 }}>Your data syncs automatically across your devices.</div>
-                <button className="btn btn-ghost btn-sm" onClick={() => { void auth.signOut(); }}>Sign out</button>
+                <button className="btn btn-ghost btn-sm" onClick={() => { void auth.signOut(); }}><LogOut size={15} aria-hidden="true"/> Log out</button>
               </>
             ) : (
               <>

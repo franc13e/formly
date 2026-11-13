@@ -20,13 +20,13 @@ export function CycleRing({ cycleInfo, size = 260 }: CycleRingProps) {
   return (
     <div style={{ position: "relative", width: size, height: size }}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label={`Day ${cycleInfo.dayOfCycle} of about ${L}, ${label}`}>
-        <circle cx={c} cy={c} r={r - stroke * 1.1} fill="#FFFFFF" />
+        <circle cx={c} cy={c} r={r - stroke * 1.1} fill={C.card} />
         {phaseRanges(L, cycleInfo.periodLength).filter(p => p.end > p.start).map(p => (
           <circle key={p.id} cx={c} cy={c} r={r} fill="none" stroke={RING[p.id].arc} strokeWidth={stroke} strokeLinecap="round"
             strokeDasharray={`${Math.max(1, (p.end - p.start) * perDay - gap)} ${circ}`} strokeDashoffset={-(p.start * perDay + gap / 2)}
             transform={`rotate(-90 ${c} ${c})`} />
         ))}
-        <circle cx={c + r * Math.cos(angle)} cy={c + r * Math.sin(angle)} r={stroke * 0.85} fill="#FFFFFF" stroke={RING[cycleInfo.phase.id].mark} strokeWidth={stroke * 0.38} />
+        <circle cx={c + r * Math.cos(angle)} cy={c + r * Math.sin(angle)} r={stroke * 0.85} fill={C.card} stroke={RING[cycleInfo.phase.id].mark} strokeWidth={stroke * 0.38} />
       </svg>
       <div style={{ position: "absolute", top: size * 0.2, left: 0, right: 0, textAlign: "center" }}>
         <div className="h-display" style={{ fontSize: size * 0.17, lineHeight: 1, color: C.text }}>Day {cycleInfo.dayOfCycle}</div>

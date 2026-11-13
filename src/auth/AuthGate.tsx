@@ -109,7 +109,15 @@ export function AuthGate({ children }: { children: ReactNode }) {
       },
       signOut: async () => {
         if (!client) return;
-        await client.auth.signOut();
+        // "local" ends the session on this device without needing the network; a failed call
+        // must not leave the user stuck signed in.
+        try {
+          await client.auth.signOut({ scope: "local" });
+        } catch (error) {
+          console.error("Sign out failed:", error);
+        }
+        // Make sure the saved session is gone, or the reload below would sign straight back in.
+        Object.keys(localStorage).filter(k => k.startsWith("sb-") && k.includes("auth-token")).forEach(k => localStorage.removeItem(k));
         clearAppData(localStorage);
         setGuest(false);
         window.location.reload();

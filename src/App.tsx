@@ -117,12 +117,12 @@ export default function App() {
         {toast&&<div className="toast">{toast}</div>}
         {/* Desktop sidebar — hidden on mobile via CSS */}
         <div className="desktop-sidebar">
-          <div style={{padding:"0 24px 32px",fontFamily:"DM Sans",fontWeight:700,fontSize:22,color:"#8A4862",letterSpacing:"-0.5px"}}>
+          <div style={{padding:"0 24px 32px",fontFamily:"DM Sans",fontWeight:700,fontSize:22,color:C.accentDeep,letterSpacing:"-0.5px"}}>
             formly
           </div>
           {TABS.map(t=>(
-            <button key={t.id} onClick={()=>setTab(t.id)} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 24px",background:tab===t.id?C.rose:"transparent",border:"none",cursor:"pointer",width:"100%",textAlign:"left",fontFamily:"DM Sans",fontWeight:700,fontSize:14,color:tab===t.id?"#8A4862":C.textMid,borderLeft:tab===t.id?"3px solid #A95C76":"3px solid transparent",transition:"all .15s"}}>
-              <Icon d={Icons[t.icon]} size={18} stroke={tab===t.id?"#A95C76":C.textMid} strokeWidth={1.8}/>
+            <button key={t.id} onClick={()=>setTab(t.id)} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 24px",background:tab===t.id?C.rose:"transparent",border:"none",cursor:"pointer",width:"100%",textAlign:"left",fontFamily:"DM Sans",fontWeight:700,fontSize:14,color:tab===t.id?C.accentDeep:C.textMid,borderLeft:tab===t.id?`3px solid ${C.accentInk}`:"3px solid transparent",transition:"all .15s"}}>
+              <Icon d={Icons[t.icon]} size={18} stroke={tab===t.id?C.accentInk:C.textMid} strokeWidth={1.8}/>
               {t.label}
             </button>
           ))}
@@ -137,12 +137,12 @@ export default function App() {
         {tab==="nutrition"&&<NutritionPage cycleInfo={cycleInfo} showToast={showToast} askDraft={askDraft} clearAskDraft={clearAskDraft}/>}
         {tab==="body"&&<BodyPage measurements={measurements} setMeasurements={setMeasurements} measurementHistory={measurementHistory} setMeasurementHistory={setMeasurementHistory} weightHistory={weightHistory} cycleInfo={cycleInfo} periodStart={periodStart} setPeriodStart={setPeriodStart} periodHistory={periodHistory} setPeriodHistory={setPeriodHistory} cycleLength={cycleLength} setCycleLength={setCycleLength} starts={starts} stats={stats} logPeriodStart={logPeriodStart} periodLength={periodLen} periodLengthSetting={periodLengthSetting} setPeriodLengthSetting={setPeriodLengthSetting} logPeriodEnd={logPeriodEnd} logPeriodFlow={logPeriodFlow} showToast={showToast}/>}
         {tab==="workouts"&&<WorkoutsPage workoutPlan={workoutPlan} setWorkoutPlan={setWorkoutPlan} schedule={schedule} setSchedule={setSchedule} workoutLog={workoutLog} setWorkoutLog={setWorkoutLog} aiPlan={aiPlan} setAiPlan={setAiPlan} measurements={measurements} cycleInfo={cycleInfo} showToast={showToast} onAskCoach={onAskCoach} phaseOn={phaseOn}/>}
-        {tab==="settings"&&<SettingsPage userName={userName} setUserName={setUserName} showToast={showToast} cycle={periodStart?{length:stats.length,cyclesLogged:stats.cyclesLogged,periodLength:periodLen.length,periodsLogged:periodLen.logged}:null} onOpenCycle={()=>setTab("body")}/>}
+        {tab==="settings"&&<SettingsPage phase={cycleInfo?.phase.id ?? null} userName={userName} setUserName={setUserName} showToast={showToast} cycle={periodStart?{length:stats.length,cyclesLogged:stats.cyclesLogged,periodLength:periodLen.length,periodsLogged:periodLen.logged}:null} onOpenCycle={()=>setTab("body")}/>}
         <nav className="bottom-nav" aria-label="Main">
           <div className="nav-pill">
             {TABS.map(t=>(
               <button key={t.id} className={`nav-tab${tab===t.id?" active":""}`} onClick={()=>setTab(t.id)} aria-label={t.label} aria-current={tab===t.id?"page":undefined}>
-                <span className="nav-icon-wrap"><Icon d={Icons[t.icon]} size={19} stroke={tab===t.id?C.text:"#E9D9E0"} strokeWidth={tab===t.id?2.2:1.9}/></span>
+                <span className="nav-icon-wrap"><Icon d={Icons[t.icon]} size={19} stroke={tab===t.id?C.text:C.navIcon} strokeWidth={tab===t.id?2.2:1.9}/></span>
                 <span className={`nav-label${tab===t.id?" active":""}`}>{t.label}</span>
               </button>
             ))}

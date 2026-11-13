@@ -70,7 +70,7 @@ export function Dashboard({ schedule, weightHistory, cycleInfo, workoutLog, user
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7,minmax(0,1fr))", gap: 6, marginBottom: 16 }}>
         {week.map(d => (
-          <div key={d.key} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "8px 0", borderRadius: 14, background: d.isToday ? C.petal : "rgba(255,255,255,.72)", boxShadow: d.isToday ? `0 6px 14px ${C.shadow}` : "none" }}>
+          <div key={d.key} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "8px 0", borderRadius: 14, background: d.isToday ? C.petal : C.white, boxShadow: d.isToday ? `0 6px 14px ${C.shadow}` : "none" }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: d.isToday ? C.text : C.textSoft }}>{d.isToday ? "Today" : d.label}</span>
             <span style={{ fontSize: 15, fontWeight:600, color: C.text }}>{d.num}</span>
             <span style={{ width: 5, height: 5, borderRadius: "50%", background: d.busy ? (d.isToday ? C.text : C.accentInk) : "transparent" }} />

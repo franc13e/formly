@@ -13,7 +13,7 @@ interface FoodChatProps {
   initialDraft?: string;
 }
 
-const PURPLE = "#A95C76";
+const PURPLE = C.accentInk;
 
 /** Three bouncing dots shown while the coach is replying. */
 function TypingDots() {
@@ -89,7 +89,7 @@ export function FoodChat({ cycleInfo, initialDraft }: FoodChatProps) {
           </div>
         </div>
         {messages.length > 0 && (
-          <button onClick={clear} style={{display:"inline-flex",alignItems:"center",gap:4,background:"none",border:"none",fontSize:11,color:"#A95C76",fontWeight:700,cursor:"pointer",fontFamily:"DM Sans",flexShrink:0}}>
+          <button onClick={clear} style={{display:"inline-flex",alignItems:"center",gap:4,background:"none",border:"none",fontSize:11,color:C.accentInk,fontWeight:700,cursor:"pointer",fontFamily:"DM Sans",flexShrink:0}}>
             <Trash2 size={13} aria-hidden="true"/> Clear chat
           </button>
         )}
@@ -112,13 +112,13 @@ export function FoodChat({ cycleInfo, initialDraft }: FoodChatProps) {
       ) : (
         <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:14}}>
           {messages.map((m, i) => m.role === "user" ? (
-            <div key={i} style={{alignSelf:"flex-end",maxWidth:"85%",background:C.lavender,color:"#6E3A4F",borderRadius:"18px 18px 4px 18px",padding:"10px 14px",fontSize:13,fontWeight:600,lineHeight:1.55,whiteSpace:"pre-wrap",wordBreak:"break-word"}}>{m.content}</div>
+            <div key={i} style={{alignSelf:"flex-end",maxWidth:"85%",background:C.lavender,color:C.accentDeep,borderRadius:"18px 18px 4px 18px",padding:"10px 14px",fontSize:13,fontWeight:600,lineHeight:1.55,whiteSpace:"pre-wrap",wordBreak:"break-word"}}>{m.content}</div>
           ) : (
             <div key={i} style={{alignSelf:"flex-start",maxWidth:"90%",background:C.card,border:`1.5px solid ${C.border}`,boxShadow:`0 2px 8px ${C.shadow}`,color:C.text,borderRadius:"18px 18px 18px 4px",padding:"12px 14px",fontSize:13,fontWeight:500,lineHeight:1.65,whiteSpace:"pre-wrap",wordBreak:"break-word"}}>{m.content}</div>
           ))}
           {loading && <TypingDots/>}
           {error && (
-            <div style={{alignSelf:"flex-start",display:"flex",alignItems:"center",gap:8,fontSize:12,color:"#C05070",fontWeight:600}}>
+            <div style={{alignSelf:"flex-start",display:"flex",alignItems:"center",gap:8,fontSize:12,color:C.danger,fontWeight:600}}>
               <span>Couldn't get a reply: {error}</span>
               {canRetry && (
                 <button onClick={() => void request(messages)} style={{display:"inline-flex",alignItems:"center",gap:4,background:"none",border:"none",color:PURPLE,fontWeight:600,fontSize:12,cursor:"pointer",fontFamily:"DM Sans"}}>

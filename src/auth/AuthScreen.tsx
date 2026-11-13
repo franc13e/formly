@@ -80,7 +80,7 @@ export function AuthScreen({ client, onContinueAsGuest }: AuthScreenProps) {
                 autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
                 placeholder="At least 6 characters" value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
-            {error && <div role="alert" style={{ fontSize: 13, color: "#C05070", fontWeight: 600 }}>{error}</div>}
+            {error && <div role="alert" style={{ fontSize: 13, color: C.danger, fontWeight: 600 }}>{error}</div>}
             {notice && <div role="status" style={{ fontSize: 13, color: "#3A7A50", fontWeight: 600 }}>{notice}</div>}
             <button className="btn btn-primary" type="submit" disabled={busy}>
               {busy ? "Please wait…" : mode === "sign-in" ? "Sign in" : "Create account"}

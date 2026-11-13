@@ -26,9 +26,9 @@ interface WorkoutInsightsProps {
 
 // Soft rose-to-neutral shades for the balance bar; the accent stays on text.
 const KIND_STYLE: Record<WorkoutKind, { label: string; fill: string }> = {
-  strength: { label: "Strength", fill: "#EBB3C3" },
+  strength: { label: "Strength", fill: C.lavenderDeep },
   cardio: { label: "Cardio", fill: C.roseDeep },
-  recovery: { label: "Recovery", fill: "#EFE6E9" },
+  recovery: { label: "Recovery", fill: C.bgDeep },
 };
 const KIND_ORDER: WorkoutKind[] = ["strength", "cardio", "recovery"];
 

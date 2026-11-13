@@ -86,7 +86,7 @@ function SubTabs({ subTab, setSubTab }: { subTab: BodySubTab; setSubTab: (tab: B
   return (
     <div style={{display:"flex",borderBottom:`2px solid ${C.border}`}}>
       {([["cycle","Cycle"],["measurements","Body"],["insights","Insights"]] as const).map(([v,l])=>(
-        <button key={v} onClick={()=>setSubTab(v)} style={{flex:1,padding:"10px 0",border:"none",background:"transparent",cursor:"pointer",fontFamily:"DM Sans",fontWeight:600,fontSize:14,color:subTab===v?"#A95C76":C.textSoft,borderBottom:subTab===v?"2px solid #A95C76":"2px solid transparent",marginBottom:-2,transition:"all .15s"}}>{l}</button>
+        <button key={v} onClick={()=>setSubTab(v)} style={{flex:1,padding:"10px 0",border:"none",background:"transparent",cursor:"pointer",fontFamily:"DM Sans",fontWeight:600,fontSize:14,color:subTab===v?C.accentInk:C.textSoft,borderBottom:subTab===v?`2px solid ${C.accentInk}`:"2px solid transparent",marginBottom:-2,transition:"all .15s"}}>{l}</button>
       ))}
     </div>
   );
@@ -137,7 +137,7 @@ export function BodyPage({ measurements, setMeasurements, measurementHistory, se
     // Only period and ovulation days carry colour; the rest of the month stays plain.
     if(info.phase!=="ovulation")return {};
     const p=PHASES.ovulation;
-    return {background:"#FFFBF2",border:`1.5px solid ${p.color}`,textColor:p.textColor,content:<Glyph emoji="☀️" chip={false} size={9} color={p.textColor}/>};
+    return {background:p.bg,border:`1.5px solid ${p.color}`,textColor:p.textColor,content:<Glyph emoji="☀️" chip={false} size={9} color={p.textColor}/>};
   };
 
   const fields: MeasurementField[]=[{k:"weight",label:"Weight",unit:"kg"},{k:"height",label:"Height",unit:"cm"},{k:"waist",label:"Waist",unit:"cm"},{k:"hips",label:"Hips",unit:"cm"},{k:"bust",label:"Bust / Chest",unit:"cm"},{k:"glutes",label:"Glutes",unit:"cm"},{k:"thighs",label:"Thighs",unit:"cm"},{k:"arms",label:"Arms",unit:"cm"}];
@@ -270,7 +270,7 @@ export function BodyPage({ measurements, setMeasurements, measurementHistory, se
                 const lengths = entries.map((p,i,arr)=>arr[i+1]?Math.round((new Date(p.date).getTime()-new Date(arr[i+1].date).getTime())/(1000*60*60*24)):null).filter((n): n is number => Boolean(n));
                 const avg = lengths.length ? Math.round(lengths.reduce((a,b)=>a+b,0)/lengths.length) : null;
                 return (<>
-                  {avg&&<div style={{background:C.lavender,borderRadius:10,padding:"8px 12px",marginBottom:10,fontSize:12,fontWeight:700,color:"#A95C76"}}>Your average cycle: {avg} days</div>}
+                  {avg&&<div style={{background:C.lavender,borderRadius:10,padding:"8px 12px",marginBottom:10,fontSize:12,fontWeight:700,color:C.accentInk}}>Your average cycle: {avg} days</div>}
                   {entries.map((p,i,arr)=>{const next=arr[i+1];const len=next?Math.round((new Date(p.date).getTime()-new Date(next.date).getTime())/(1000*60*60*24)):null;return(<div key={p.date} className="row-between" style={{padding:"6px 0",borderTop:i>0?`1px solid ${C.border}`:"none"}}><span style={{fontSize:13,fontWeight:600,color:C.textMid}}>{new Date(p.date+"T12:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</span>{len&&<span style={{fontSize:11,color:C.textSoft,fontWeight:600}}>{len}d</span>}</div>);})}
                 </>);
               })()}
@@ -313,9 +313,9 @@ export function BodyPage({ measurements, setMeasurements, measurementHistory, se
             <div style={{fontSize:12,color:C.textSoft,fontWeight:500,marginBottom:14,lineHeight:1.5}}>Get a warm, personalised explanation of what's going on in your body right now, taking into account your cycle phase, weight trend, and measurements.</div>
             <button className="btn btn-primary" style={{width:"100%"}} onClick={generateInsight} disabled={aiLoading}>{aiLoading?<><div className="spin"/>Thinking about your body...</>:<><Glyph emoji="✨" chip={false} size={16} color="currentColor"/>Get my insight</>}</button>
             {aiInsight&&<div style={{marginTop:14,background:C.lavender,borderRadius:14,padding:"14px 16px"}}>
-              <div style={{fontSize:11,fontWeight:600,color:"#A95C76",marginBottom:8}}>YOUR INSIGHT</div>
-              <div style={{fontSize:13,lineHeight:1.7,color:"#6E3A4F",fontWeight:500}}>{aiInsight}</div>
-              <button style={{marginTop:10,background:"none",border:"none",fontSize:11,color:"#A95C76",fontWeight:700,cursor:"pointer",padding:0,fontFamily:"DM Sans"}} onClick={()=>{setAiInsight("");save("body-insight","");}}>Clear</button>
+              <div style={{fontSize:11,fontWeight:600,color:C.accentInk,marginBottom:8}}>YOUR INSIGHT</div>
+              <div style={{fontSize:13,lineHeight:1.7,color:C.accentDeep,fontWeight:500}}>{aiInsight}</div>
+              <button style={{marginTop:10,background:"none",border:"none",fontSize:11,color:C.accentInk,fontWeight:700,cursor:"pointer",padding:0,fontFamily:"DM Sans"}} onClick={()=>{setAiInsight("");save("body-insight","");}}>Clear</button>
             </div>}
           </div>
           <div style={{marginBottom:8}}>

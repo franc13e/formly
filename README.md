@@ -57,6 +57,7 @@ These are the same words as the About section on the app's Profile screen.
 ## Features
 
 **Cycle**
+- **Make it yours**: pick your mascot (Blobby, Buff Blobby, Bunny or Kitty), light or dark mode (or follow your device), and one of five colour palettes: Ballet, Matcha, Lilac, Peach or Ocean. Every palette passes WCAG AA contrast in light and dark, checked by tests
 - **Home cycle ring**: the current cycle day and phase in a ring of phases, with an animated mascot whose colour, mood, movement and little accessory follow the phase (a nightcap and sleepy face on period days, a sprout, a flower and a bounce around ovulation, a bow in the luteal phase); she blinks, glances around and waves, beams and pops hearts when tapped, and stays still if your device asks for reduced motion; the whole screen is tinted by phase
 - **Monthly cycle calendar**: logged periods (with flow level), predicted periods and ovulation days; tap any day to start a period, mark its flow as light, medium or heavy, or mark "no flow" to end it
 - **Learned predictions**: next period shown as a range, based on your own logged cycles (see [How predictions work](#how-predictions-work))

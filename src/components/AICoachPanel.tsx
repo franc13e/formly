@@ -190,8 +190,8 @@ Build me a personalised weekly workout structure and daily nutrition targets. Gi
         {GOAL_CARDS.map(g => { const sel = goalId === g.id; return (
           <button key={g.id} onClick={() => setGoalId(g.id)} style={{width:"100%",display:"flex",alignItems:"center",gap:12,background:sel?C.lavender:C.bgDeep,border:`1.5px solid ${sel?C.lavenderDeep:C.border}`,borderRadius:14,padding:"11px 14px",marginBottom:7,cursor:"pointer",textAlign:"left",fontFamily:"DM Sans",transition:"all .15s"}}>
             <Glyph emoji={g.emoji} size={17}/>
-            <div style={{flex:1}}><div style={{fontWeight:600,fontSize:14,color:sel?"#8A4862":C.text}}>{g.label}</div><div style={{fontSize:11,color:C.textSoft,fontWeight:500}}>{g.sub}</div></div>
-            <div style={{width:16,height:16,borderRadius:"50%",border:`2px solid ${sel?"#A95C76":C.border}`,background:sel?"#A95C76":"transparent",flexShrink:0}}/>
+            <div style={{flex:1}}><div style={{fontWeight:600,fontSize:14,color:sel?C.accentDeep:C.text}}>{g.label}</div><div style={{fontSize:11,color:C.textSoft,fontWeight:500}}>{g.sub}</div></div>
+            <div style={{width:16,height:16,borderRadius:"50%",border:`2px solid ${sel?C.accentInk:C.border}`,background:sel?C.accentInk:"transparent",flexShrink:0}}/>
           </button>
         );})}
       </div>
@@ -200,9 +200,9 @@ Build me a personalised weekly workout structure and daily nutrition targets. Gi
         <div className="sec-title">Activity level</div>
         {ACTIVITY_OPTIONS.map(a => { const sel = activityId === a.id; return (
           <button key={a.id} onClick={() => setActivityId(a.id)} style={{width:"100%",display:"flex",alignItems:"center",gap:10,background:sel?C.lavender:C.bgDeep,border:`1.5px solid ${sel?C.lavenderDeep:C.border}`,borderRadius:12,padding:"10px 12px",marginBottom:6,cursor:"pointer",textAlign:"left",fontFamily:"DM Sans",transition:"all .15s"}}>
-            <div style={{width:14,height:14,borderRadius:"50%",border:`2px solid ${sel?"#A95C76":C.border}`,background:sel?"#A95C76":"transparent",flexShrink:0}}/>
+            <div style={{width:14,height:14,borderRadius:"50%",border:`2px solid ${sel?C.accentInk:C.border}`,background:sel?C.accentInk:"transparent",flexShrink:0}}/>
             <Glyph emoji={a.emoji} size={14}/>
-            <div><span style={{fontWeight:600,fontSize:13,color:sel?"#8A4862":C.text}}>{a.label}</span><span style={{fontSize:11,color:C.textSoft}}> · {a.sub}</span></div>
+            <div><span style={{fontWeight:600,fontSize:13,color:sel?C.accentDeep:C.text}}>{a.label}</span><span style={{fontSize:11,color:C.textSoft}}> · {a.sub}</span></div>
           </button>
         );})}
       </div>
@@ -221,7 +221,7 @@ Build me a personalised weekly workout structure and daily nutrition targets. Gi
         <div className="sec-title">Focus areas <span style={{fontWeight:500,color:C.textSoft,fontSize:12}}>(optional)</span></div>
         <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
           {FOCUS_AREAS.map(f => { const on = focusAreas.includes(f.id); return (
-            <button key={f.id} onClick={() => toggleFocus(f.id)} className={`chip${on?" on":""}`} style={on?{background:C.lavenderDeep,borderColor:"transparent",color:"#8A4862"}:{}}><Glyph emoji={f.emoji} chip={false} size={13} color={on?"#8A4862":undefined}/> {f.label}</button>
+            <button key={f.id} onClick={() => toggleFocus(f.id)} className={`chip${on?" on":""}`} style={on?{background:C.lavenderDeep,borderColor:"transparent",color:C.accentDeep}:{}}><Glyph emoji={f.emoji} chip={false} size={13} color={on?C.accentDeep:undefined}/> {f.label}</button>
           );})}
         </div>
       </div>
@@ -231,7 +231,7 @@ Build me a personalised weekly workout structure and daily nutrition targets. Gi
         <textarea className="input" rows={3} placeholder="Injuries, preferences, foods you avoid" value={customNote} onChange={e=>setCustomNote(e.target.value)} style={{resize:"none",lineHeight:1.6}}/>
       </div>
 
-      {error && <div style={{fontSize:13,color:"#C05070",fontWeight:700,marginBottom:12,padding:"10px 14px",background:C.rose,borderRadius:12}}>{error}</div>}
+      {error && <div style={{fontSize:13,color:C.danger,fontWeight:700,marginBottom:12,padding:"10px 14px",background:C.rose,borderRadius:12}}>{error}</div>}
       <button className="btn btn-primary" style={{width:"100%",fontSize:15,padding:"14px",marginBottom:16}} onClick={generate} disabled={loading}>
         {loading ? <><div className="spin"/>Crafting your plan...</> : <><Glyph emoji="✨" chip={false} size={16} color="currentColor"/>Generate my plan</>}
       </button>

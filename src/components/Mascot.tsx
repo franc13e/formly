@@ -1,12 +1,14 @@
 import { useId, useState } from "react";
 import type { PhaseId } from "../types";
+import type { MascotStyle } from "../lib/appearance";
+import { useAppearance } from "../hooks/useAppearance";
 
 // ─── Mascot: a soft "puffy" blob that changes colour, mood and movement with the phase ──
 // It floats and breathes, blinks, glances around and waves. Each phase has its own face,
 // movement and little accessory (a nightcap, a sprout, a flower, a bow). Tapping it makes it
 // wobble, smile with its eyes and pop out hearts. All motion stops under "reduce motion"
 // (see the mascot rules in theme.ts).
-const LOOKS: Record<PhaseId | "none", { light: string; mid: string; deep: string }> = {
+const LOOKS: Record<PhaseId | "none", Look> = {
   menstrual:  { light: "#FFF1F4", mid: "#F7CBD5", deep: "#EFADBD" },
   follicular: { light: "#EEF8F0", mid: "#D2EAD8", deep: "#B3D9BE" },
   ovulation:  { light: "#FFF9E6", mid: "#F8E4AE", deep: "#EFCD78" },
@@ -84,20 +86,74 @@ function Accessory({ phase, deep }: { phase: PhaseId | "none"; deep: string }) {
 const SPARKLE_BIG = "M92 14 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z";
 const SPARKLE_SMALL = "M16 22 l1.5 3.5 3.5 1.5 -3.5 1.5 -1.5 3.5 -1.5 -3.5 -3.5 -1.5 3.5 -1.5z";
 
+type Look = { light: string; mid: string; deep: string };
+
+/** Bunny ears (the right one flops) or kitty ears, drawn behind the body. */
+function Ears({ kind, look }: { kind: "bunny" | "kitty"; look: Look }) {
+  if (kind === "bunny") return <>
+    <g transform="rotate(-12 40 18)"><g className="mascot-ear-l">
+      <ellipse cx="40" cy="3" rx="7.5" ry="17" fill={look.mid} stroke={look.deep} strokeWidth={1}/>
+      <ellipse cx="40" cy="5" rx="3.6" ry="12" fill="#F5A9BC" opacity={0.6}/>
+    </g></g>
+    <g transform="rotate(62 72 18)"><g className="mascot-ear-r">
+      <ellipse cx="72" cy="3" rx="7.5" ry="17" fill={look.mid} stroke={look.deep} strokeWidth={1}/>
+      <ellipse cx="72" cy="5" rx="3.6" ry="12" fill="#F5A9BC" opacity={0.6}/>
+    </g></g>
+  </>;
+  return <>
+    <g className="mascot-ear-l">
+      <path d="M21 36 L25 6 L48 20 Z" fill={look.mid} stroke={look.deep} strokeWidth={1} strokeLinejoin="round"/>
+      <path d="M27 28 L29 13 L41 21 Z" fill="#F5A9BC" opacity={0.65}/>
+    </g>
+    <g className="mascot-ear-r">
+      <path d="M89 36 L85 6 L62 20 Z" fill={look.mid} stroke={look.deep} strokeWidth={1} strokeLinejoin="round"/>
+      <path d="M83 28 L81 13 L69 21 Z" fill="#F5A9BC" opacity={0.65}/>
+    </g>
+  </>;
+}
+
+const Whiskers = () => <g stroke={INK} strokeWidth={1.2} strokeLinecap="round" opacity={0.55}>
+  <path d="M25 59 L13 56"/><path d="M25 63 L12 64"/><path d="M85 59 L97 56"/><path d="M85 63 L98 64"/>
+</g>;
+
+/** One flexing arm for the buff mascot (double-biceps pose). `flip` mirrors it to the right side. */
+function BuffArm({ look, flip }: { look: Look; flip?: boolean }) {
+  return (
+    <g transform={flip ? "translate(110 0) scale(-1 1)" : undefined}>
+      <g className="mascot-flex">
+        <ellipse cx="4" cy="34" rx="6.5" ry="11" fill={look.mid} stroke={look.deep} strokeWidth={1} transform="rotate(14 4 34)"/>
+        <circle cx="3" cy="21" r="7" fill={look.mid} stroke={look.deep} strokeWidth={1}/>
+        <path d="M0 19 Q3 16.5 6 19" fill="none" stroke={look.deep} strokeWidth={1} strokeLinecap="round"/>
+        <ellipse cx="11" cy="50" rx="13" ry="10" fill={look.mid} stroke={look.deep} strokeWidth={1} transform="rotate(-18 11 50)"/>
+        <ellipse cx="7" cy="46" rx="5" ry="2.6" fill="#FFFFFF" opacity={0.55} transform="rotate(-25 7 46)"/>
+      </g>
+    </g>
+  );
+}
+
 interface MascotProps {
   phase: PhaseId | null;
   /** Width in px; height follows (110:88). */
   size?: number;
+  /** Which mascot to draw; defaults to the one picked in Settings. */
+  variant?: MascotStyle;
 }
 
 /** Decorative; the phase is always also stated in text next to it. */
-export function Mascot({ phase, size = 110 }: MascotProps) {
+export function Mascot({ phase, size = 110, variant }: MascotProps) {
+  const chosen = useAppearance().mascot;
+  const kind = variant ?? chosen;
   const key = phase ?? "none";
   const look = LOOKS[key];
   const gid = useId().replace(/:/g, "");
   // Tapping makes it wobble, smile and pop hearts; the class comes off when the wobble ends so it can replay.
   const [boop, setBoop] = useState(false);
   const cheek = key === "menstrual" || key === "none" ? 0.7 : 0.95;
+  const buff = kind === "buff";
+  const cheeks = <>
+    <ellipse cx="33" cy="62" rx="6.5" ry="4" fill="#F5A9BC" opacity={cheek * 0.75}/>
+    <ellipse cx="77" cy="62" rx="6.5" ry="4" fill="#F5A9BC" opacity={cheek * 0.75}/>
+  </>;
   return (
     <svg width={size} height={size * 0.8} viewBox="0 0 110 88" aria-hidden="true" onClick={() => setBoop(true)} style={{ overflow: "visible", cursor: "pointer" }}>
       <defs>
@@ -105,22 +161,48 @@ export function Mascot({ phase, size = 110 }: MascotProps) {
           <stop offset="0" stopColor={look.light}/><stop offset="0.6" stopColor={look.mid}/><stop offset="1" stopColor={look.deep}/>
         </radialGradient>
       </defs>
-      <g className={"mascot m-" + key}>
+      <g className={"mascot m-" + key + (buff ? " m-buff" : "")}>
         <g className={boop ? "mascot-body mascot-boop" : "mascot-body"} onAnimationEnd={e => { if (e.animationName === "mBoop") setBoop(false); }}>
-          {/* Feet and arms sit behind the body so only their tips peek out. */}
-          <ellipse cx="34" cy="82.5" rx="8" ry="4" fill={look.deep}/>
-          <ellipse cx="76" cy="82.5" rx="8" ry="4" fill={look.deep}/>
-          <g transform="rotate(50 10 71)"><ellipse className="mascot-arm-l" cx="10" cy="71" rx="4.5" ry="7.5" fill={look.mid} stroke={look.deep} strokeWidth={1}/></g>
-          <g transform="rotate(-50 100 71)"><ellipse className="mascot-arm-r" cx="100" cy="71" rx="4.5" ry="7.5" fill={look.mid} stroke={look.deep} strokeWidth={1}/></g>
-          <path d="M10 82 C6 50 22 18 55 16 C88 14 106 46 100 82 Z" fill={"url(#" + gid + ")"}/>
-          <ellipse className="mascot-shine" cx="38" cy="32" rx="12" ry="7" fill="#FFFFFF" opacity="0.7" transform="rotate(-20 38 32)"/>
-          <circle cx="52" cy="27" r="2.2" fill="#FFFFFF" opacity="0.8"/>
-          <g className="mascot-face">
-            <ellipse cx="33" cy="62" rx="6.5" ry="4" fill="#F5A9BC" opacity={cheek * 0.75}/>
-            <ellipse cx="77" cy="62" rx="6.5" ry="4" fill="#F5A9BC" opacity={cheek * 0.75}/>
-            <Face phase={key} happy={boop}/>
-          </g>
-          <Accessory phase={key} deep={look.deep}/>
+          {buff ? <g transform="translate(10 6) scale(.82)">
+            {/* Buff: broad shoulders, a pec line, abs, two flexing arms and a sweatband. */}
+            <ellipse cx="38" cy="83" rx="9" ry="4.2" fill={look.deep}/>
+            <ellipse cx="72" cy="83" rx="9" ry="4.2" fill={look.deep}/>
+            <path d="M20 82 C16 64 6 44 16 28 C28 10 82 10 94 28 C104 44 94 64 90 82 Z" fill={"url(#" + gid + ")"}/>
+            <BuffArm look={look}/>
+            <BuffArm look={look} flip/>
+            <ellipse className="mascot-shine" cx="36" cy="27" rx="11" ry="6" fill="#FFFFFF" opacity="0.65" transform="rotate(-18 36 27)"/>
+            <path d="M33 61 Q43 67 54 62 M56 62 Q67 67 77 61" fill="none" stroke={look.deep} strokeWidth={1.6} strokeLinecap="round"/>
+            {[0, 1, 2].map(r => <g key={r} fill={look.deep} opacity={0.5}>
+              <rect x="46" y={66 + r * 5.3} width="8" height="4.4" rx="2.2"/>
+              <rect x="56" y={66 + r * 5.3} width="8" height="4.4" rx="2.2"/>
+            </g>)}
+            <g className="mascot-face" transform="translate(0 -9)">
+              {cheeks}
+              <Face phase={key} happy={boop}/>
+              {!boop && key !== "menstrual" && <g stroke={INK} strokeWidth={2} strokeLinecap="round">
+                <path d="M37.5 44.5 L47 46.5"/><path d="M72.5 44.5 L63 46.5"/>
+              </g>}
+            </g>
+            <path d="M15 31 Q55 13 95 31" fill="none" stroke="#F08FA8" strokeWidth={6} strokeLinecap="round"/>
+            <path d="M15 31 Q55 13 95 31" fill="none" stroke="#FFFFFF" strokeWidth={1.4} strokeDasharray="3 4" opacity={0.8}/>
+            <path d="M94 30 Q103 30 106 37 M94 31 Q100 36 99 43" fill="none" stroke="#F08FA8" strokeWidth={3.4} strokeLinecap="round"/>
+          </g> : <>
+            {(kind === "bunny" || kind === "kitty") && <Ears kind={kind} look={look}/>}
+            {/* Feet and arms sit behind the body so only their tips peek out. */}
+            <ellipse cx="34" cy="82.5" rx="8" ry="4" fill={look.deep}/>
+            <ellipse cx="76" cy="82.5" rx="8" ry="4" fill={look.deep}/>
+            <g transform="rotate(50 10 71)"><ellipse className="mascot-arm-l" cx="10" cy="71" rx="4.5" ry="7.5" fill={look.mid} stroke={look.deep} strokeWidth={1}/></g>
+            <g transform="rotate(-50 100 71)"><ellipse className="mascot-arm-r" cx="100" cy="71" rx="4.5" ry="7.5" fill={look.mid} stroke={look.deep} strokeWidth={1}/></g>
+            <path d="M10 82 C6 50 22 18 55 16 C88 14 106 46 100 82 Z" fill={"url(#" + gid + ")"}/>
+            <ellipse className="mascot-shine" cx="38" cy="32" rx="12" ry="7" fill="#FFFFFF" opacity="0.7" transform="rotate(-20 38 32)"/>
+            <circle cx="52" cy="27" r="2.2" fill="#FFFFFF" opacity="0.8"/>
+            <g className="mascot-face">
+              {cheeks}
+              <Face phase={key} happy={boop}/>
+              {kind === "kitty" && <Whiskers/>}
+            </g>
+            <Accessory phase={key} deep={look.deep}/>
+          </>}
         </g>
         {key === "ovulation" && <path className="mascot-sparkle" d={SPARKLE_BIG} fill="#FFFFFF" stroke={look.deep} strokeWidth="0.8"/>}
         {key === "follicular" && <path className="mascot-sparkle" d={SPARKLE_SMALL} fill="#FFFFFF" stroke={look.deep} strokeWidth="0.8"/>}
