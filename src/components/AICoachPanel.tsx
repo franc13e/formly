@@ -210,7 +210,7 @@ Build me a personalised weekly workout structure and daily nutrition targets. Gi
       <div className="card" style={{marginBottom:14}}>
         <div className="sec-title">Stats</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
-          <div><label className="label">Age</label><input className="input" type="number" placeholder="e.g. 26" value={age} onChange={e=>setAge(e.target.value)}/></div>
+          <div><label className="label">Age</label><input className="input" type="number" value={age} onChange={e=>setAge(e.target.value)}/></div>
           <div><label className="label">Workouts/week</label><input className="input" type="number" min="1" max="7" placeholder="4" value={workoutsPerWeek} onChange={e=>setWorkoutsPerWeek(e.target.value)}/></div>
         </div>
         <div><label className="label">Sex</label><select className="input" value={sex} onChange={e=>setSex(e.target.value)}><option>Female</option><option>Male</option><option>Non-binary</option><option>Prefer not to say</option></select></div>
@@ -228,7 +228,7 @@ Build me a personalised weekly workout structure and daily nutrition targets. Gi
 
       <div className="card" style={{marginBottom:14}}>
         <div className="sec-title">Anything else? <span style={{fontWeight:500,color:C.textSoft,fontSize:12}}>(optional)</span></div>
-        <textarea className="input" rows={3} placeholder="e.g. I have a bad knee, I prefer home workouts, I don't eat meat..." value={customNote} onChange={e=>setCustomNote(e.target.value)} style={{resize:"none",lineHeight:1.6}}/>
+        <textarea className="input" rows={3} placeholder="Injuries, preferences, foods you avoid" value={customNote} onChange={e=>setCustomNote(e.target.value)} style={{resize:"none",lineHeight:1.6}}/>
       </div>
 
       {error && <div style={{fontSize:13,color:"#C05070",fontWeight:700,marginBottom:12,padding:"10px 14px",background:C.rose,borderRadius:12}}>{error}</div>}

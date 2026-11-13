@@ -254,6 +254,12 @@ export interface WorkoutLogEntry {
   duration: string;
   notes: string;
   id: number;
+  /** Cardio distance in km. */
+  distance?: string;
+  /** How hard it felt, e.g. "Easy" or "Gentle" (cardio and yoga/stretch). */
+  intensity?: string;
+  /** What kind of workout it was logged as. */
+  kind?: "strength" | "cardio" | "recovery";
 }
 
 export interface WorkoutLogForm {
@@ -262,6 +268,8 @@ export interface WorkoutLogForm {
   weight: string;
   notes: string;
   duration: string;
+  distance: string;
+  intensity: string;
 }
 
 // ─── Workout guides ───────────────────────────────────────────────────────────

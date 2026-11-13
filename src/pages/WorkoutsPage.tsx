@@ -17,6 +17,8 @@ import { load, save } from "../lib/storage";
 import { addDays, groupLogByDate, weekStreak, monthStats, moveInSchedule, weekOf } from "../lib/workouts";
 import { builtInGuide, cachedFormTips, findLibraryWorkout } from "../lib/formTips";
 import { groupDayItems, toScheduled } from "../lib/sessions";
+import { phaseFit, workoutKind, type WorkoutKind } from "../lib/workoutKind";
+import { INTENSITY, KIND_LABEL, formForKind, logFields, logSummary, normalizeDuration } from "../lib/logFields";
 
 type WorkoutsTab = "schedule" | "browse" | "ai" | "history";
 type ScheduleView = "week" | "month";
@@ -55,7 +57,8 @@ function TabRow({ tab, setTab }: { tab: WorkoutsTab; setTab: (tab: WorkoutsTab) 
 const shortDate = (date: string) => new Date(date+"T12:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});
 /** Timestamp id for a new log entry (kept outside the component so the React compiler's purity check doesn't flag the click handler). */
 const newLogId = () => Date.now();
-const EMPTY_LOG_FORM: WorkoutLogForm = { sets:"", reps:"", weight:"", notes:"", duration:"" };
+const EMPTY_LOG_FORM: WorkoutLogForm = { sets:"", reps:"", weight:"", notes:"", duration:"", distance:"", intensity:"" };
+const LOG_KINDS: WorkoutKind[] = ["strength", "cardio", "recovery"];
 /** Visible keyboard focus for everything on the Workouts tab (inline styles can't express :focus-visible). */
 const FOCUS_CSS = `.workouts-page :is(button,a,[tabindex],input,select,textarea):focus-visible{outline:2px solid ${C.accentInk};outline-offset:2px;}`;
 const iconBtn = { background:"none", border:"none", color:C.textSoft, cursor:"pointer", padding:4, display:"inline-flex", alignItems:"center", justifyContent:"center", borderRadius:8 } as const;
@@ -71,6 +74,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
   const [tab, setTab] = useState<WorkoutsTab>("schedule");
   const [logModal, setLogModal] = useState<LoggableWorkout | null>(null);
   const [logForm, setLogForm] = useState<WorkoutLogForm>(EMPTY_LOG_FORM);
+  const [logKind, setLogKind] = useState<WorkoutKind>("strength");
   const [customInput, setCustomInput] = useState("");
   const [pickingDay, setPickingDay] = useState<string | null>(null);
   const [scheduleView, setScheduleView] = useState<ScheduleView>("week");
@@ -105,11 +109,18 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
     showToast(`Moved to ${shortDate(to)}`);
   };
   const selectDay = (date: string) => { setPickingDay(p => p===date ? null : date); setMovingIdx(null); };
-  const openLog = (w: LoggableWorkout) => { setLogModal(w); setLogForm(EMPTY_LOG_FORM); };
+  const openLog = (w: LoggableWorkout) => {
+    setLogModal(w);
+    setLogKind(workoutKind(findLibraryWorkout(w) ?? { name: w.name, muscle: w.muscle }));
+    const mins = (w.duration ?? w.detail ?? "").match(/(\d+)\s*min/);
+    setLogForm({ ...EMPTY_LOG_FORM, duration: mins ? mins[1] : "" });
+  };
 
   const logWorkout = () => {
     if (!logModal) return;
-    const entry = { workoutId: logModal.id||logModal.name, name: logModal.name, emoji: logModal.emoji||"🏋️", muscle: logModal.muscle||"", date: todayStr, time: new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}), sets:logForm.sets, reps:logForm.reps, weight:logForm.weight, duration:logForm.duration||logModal.duration||"", notes:logForm.notes, id:newLogId() };
+    const f = formForKind(logForm, logKind, logModal.name);
+    const entry: WorkoutLogEntry = { workoutId: logModal.id||logModal.name, name: logModal.name, emoji: logModal.emoji||"🏋️", muscle: logModal.muscle||"", date: todayStr, time: new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}), sets:f.sets.trim(), reps:f.reps.trim(), weight:f.weight.trim(), duration:normalizeDuration(f.duration)||logModal.duration||"", notes:f.notes.trim(), id:newLogId(), kind:logKind,
+      ...(f.distance.trim() ? { distance: f.distance.trim() } : {}), ...(f.intensity ? { intensity: f.intensity } : {}) };
     setWorkoutLog(l=>[entry,...(l||[])]);
     setLogModal(null); setLogForm(EMPTY_LOG_FORM);
     showToast("Workout logged!");
@@ -388,7 +399,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
                           <Glyph emoji={e.emoji||"🏋️"} size={16}/>
                           <div style={{flex:1}}>
                             <div style={{fontWeight:600,fontSize:14}}>{e.name}</div>
-                            <div style={{fontSize:11,color:C.textSoft,marginTop:3}}>{e.duration}{e.sets?` · ${e.sets} sets`:""}{e.reps?` x ${e.reps} reps`:""}{e.weight?` @ ${e.weight}kg`:""}</div>
+                            <div style={{fontSize:11,color:C.textSoft,marginTop:3}}>{logSummary(e)}</div>
                             {e.notes&&<div style={{fontSize:11,color:C.textMid,marginTop:4,fontStyle:"italic"}}>{e.notes}</div>}
                           </div>
                           <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4}}>
@@ -418,13 +429,31 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
           <div style={{flex:1,minWidth:0}}><div className="modal-title" style={{marginBottom:0}}>{logModal.name}</div><div style={{fontSize:12,color:C.textSoft,fontWeight:500}}>{logModal.muscle||""}{logModal.duration?` · ${logModal.duration}`:""}</div></div>
           <button onClick={()=>setGuideFor(findLibraryWorkout(logModal) ?? { name:logModal.name, emoji:logModal.emoji, muscle:logModal.muscle, duration:logModal.duration })} style={{background:"none",border:"none",padding:4,cursor:"pointer",fontFamily:"DM Sans",fontSize:12,fontWeight:700,color:C.accentInk,textDecoration:"underline",flexShrink:0}}>Form guide</button>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
-          {([["sets","Sets","e.g. 3"],["reps","Reps","e.g. 12"],["weight","Weight (kg)","e.g. 40"],["duration","Duration","e.g. 30 min"]] as const).map(([k,lbl,ph])=>(
-            <div key={k}><label className="label">{lbl}</label><input className="input" placeholder={ph} value={logForm[k]} onChange={e=>setLogForm(p=>({...p,[k]:e.target.value}))}/></div>
-          ))}
+        <div style={{marginBottom:12}}>
+          <div className="label" id="log-kind">Type</div>
+          <div role="radiogroup" aria-labelledby="log-kind" style={{display:"flex",gap:4,background:C.bgDeep,borderRadius:12,padding:4}}>
+            {LOG_KINDS.map(k=>(
+              <button key={k} type="button" role="radio" aria-checked={logKind===k} onClick={()=>setLogKind(k)} style={{flex:1,padding:"7px 4px",borderRadius:9,border:"none",cursor:"pointer",background:logKind===k?C.white:"transparent",color:logKind===k?"#A95C76":C.textSoft,fontWeight:700,fontSize:12,fontFamily:"DM Sans",boxShadow:logKind===k?`0 1px 6px ${C.shadow}`:"none",transition:"all .15s"}}>{KIND_LABEL[k]}</button>
+            ))}
+          </div>
         </div>
-        <div style={{marginBottom:14}}><label className="label">Notes (optional)</label><input className="input" placeholder="How did it feel? Any PRs?" value={logForm.notes} onChange={e=>setLogForm(p=>({...p,notes:e.target.value}))}/></div>
-        {cycleInfo&&<div style={{background:cycleInfo.phase.bg,borderRadius:12,padding:"8px 12px",marginBottom:14,fontSize:12,fontWeight:600,color:cycleInfo.phase.textColor}}><Glyph emoji={cycleInfo.phase.emoji} chip={false} size={12} color={cycleInfo.phase.textColor}/> {cycleInfo.phase.label} phase: {cycleInfo.phase.workouts[0]}</div>}
+        {(() => { const fields = logFields(logKind, logModal.name); return (
+          <div style={{display:"grid",gridTemplateColumns:fields.length===1?"1fr":"1fr 1fr",gap:10,marginBottom:12}}>
+            {fields.map(f=>(
+              <div key={f.key}><label className="label" htmlFor={`log-${f.key}`}>{f.label}</label><input id={`log-${f.key}`} className="input" inputMode={f.inputMode} value={logForm[f.key]} onChange={e=>setLogForm(p=>({...p,[f.key]:e.target.value}))}/></div>
+            ))}
+          </div>
+        ); })()}
+        {INTENSITY[logKind].length>0&&<div style={{marginBottom:12}}>
+          <div className="label" id="log-feel">How hard</div>
+          <div role="radiogroup" aria-labelledby="log-feel" style={{display:"flex",gap:6}}>
+            {INTENSITY[logKind].map(level=>{ const on=logForm.intensity===level; return (
+              <button key={level} type="button" role="radio" aria-checked={on} onClick={()=>setLogForm(p=>({...p,intensity:on?"":level}))} style={{flex:1,padding:"8px 4px",borderRadius:99,border:`1.5px solid ${on?C.accentInk:C.border}`,background:on?C.lavender:"transparent",color:on?"#8A4862":C.textSoft,fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"DM Sans",transition:"all .15s"}}>{level}</button>
+            ); })}
+          </div>
+        </div>}
+        <div style={{marginBottom:14}}><label className="label" htmlFor="log-notes">Notes (optional)</label><input id="log-notes" className="input" value={logForm.notes} onChange={e=>setLogForm(p=>({...p,notes:e.target.value}))}/></div>
+        {cycleInfo&&<div style={{background:cycleInfo.phase.bg,borderRadius:12,padding:"8px 12px",marginBottom:14,fontSize:12,fontWeight:600,lineHeight:1.5,color:cycleInfo.phase.textColor}}><Glyph emoji={cycleInfo.phase.emoji} chip={false} size={12} color={cycleInfo.phase.textColor}/> {cycleInfo.phase.label} phase: {phaseFit(logKind, cycleInfo.phase.id)}</div>}
         <div className="row" style={{gap:10}}><button className="btn btn-ghost" style={{flex:1}} onClick={()=>setLogModal(null)}>Cancel</button><button className="btn btn-primary" style={{flex:2}} onClick={logWorkout}>Save workout ✓</button></div>
       </div></div>}
 

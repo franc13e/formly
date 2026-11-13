@@ -88,8 +88,8 @@ export function SessionBuilder({ initial, pool: basePool, customIds: baseCustomI
         <button onClick={onClose} aria-label="Close" style={{background:"none",border:"none",color:C.textSoft,cursor:"pointer",padding:4,display:"inline-flex",borderRadius:8}}><X size={18} strokeWidth={1.8} aria-hidden="true"/></button>
       </div>
 
-      <div style={{marginBottom:12}}><label className="label" htmlFor="sb-name">Name</label><input id="sb-name" className="input" placeholder="e.g. Glute day" value={name} onChange={e=>setName(e.target.value)} autoFocus/></div>
-      <div style={{marginBottom:12}}><label className="label" htmlFor="sb-focus">Focus (optional)</label><input id="sb-focus" className="input" placeholder={focusFrom(chosen) || "e.g. Glutes and hamstrings"} value={focus} onChange={e=>setFocus(e.target.value)}/></div>
+      <div style={{marginBottom:12}}><label className="label" htmlFor="sb-name">Name</label><input id="sb-name" className="input" value={name} onChange={e=>setName(e.target.value)} autoFocus/></div>
+      <div style={{marginBottom:12}}><label className="label" htmlFor="sb-focus">Focus (optional)</label><input id="sb-focus" className="input" placeholder={focusFrom(chosen)} value={focus} onChange={e=>setFocus(e.target.value)}/></div>
 
       <div style={{marginBottom:16}}>
         <div className="label" id="sb-icon">Icon</div>
@@ -143,7 +143,7 @@ export function SessionBuilder({ initial, pool: basePool, customIds: baseCustomI
           ? <div style={{background:C.rose,border:`1.5px solid ${C.roseDeep}`,borderRadius:14,padding:12,marginBottom:10}}>
               <div style={{fontSize:12,fontWeight:700,color:C.text,marginBottom:8}}>Add your own exercise</div>
               <label className="label" htmlFor="sb-new-name">Exercise name</label>
-              <input id="sb-new-name" className="input" placeholder="e.g. Cable kickback" value={newEx.name} autoFocus
+              <input id="sb-new-name" className="input" value={newEx.name} autoFocus
                 onChange={e=>setNewEx({...newEx,name:e.target.value})} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();addNew();}}} style={{marginBottom:8}}/>
               <label className="label" htmlFor="sb-new-muscle">Muscle group</label>
               <select id="sb-new-muscle" className="input" value={newEx.muscle} onChange={e=>setNewEx({...newEx,muscle:e.target.value})} style={{marginBottom:8}}>

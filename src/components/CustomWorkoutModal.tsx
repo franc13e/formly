@@ -46,12 +46,12 @@ export function CustomWorkoutModal({ initial, onSave, onClose }: CustomWorkoutMo
         <Glyph emoji={emoji} size={20}/>
         <div className="modal-title" id="custom-workout-title" style={{marginBottom:0}}>{initial?"Edit workout":"Create workout"}</div>
       </div>
-      <div style={{marginBottom:12}}><label className="label" htmlFor="cw-name">Name</label><input id="cw-name" className="input" placeholder="e.g. Saturday spin class" value={name} onChange={e=>setName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&save()} autoFocus/></div>
+      <div style={{marginBottom:12}}><label className="label" htmlFor="cw-name">Name</label><input id="cw-name" className="input" value={name} onChange={e=>setName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&save()} autoFocus/></div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
         <div><label className="label" htmlFor="cw-muscle">Muscle group</label>
           <select id="cw-muscle" className="input" value={muscle} onChange={e=>setMuscle(e.target.value)}>{WORKOUT_MUSCLE_GROUPS.map(m=><option key={m}>{m}</option>)}</select>
         </div>
-        <div><label className="label" htmlFor="cw-duration">Duration (min)</label><input id="cw-duration" className="input" type="number" inputMode="numeric" min={1} placeholder="e.g. 30" value={minutes} onChange={e=>setMinutes(e.target.value)}/></div>
+        <div><label className="label" htmlFor="cw-duration">Duration (min)</label><input id="cw-duration" className="input" type="number" inputMode="numeric" min={1} value={minutes} onChange={e=>setMinutes(e.target.value)}/></div>
       </div>
       <div style={{marginBottom:12}}>
         <div className="label" id="cw-diff">Difficulty</div>
@@ -75,7 +75,7 @@ export function CustomWorkoutModal({ initial, onSave, onClose }: CustomWorkoutMo
         </div>
       </div>
       <div style={{marginBottom:14}}><label className="label" htmlFor="cw-notes">What it achieves (optional)</label>
-        <textarea id="cw-notes" className="input" rows={2} placeholder="e.g. Builds endurance and clears my head." value={achieve} onChange={e=>setAchieve(e.target.value)} style={{resize:"none",lineHeight:1.6}}/>
+        <textarea id="cw-notes" className="input" rows={2} value={achieve} onChange={e=>setAchieve(e.target.value)} style={{resize:"none",lineHeight:1.6}}/>
       </div>
       <div className="row" style={{gap:10}}><button className="btn btn-ghost" style={{flex:1}} onClick={onClose}>Cancel</button><button className="btn btn-primary" style={{flex:2,opacity:canSave?1:.5}} disabled={!canSave} onClick={save}>{initial?"Save changes ✓":"Create workout ✓"}</button></div>
     </div></div>

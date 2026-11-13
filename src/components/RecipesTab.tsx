@@ -162,7 +162,7 @@ export function RecipesTab({ cycleInfo, showToast }: RecipesTabProps) {
           ))}
         </div>
         <label className="label" htmlFor="recipe-have" style={{color:"#8A4862"}}>Ingredients I have (optional)</label>
-        <input id="recipe-have" className="input" placeholder="e.g. eggs, spinach, sweet potato" value={have} maxLength={300} onChange={e => setHave(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !aiLoading) void makeRecipe(); }} style={{fontSize:13,marginBottom:10,background:C.white}}/>
+        <input id="recipe-have" className="input" placeholder="What's in your kitchen?" value={have} maxLength={300} onChange={e => setHave(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !aiLoading) void makeRecipe(); }} style={{fontSize:13,marginBottom:10,background:C.white}}/>
         <button className="btn btn-primary" style={{width:"100%"}} onClick={() => void makeRecipe()} disabled={aiLoading}>
           {aiLoading ? <><div className="spin"/>Cooking something up...</> : <><Glyph emoji="✨" chip={false} size={16} color="currentColor"/>Make me a {aiKind}</>}
         </button>

@@ -75,6 +75,18 @@ export const CSS = `
   @keyframes mTwinkle{0%,100%{transform:scale(.6) rotate(0deg);opacity:.55}50%{transform:scale(1.15) rotate(45deg);opacity:1}}
   @keyframes mZ{0%{opacity:0;transform:translate(0,0) scale(.7)}20%{opacity:.6}100%{opacity:0;transform:translate(7px,-14px) scale(1.15)}}
   @keyframes mBoop{0%{transform:scale(1,1)}20%{transform:scale(1.14,.84)}42%{transform:translateY(-7px) scale(.9,1.1)}62%{transform:scale(1.06,.94)}80%{transform:scale(.98,1.02)}100%{transform:scale(1,1)}}
+  .mascot-arm-l,.mascot-arm-r{transform-box:fill-box;transform-origin:50% 15%;}
+  .mascot-arm-r{animation:mWave 7s ease-in-out infinite;}
+  .m-ovulation .mascot-arm-l{animation:mWave 7s ease-in-out 3.5s infinite reverse;}
+  .mascot-sprout{transform-box:fill-box;transform-origin:30% 100%;animation:mSprout 3.4s ease-in-out infinite;}
+  .mascot-flower{animation:mFlower 6s linear infinite;}
+  .mascot-heart{opacity:0;animation:mHeart 1.1s ease-out forwards;}
+  .mascot-heart2{animation-delay:.12s;}
+  .mascot-heart3{animation-delay:.24s;}
+  @keyframes mWave{0%,70%,100%{rotate:0deg}76%{rotate:-26deg}82%{rotate:-6deg}88%{rotate:-26deg}94%{rotate:0deg}}
+  @keyframes mSprout{0%,100%{rotate:-6deg}50%{rotate:7deg}}
+  @keyframes mFlower{to{rotate:360deg}}
+  @keyframes mHeart{0%{opacity:0;transform:translateY(4px) scale(.4)}25%{opacity:1;transform:translateY(-2px) scale(1.1)}100%{opacity:0;transform:translateY(-16px) scale(.9)}}
   @media (prefers-reduced-motion:reduce){.mascot,.mascot *{animation:none !important;}}
   html,body,#root{height:100%;background:#F8E6EA;font-family:'DM Sans',system-ui,sans-serif;color:${C.text};}
   ::-webkit-scrollbar{display:none;}

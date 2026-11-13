@@ -40,9 +40,11 @@ export function muscleGroup(muscle: string): string | null {
  * The group a log entry trained: its own muscle value, else the library workout with that name,
  * else cardio or recovery by kind. Null when nothing tells us.
  */
-export function entryGroup(e: Pick<WorkoutLogEntry, "name" | "muscle">): string | null {
+export function entryGroup(e: Pick<WorkoutLogEntry, "name" | "muscle"> & { kind?: WorkoutLogEntry["kind"] }): string | null {
   const own = muscleGroup(e.muscle);
   if (own) return own;
+  if (e.kind === "cardio") return "Cardio";
+  if (e.kind === "recovery") return "Recovery";
   const lib = findLibraryWorkout({ name: e.name });
   if (lib) return muscleGroup(lib.muscle);
   const kind = workoutKind({ name: e.name, muscle: "" });

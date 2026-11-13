@@ -57,7 +57,7 @@ These are the same words as the About section on the app's Profile screen.
 ## Features
 
 **Cycle**
-- **Home cycle ring**: the current cycle day and phase in a ring of phases, with an animated mascot whose colour, mood and movement follow the phase (sleepy and slow on period days, bouncy around ovulation; it blinks, glances around and wobbles when tapped, and stays still if your device asks for reduced motion); the whole screen is tinted by phase
+- **Home cycle ring**: the current cycle day and phase in a ring of phases, with an animated mascot whose colour, mood, movement and little accessory follow the phase (a nightcap and sleepy face on period days, a sprout, a flower and a bounce around ovulation, a bow in the luteal phase); she blinks, glances around and waves, beams and pops hearts when tapped, and stays still if your device asks for reduced motion; the whole screen is tinted by phase
 - **Monthly cycle calendar**: logged periods (with flow level), predicted periods and ovulation days; tap any day to start a period, mark its flow as light, medium or heavy, or mark "no flow" to end it
 - **Learned predictions**: next period shown as a range, based on your own logged cycles (see [How predictions work](#how-predictions-work))
 - **Late periods**: shown as "X days late" with a one-tap "My period started"
@@ -65,6 +65,7 @@ These are the same words as the About section on the app's Profile screen.
 
 **Workouts**
 - **Week / month schedule**: plan workouts on any day, mark rest days and move planned workouts to another day
+- **Logging that fits the workout**: strength asks for sets, reps and weight; runs, rides and swims for time and distance (with your pace); yoga and stretching for time and how it felt. The type is picked for you and can be changed
 - **History calendar**: each logged workout's icon on the day you did it, plus monthly totals and your weekly streak (weeks in a row with at least one workout)
 - **Insights**: this week or month at a glance: muscle groups trained (and not yet), what that training did for your body (e.g. glutes: supports your hips, knees and lower back) with your most-done workout, strength / cardio / recovery balance, training by cycle phase and one gentle suggestion
 - **Train next**: the muscle groups you've rested longest (skipping ones trained in the last two days), each with an exercise picked for your current phase and a one-tap "add to today"
@@ -77,7 +78,7 @@ These are the same words as the About section on the app's Profile screen.
 - **AI coach**: personalised plans from your goal, activity level, focus areas and current phase
 
 **Nutrition**
-- **This phase**: foods to focus on and ease off, with the reason for each
+- **This phase**: foods to focus on and ease off, with the reason for each. Tap one for more on why, foods that count and easy meal ideas, or what to have instead
 - **Ask**: a food-coach chat for any food question (cravings, bloating, pre-workout meals, eating for a goal), aware of your cycle phase; it points to a doctor or dietitian for medical concerns
 - **Recipes**: 3 meals and 2 drinks for each phase, with ingredients, steps, photos and YouTube / TikTok links; "Make me a recipe" generates one from what you have at home, and you can save favourites
 

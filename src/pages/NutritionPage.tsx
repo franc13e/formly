@@ -4,6 +4,7 @@ import { CYCLE_FOODS } from "../data/nutrition";
 import { Glyph } from "../components/Glyph";
 import { FoodChat } from "../components/FoodChat";
 import { RecipesTab } from "../components/RecipesTab";
+import { EaseFoods, FocusFoods } from "../components/PhaseFoodList";
 import type { CycleInfo, ShowToast } from "../types";
 
 type NutritionSubTab = "cycle" | "goals" | "recipes";
@@ -85,27 +86,16 @@ export function NutritionPage({ cycleInfo, showToast, askDraft = null, clearAskD
                 </div>
 
                 <div className="card" style={{marginBottom:14}}>
-                  <div style={{fontWeight:600,fontSize:14,color:C.textMid,marginBottom:12}}>Foods to focus on</div>
-                  {phaseFoods.eat.map((item, i) => (
-                    <div key={i} style={{display:"flex",gap:12,padding:"10px 0",borderTop:i>0?`1px solid ${C.border}`:"none",alignItems:"flex-start"}}>
-                      <Glyph emoji={item.emoji} size={16}/>
-                      <div>
-                        <div style={{fontWeight:600,fontSize:13,marginBottom:2}}>{item.food}</div>
-                        <div style={{fontSize:12,color:C.textSoft,fontWeight:500,lineHeight:1.5}}>{item.why}</div>
-                      </div>
-                    </div>
-                  ))}
+                  <div style={{fontWeight:600,fontSize:14,color:C.textMid,marginBottom:2}}>Foods to focus on</div>
+                  <div style={{fontSize:12,color:C.textSoft,fontWeight:500,marginBottom:10}}>Tap one for why it helps, foods that count and easy ideas.</div>
+                  <FocusFoods phase={phase.id} foods={phaseFoods.eat}/>
                 </div>
 
                 {phaseFoods.ease.length > 0 && (
                   <div className="card" style={{marginBottom:14,background:C.rose,border:"none"}}>
-                    <div style={{fontWeight:600,fontSize:14,color:ACCENT.protein.text,marginBottom:12}}>Ease off on</div>
-                    {phaseFoods.ease.map((item, i) => (
-                      <div key={i} style={{padding:"8px 0",borderTop:i>0?`1px solid ${C.roseDeep}`:"none"}}>
-                        <div style={{fontWeight:700,fontSize:13,color:ACCENT.protein.text}}>{item.food}</div>
-                        <div style={{fontSize:12,color:ACCENT.protein.text,fontWeight:500,opacity:.8,marginTop:2}}>{item.why}</div>
-                      </div>
-                    ))}
+                    <div style={{fontWeight:600,fontSize:14,color:ACCENT.protein.text,marginBottom:2}}>Ease off on</div>
+                    <div style={{fontSize:12,color:ACCENT.protein.text,opacity:.8,fontWeight:500,marginBottom:8}}>Tap one for why, and what to have instead.</div>
+                    <EaseFoods phase={phase.id} foods={phaseFoods.ease}/>
                   </div>
                 )}
               </div>

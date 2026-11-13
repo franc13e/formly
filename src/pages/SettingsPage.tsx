@@ -77,7 +77,7 @@ export function SettingsPage({ userName, setUserName, showToast, cycle, onOpenCy
         <div className="card">
           <label className="label" htmlFor="display-name">Display name</label>
           <div style={{ display: "flex", gap: 10 }}>
-            <input id="display-name" className="input" placeholder="e.g. Sofia" value={localName} onChange={e => setLocalName(e.target.value)} />
+            <input id="display-name" className="input" value={localName} onChange={e => setLocalName(e.target.value)} />
             <button className="btn btn-primary btn-sm" style={{ flexShrink: 0 }} onClick={() => { setUserName(localName); save("user-name", localName); showToast("Name saved"); }}>Save</button>
           </div>
         </div>

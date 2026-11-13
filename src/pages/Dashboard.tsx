@@ -6,6 +6,7 @@ import { CycleRing } from "../components/CycleRing";
 import { Mascot } from "../components/Mascot";
 import type { CycleInfo, Schedule, WeightEntry, WorkoutLogEntry } from "../types";
 import { localDateKey } from "../lib/date";
+import { logSummary } from "../lib/logFields";
 
 interface DashboardProps {
   schedule: Schedule;
@@ -154,7 +155,7 @@ export function Dashboard({ schedule, weightHistory, cycleInfo, workoutLog, user
                   <Glyph emoji={e.emoji || "🏋️"} size={16} />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 700, fontSize: 14 }}>{e.name}</div>
-                    <div style={{ fontSize: 12, color: C.textSoft, fontWeight: 500 }}>{e.sets && `${e.sets} sets`}{e.reps && ` × ${e.reps} reps`}{e.weight && ` @ ${e.weight}kg`}</div>
+                    <div style={{ fontSize: 12, color: C.textSoft, fontWeight: 500 }}>{logSummary(e)}</div>
                   </div>
                   <span style={{ fontSize: 11, color: ACCENT.fiber.text, fontWeight: 700, background: C.sage, padding: "2px 8px", borderRadius: 99 }}>✓</span>
                 </div>
