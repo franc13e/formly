@@ -14,32 +14,65 @@ Formly is a mobile-first fitness app that combines workout planning, food guidan
 
 ## Screenshots
 
-<p align="center">
-  <img src="docs/screenshots/home.png" width="240" alt="Home: phase-tinted screen with the cycle ring, mascot, week strip and next period">
-  <img src="docs/screenshots/body.png" width="240" alt="Body: next-period prediction and the monthly cycle calendar">
-  <img src="docs/screenshots/browse.png" width="240" alt="Browse: workouts that suit your phase, muscle-group filters and exercise pictures">
-  <img src="docs/screenshots/workouts.png" width="240" alt="Workouts: weekly streak, insights on what your training did for your body, and what to train next">
-</p>
-<p align="center">
-  <img src="docs/screenshots/ask.png" width="240" alt="Ask: the cycle-aware food coach chat">
-  <img src="docs/screenshots/recipes.png" width="240" alt="Recipes: meals and drinks for the current phase with photos and video links">
-  <img src="docs/screenshots/guide.png" width="240" alt="Workout guide: demo image, how it helps, phase fit, form cues, video link and pre/post-workout food">
-</p>
-<p align="center">
-  <img src="docs/screenshots/measurements.png" width="240" alt="Body: measurements, weight trend and measurement history">
-  <img src="docs/screenshots/profile.png" width="240" alt="Profile: details, cycle summary and about Formly">
-  <img src="docs/screenshots/profile-about.png" width="240" alt="Profile: what Formly does, our approach, and data and privacy">
-</p>
-<p align="center">
-  <img src="docs/screenshots/coach.png" width="240" alt="Coach: a daily check-in that suggests gentler swaps on a drained, crampy day">
-  <img src="docs/screenshots/plan-week.png" width="240" alt="Coach: Plan my week, seven days fitted to each day's cycle phase">
-  <img src="docs/screenshots/dark.png" width="240" alt="Dark mode with Buff Blobby flexing in the cycle ring">
-</p>
-<p align="center">
-  <img src="docs/screenshots/customise.png" width="240" alt="Customise: four mascots, light, dark or device theme, and five colour palettes">
-  <img src="docs/screenshots/report.png" width="240" alt="PDF report: cycle summary, period history, workouts and measurements">
-  <img src="docs/screenshots/delete.png" width="240" alt="Delete all data: offers a backup first and needs DELETE typed to confirm">
-</p>
+### Your cycle
+
+<table>
+  <tr>
+    <td align="center" valign="top" width="33%"><img src="docs/screenshots/home.png" width="230" alt="Home: The cycle ring, your mascot and what's coming up"><br><b>Home</b><br><sub>The cycle ring, your mascot and what's coming up</sub></td>
+    <td align="center" valign="top" width="33%"><img src="docs/screenshots/calendar.png" width="230" alt="Cycle calendar: Logged periods with flow, predictions and ovulation"><br><b>Cycle calendar</b><br><sub>Logged periods with flow, predictions and ovulation</sub></td>
+    <td align="center" valign="top" width="33%"><img src="docs/screenshots/phase.png" width="230" alt="Your phase: What's happening in your body right now"><br><b>Your phase</b><br><sub>What's happening in your body right now</sub></td>
+  </tr>
+</table>
+
+### Workouts
+
+<table>
+  <tr>
+    <td align="center" valign="top" width="33%"><img src="docs/screenshots/browse.png" width="230" alt="Browse: Picks for your phase, with exercise pictures"><br><b>Browse</b><br><sub>Picks for your phase, with exercise pictures</sub></td>
+    <td align="center" valign="top" width="33%"><img src="docs/screenshots/guide.png" width="230" alt="Workout guide: How it helps, phase fit and form cues"><br><b>Workout guide</b><br><sub>How it helps, phase fit and form cues</sub></td>
+    <td align="center" valign="top" width="33%"><img src="docs/screenshots/log.png" width="230" alt="Log a workout: Fields that fit the workout: here, a run"><br><b>Log a workout</b><br><sub>Fields that fit the workout: here, a run</sub></td>
+  </tr>
+</table>
+
+### Coach
+
+<table>
+  <tr>
+    <td align="center" valign="top" width="33%"><img src="docs/screenshots/coach.png" width="230" alt="Daily check-in: Tell it how you feel and it adjusts today"><br><b>Daily check-in</b><br><sub>Tell it how you feel and it adjusts today</sub></td>
+    <td align="center" valign="top" width="33%"><img src="docs/screenshots/plan-week.png" width="230" alt="Plan my week: 7 days fitted to each day's phase"><br><b>Plan my week</b><br><sub>7 days fitted to each day's phase</sub></td>
+    <td align="center" valign="top" width="33%"><img src="docs/screenshots/insights.png" width="230" alt="Insights: What you trained and what it did for you"><br><b>Insights</b><br><sub>What you trained and what it did for you</sub></td>
+  </tr>
+</table>
+
+### Food
+
+<table>
+  <tr>
+    <td align="center" valign="top" width="33%"><img src="docs/screenshots/foods.png" width="230" alt="This phase: Tap a food for why, examples and ideas"><br><b>This phase</b><br><sub>Tap a food for why, examples and ideas</sub></td>
+    <td align="center" valign="top" width="33%"><img src="docs/screenshots/ask.png" width="230" alt="Food coach: Ask anything about food and your cycle"><br><b>Food coach</b><br><sub>Ask anything about food and your cycle</sub></td>
+    <td align="center" valign="top" width="33%"><img src="docs/screenshots/recipes.png" width="230" alt="Recipes: Meals and drinks for each phase"><br><b>Recipes</b><br><sub>Meals and drinks for each phase</sub></td>
+  </tr>
+</table>
+
+### Make it yours
+
+<table>
+  <tr>
+    <td align="center" valign="top" width="33%"><img src="docs/screenshots/customise.png" width="230" alt="Customise: Four mascots, dark mode and five palettes"><br><b>Customise</b><br><sub>Four mascots, dark mode and five palettes</sub></td>
+    <td align="center" valign="top" width="33%"><img src="docs/screenshots/dark.png" width="230" alt="Dark mode: With Buff Blobby"><br><b>Dark mode</b><br><sub>With Buff Blobby</sub></td>
+    <td align="center" valign="top" width="33%"><img src="docs/screenshots/palettes.png" width="230" alt="Palettes: Matcha, with Bunny"><br><b>Palettes</b><br><sub>Matcha, with Bunny</sub></td>
+  </tr>
+</table>
+
+### Body and your data
+
+<table>
+  <tr>
+    <td align="center" valign="top" width="33%"><img src="docs/screenshots/measurements.png" width="230" alt="Measurements: Rings, weight trend and history"><br><b>Measurements</b><br><sub>Rings, weight trend and history</sub></td>
+    <td align="center" valign="top" width="33%"><img src="docs/screenshots/report.png" width="230" alt="PDF report: Your cycle, workouts and body in one report"><br><b>PDF report</b><br><sub>Your cycle, workouts and body in one report</sub></td>
+    <td align="center" valign="top" width="33%"><img src="docs/screenshots/delete.png" width="230" alt="Safe delete: A backup first, and DELETE typed to confirm"><br><b>Safe delete</b><br><sub>A backup first, and DELETE typed to confirm</sub></td>
+  </tr>
+</table>
 
 ## About Formly
 
