@@ -18,7 +18,7 @@ function resultField(body: unknown): unknown {
  * Throws an Error with a user-facing message on HTTP errors, timeouts (60s) and network failures.
  * `label` names the caller in console errors.
  */
-async function postForResult(endpoint: string, body: unknown, label: string): Promise<string> {
+async function postJson(endpoint: string, body: unknown, label: string): Promise<unknown> {
   let result: unknown;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 60000);
@@ -34,7 +34,7 @@ async function postForResult(endpoint: string, body: unknown, label: string): Pr
       const detail = errorDetail(err);
       throw new Error(detail ? String(detail) : `Server error ${res.status}`);
     }
-    result = resultField(await res.json());
+    result = await res.json();
   } catch(e) {
     const name = e instanceof Error ? e.name : undefined;
     const message = e instanceof Error ? e.message : undefined;
@@ -45,6 +45,11 @@ async function postForResult(endpoint: string, body: unknown, label: string): Pr
     // Also clear the timer when fetch / reading the body throws.
     clearTimeout(timeout);
   }
+  return result;
+}
+
+async function postForResult(endpoint: string, body: unknown, label: string): Promise<string> {
+  const result = resultField(await postJson(endpoint, body, label));
   // The callers only ever use the result as a string. A missing / non-string result
   // used to surface as a TypeError in the caller; keep it a TypeError here.
   if (typeof result !== "string") throw new TypeError(`Unexpected response from ${endpoint}: "result" is not a string`);
@@ -92,4 +97,17 @@ export async function getRecipePhoto(name: string): Promise<RecipePhoto | null> 
 /** Asks /api/form-tips for form tips for a workout; returns its plain-text reply (see `parseFormTips`). Errors are thrown like `callAI`'s. */
 export function callFormTips(name: string, muscle?: string): Promise<string> {
   return postForResult("/api/form-tips", { name: name.trim().slice(0, 80), muscle: muscle?.trim().slice(0, 40) || undefined }, "callFormTips");
+}
+
+/** The training coach chat (/api/coach-chat); same shape and errors as `callFoodChat`. */
+export function callCoachChat(messages: ChatMessage[], context?: string): Promise<string> {
+  return postForResult("/api/coach-chat", { messages: messages.map(({ role, content }) => ({ role, content })), context }, "callCoachChat");
+}
+
+/** Asks /api/plan-week for a 7-day plan; returns the cleaned plan (ids are library workout ids). */
+export async function callPlanWeek(request: unknown): Promise<{ summary: string; days: { date: string; ids: number[]; note: string }[] }> {
+  const body = await postJson("/api/plan-week", request, "callPlanWeek");
+  const plan = typeof body === "object" && body !== null && "plan" in body ? (body as { plan: unknown }).plan : null;
+  if (!plan || typeof plan !== "object" || !Array.isArray((plan as { days?: unknown }).days)) throw new Error("The coach sent back something unexpected. Try again.");
+  return plan as { summary: string; days: { date: string; ids: number[]; note: string }[] };
 }

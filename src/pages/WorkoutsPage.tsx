@@ -4,14 +4,15 @@ import { C, ACCENT } from "../theme";
 import { ALL_WORKOUTS } from "../data/workouts";
 import { SwipeToDelete } from "../components/SwipeToDelete";
 import { Glyph } from "../components/Glyph";
-import { AICoachPanel } from "../components/AICoachPanel";
+import { CoachPanel } from "../components/CoachPanel";
+import type { PhaseContext } from "../lib/phaseSuggest";
 import { MonthCalendar, type DayLook } from "../components/MonthCalendar";
 import { CustomWorkoutModal } from "../components/CustomWorkoutModal";
 import { WorkoutGuide, type GuideTarget } from "../components/WorkoutGuide";
 import { WorkoutInsights } from "../components/WorkoutInsights";
 import { WorkoutThumb } from "../components/WorkoutThumb";
 import { BrowseTab } from "../components/BrowseTab";
-import type { CycleInfo, LoggableWorkout, PhaseId, Measurements, Schedule, ScheduledWorkout, Setter, ShowToast, Workout, WorkoutLogEntry, WorkoutLogForm } from "../types";
+import type { CycleInfo, LoggableWorkout, PhaseId, Schedule, ScheduledWorkout, Setter, ShowToast, Workout, WorkoutLogEntry, WorkoutLogForm } from "../types";
 import { localDateKey } from "../lib/date";
 import { load, save } from "../lib/storage";
 import { addDays, groupLogByDate, weekStreak, monthStats, moveInSchedule, weekOf } from "../lib/workouts";
@@ -30,23 +31,21 @@ interface WorkoutsPageProps {
   setSchedule: Setter<Schedule>;
   workoutLog: WorkoutLogEntry[];
   setWorkoutLog: Setter<WorkoutLogEntry[]>;
-  /** The saved AI coach plan text (App state, persisted under "ai-plan"), or null. */
-  aiPlan: string | null;
-  setAiPlan: Setter<string | null>;
-  measurements: Measurements;
   cycleInfo: CycleInfo | null;
   showToast: ShowToast;
   /** Opens the food coach with a question (from a workout guide's "Ask the food coach"). */
   onAskCoach?: (question: string) => void;
   /** Cycle phase on a YYYY-MM-DD date, or null when unknown; feeds the History insights. */
   phaseOn?: (date: string) => PhaseId | null;
+  /** Cycle details on any date, for the Coach's week plan. */
+  ctxOn?: (date: string) => PhaseContext | null;
 }
 
-/** The Schedule / Browse / AI Coach / History switcher at the top of the Workouts tab. */
+/** The Schedule / Browse / Coach / History switcher at the top of the Workouts tab. */
 function TabRow({ tab, setTab }: { tab: WorkoutsTab; setTab: (tab: WorkoutsTab) => void }) {
   return (
     <div className="row" style={{gap:6,marginBottom:16,background:C.bgDeep,borderRadius:14,padding:5}}>
-      {([["schedule","Schedule"],["browse","Browse"],["ai","AI Coach"],["history","History"]] as const).map(([v,l])=>(
+      {([["schedule","Schedule"],["browse","Browse"],["ai","Coach"],["history","History"]] as const).map(([v,l])=>(
         <button key={v} onClick={()=>setTab(v)} style={{flex:1,padding:"7px 0",borderRadius:10,border:"none",cursor:"pointer",background:tab===v?C.white:"transparent",color:tab===v?C.accentInk:C.textSoft,fontWeight:600,fontSize:13,fontFamily:"DM Sans",boxShadow:tab===v?`0 1px 6px ${C.shadow}`:"none",transition:"all .15s"}}>{l}</button>
       ))}
     </div>
@@ -70,7 +69,7 @@ const firstCue = (w: GuideTarget) => builtInGuide(findLibraryWorkout(w)).guide?.
 
 // ══════════════════════════════════════════════════════════════════════════════
 // ─── WORKOUTS ─────────────────────────────────────────────────────────────────
-export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedule, workoutLog, setWorkoutLog, aiPlan, setAiPlan, measurements, cycleInfo, showToast, onAskCoach, phaseOn }: WorkoutsPageProps) {
+export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedule, workoutLog, setWorkoutLog, cycleInfo, showToast, onAskCoach, phaseOn, ctxOn }: WorkoutsPageProps) {
   const [tab, setTab] = useState<WorkoutsTab>("schedule");
   const [logModal, setLogModal] = useState<LoggableWorkout | null>(null);
   const [logForm, setLogForm] = useState<WorkoutLogForm>(EMPTY_LOG_FORM);
@@ -418,7 +417,7 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
       )}
 
 
-      {tab==="ai" && <AICoachPanel measurements={measurements} cycleInfo={cycleInfo} plan={aiPlan} setPlan={setAiPlan} showToast={showToast}/>}
+      {tab==="ai" && <CoachPanel cycleInfo={cycleInfo} ctxOn={ctxOn ?? (() => null)} schedule={schedule} setSchedule={setSchedule} workoutLog={workoutLog} today={todayStr} showToast={showToast}/>}
 
       {customModal&&<CustomWorkoutModal initial={customModal.initial} onSave={saveCustomWorkout} onClose={()=>setCustomModal(null)}/>}
 

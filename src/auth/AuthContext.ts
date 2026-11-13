@@ -11,6 +11,8 @@ export interface AuthContextValue {
   signOut: () => Promise<void>;
   /** Deletes the signed-in user's cloud copy (no-op when not signed in). */
   deleteCloudData: () => Promise<void>;
+  /** Uploads this device's data to the account straight away (no-op when not signed in). */
+  saveToCloud: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextValue>({
@@ -19,6 +21,7 @@ export const AuthContext = createContext<AuthContextValue>({
   startSignIn: () => {},
   signOut: async () => {},
   deleteCloudData: async () => {},
+  saveToCloud: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);

@@ -13,6 +13,7 @@ import { seedHistory, weightHistoryFrom } from "./lib/measurementHistory";
 import { OnboardingFlow } from "./pages/OnboardingFlow";
 import { Dashboard } from "./pages/Dashboard";
 import { NutritionPage } from "./pages/NutritionPage";
+import type { PhaseContext } from "./lib/phaseSuggest";
 import { BodyPage } from "./pages/BodyPage";
 import { WorkoutsPage } from "./pages/WorkoutsPage";
 import { SettingsPage } from "./pages/SettingsPage";
@@ -37,7 +38,6 @@ export default function App() {
   const [periodHistory,setPeriodHistory]=useState<PeriodEntry[]>(()=>load("period-history",[]));
   const [cycleLength,setCycleLength]=useState<number>(()=>load("cycle-length",28));
   const [periodLengthSetting,setPeriodLengthSetting]=useState<number>(()=>load("period-length",5));
-  const [aiPlan,setAiPlan]=useState<string | null>(()=>load<string | null>("ai-plan",null));
   const [toast,showToast]=useToast();
   const [addOpen,setAddOpen]=useState(false);
   // A question to pre-fill in the Nutrition "Ask" chat (null = none; "" just opens the chat).
@@ -53,6 +53,10 @@ export default function App() {
   // Phase on any date (for workout insights); null without cycle data.
   const ends=bleedEnds(withCurrentStart(periodHistory,periodStart),periodLen.length);
   const phaseOn=(date: string): PhaseId | null=>starts.length?cycleDayOn(date,starts,stats.length,periodLen.length,ends)?.phase??null:null;
+  const ctxOn=(date: string): PhaseContext | null=>{
+    const d=starts.length?cycleDayOn(date,starts,stats.length,periodLen.length,ends):null;
+    return d?{phase:{id:d.phase},dayOfCycle:d.dayOfCycle,cycleLength:stats.length}:null;
+  };
 
   /** Records a period that started on `date` (YYYY-MM-DD); the latest start drives the cycle. */
   const logPeriodStart=(date: string)=>{
@@ -90,7 +94,6 @@ export default function App() {
   useEffect(()=>{save("period-history",periodHistory);},[periodHistory]);
   useEffect(()=>{save("cycle-length",cycleLength);},[cycleLength]);
   useEffect(()=>{save("period-length",periodLengthSetting);},[periodLengthSetting]);
-  useEffect(()=>{save("ai-plan",aiPlan);},[aiPlan]);
 
   const finishOnboard=(name: string,pStart: string,cLen: number)=>{
     if(name){setUserName(name);save("user-name",name);}
@@ -136,7 +139,7 @@ export default function App() {
         {tab==="home"&&<Dashboard schedule={schedule} weightHistory={weightHistory} cycleInfo={cycleInfo} workoutLog={workoutLog} userName={userName} predictionSpread={stats.spread} onPeriodStarted={()=>{logPeriodStart(localDateKey());showToast("Period logged");}} onOpenBody={()=>setTab("body")}/>}
         {tab==="nutrition"&&<NutritionPage cycleInfo={cycleInfo} showToast={showToast} askDraft={askDraft} clearAskDraft={clearAskDraft}/>}
         {tab==="body"&&<BodyPage measurements={measurements} setMeasurements={setMeasurements} measurementHistory={measurementHistory} setMeasurementHistory={setMeasurementHistory} weightHistory={weightHistory} cycleInfo={cycleInfo} periodStart={periodStart} setPeriodStart={setPeriodStart} periodHistory={periodHistory} setPeriodHistory={setPeriodHistory} cycleLength={cycleLength} setCycleLength={setCycleLength} starts={starts} stats={stats} logPeriodStart={logPeriodStart} periodLength={periodLen} periodLengthSetting={periodLengthSetting} setPeriodLengthSetting={setPeriodLengthSetting} logPeriodEnd={logPeriodEnd} logPeriodFlow={logPeriodFlow} showToast={showToast}/>}
-        {tab==="workouts"&&<WorkoutsPage workoutPlan={workoutPlan} setWorkoutPlan={setWorkoutPlan} schedule={schedule} setSchedule={setSchedule} workoutLog={workoutLog} setWorkoutLog={setWorkoutLog} aiPlan={aiPlan} setAiPlan={setAiPlan} measurements={measurements} cycleInfo={cycleInfo} showToast={showToast} onAskCoach={onAskCoach} phaseOn={phaseOn}/>}
+        {tab==="workouts"&&<WorkoutsPage workoutPlan={workoutPlan} setWorkoutPlan={setWorkoutPlan} schedule={schedule} setSchedule={setSchedule} workoutLog={workoutLog} setWorkoutLog={setWorkoutLog} cycleInfo={cycleInfo} showToast={showToast} onAskCoach={onAskCoach} phaseOn={phaseOn} ctxOn={ctxOn}/>}
         {tab==="settings"&&<SettingsPage phase={cycleInfo?.phase.id ?? null} userName={userName} setUserName={setUserName} showToast={showToast} cycle={periodStart?{length:stats.length,cyclesLogged:stats.cyclesLogged,periodLength:periodLen.length,periodsLogged:periodLen.logged}:null} onOpenCycle={()=>setTab("body")}/>}
         <nav className="bottom-nav" aria-label="Main">
           <div className="nav-pill">

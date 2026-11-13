@@ -5,6 +5,7 @@ import { save } from "../lib/storage";
 import { useAuth } from "../auth/AuthContext";
 import { Glyph } from "../components/Glyph";
 import { CustomiseCard } from "../components/CustomiseCard";
+import { DataCard } from "../components/DataCard";
 import type { PhaseId, Setter, ShowToast } from "../types";
 
 interface CycleSummary {
@@ -33,7 +34,7 @@ const FEATURES = [
   { emoji: "💭", title: "Ask anything", desc: "A food coach for cravings, bloating, snacks and goals." },
   { emoji: "🏋️", title: "Workouts that fit", desc: "Picks for your phase, 50 exercises with pictures, sessions and your own." },
   { emoji: "📏", title: "Body tracking", desc: "Weight and measurements over time, in context." },
-  { emoji: "✨", title: "AI coach", desc: "Plans shaped by your phase, goal and routine." },
+  { emoji: "✨", title: "Your coach", desc: "A daily check-in, a week planned around your cycle, and answers to your training questions." },
 ];
 
 const PRINCIPLES = [
@@ -65,7 +66,7 @@ export function SettingsPage({ userName, setUserName, showToast, cycle, onOpenCy
     { emoji: "📅", title: synced ? "Stored on this device and in your account" : "Stored on this device", desc: synced
       ? "Your logs live in this browser and sync to your account, where only you can read them."
       : "Your periods, workouts, food chats and measurements stay in this browser." },
-    { emoji: "✨", title: "AI features", desc: "When you ask the food coach, make a recipe or get a plan, your question and the context it needs (like your phase and goal) are sent to our AI service to write the answer." },
+    { emoji: "✨", title: "AI features", desc: "When you ask a coach, make a recipe or plan your week, your question and the context it needs (like your phase, goal and recent workouts) are sent to our AI service to write the answer." },
     { emoji: "🥗", title: "Recipe photos", desc: "Recipe names are sent to Openverse to find openly licensed photos. Nothing about you is included." },
   ];
 
@@ -173,6 +174,10 @@ export function SettingsPage({ userName, setUserName, showToast, cycle, onOpenCy
         </div>
       </Section>
 
+      <Section label="Your data">
+        <DataCard showToast={showToast}/>
+      </Section>
+
       <Section label="Data and privacy">
         <div className="card" style={{ padding: 0 }}>
           {privacy.map((p, i) => (
@@ -184,13 +189,6 @@ export function SettingsPage({ userName, setUserName, showToast, cycle, onOpenCy
               </div>
             </div>
           ))}
-          <div style={{ padding: "4px 16px 16px" }}>
-            <button className="btn btn-ghost btn-sm" style={{ color: C.accentInk, borderColor: C.roseDeep }} onClick={() => {
-              const msg = synced ? "Delete all your data from this device and your account? This cannot be undone." : "Clear all app data? This cannot be undone.";
-              if (!window.confirm(msg)) return;
-              void auth.deleteCloudData().then(() => { localStorage.clear(); window.location.reload(); }, () => showToast("Couldn't delete cloud data. Try again."));
-            }}>Clear all data</button>
-          </div>
         </div>
       </Section>
 

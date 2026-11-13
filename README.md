@@ -44,7 +44,7 @@ These are the same words as the About section on the app's Profile screen.
 | **Ask anything** | A food coach for cravings, bloating, snacks and goals. |
 | **Workouts that fit** | Picks for your phase, 50 exercises with pictures, sessions and your own. |
 | **Body tracking** | Weight and measurements over time, in context. |
-| **AI coach** | Plans shaped by your phase, goal and routine. |
+| **Your coach** | A daily check-in, a week planned around your cycle, and answers to your training questions. |
 
 **Our approach:** your body isn't the same every week, so your plan shouldn't be either.
 
@@ -76,7 +76,12 @@ These are the same words as the About section on the app's Profile screen.
 - **Exercise library**: about 50 exercises across glutes, legs, back, chest, shoulders, arms, core, cardio and recovery, filterable by muscle group, each with a demonstration picture where one exists
 - **For your phase**: Browse opens with workouts that suit your current phase, each with a one-line reason
 - **Sessions**: ready-made sessions (Glute day, Leg day, Upper body, Period-friendly flow and more) or your own, built from the library or exercises you type in yourself (saved under "Yours"); add a whole session to a day in one tap, shown grouped on the schedule while each exercise keeps its own log
-- **AI coach**: personalised plans from your goal, activity level, focus areas and current phase
+- **Coach**: one place that brings it together
+  - **Daily check-in**: tap how you feel (Drained, Okay, Great, plus cramps, soreness and more) and the coach adjusts today: gentler swaps, a rest day, or a nudge to push
+  - **Plan my week**: one tap plans the next 7 days around your predicted phase each day, the muscles you've rested and how you feel, then adds it to your schedule. If the AI can't be reached, a built-in planner makes the week instead
+  - **Weekly recap**: workouts this week against last week, and what you trained
+  - **Ask your coach**: a training chat that knows your phase and recent workouts
+- **Your data**: download a PDF report (cycle history, workouts and measurements, ready to share with a doctor), download a full backup and restore it later, and delete everything only after typing DELETE to confirm
 
 **Nutrition**
 - **This phase**: foods to focus on and ease off, with the reason for each. Tap one for more on why, foods that count and easy meal ideas, or what to have instead
@@ -151,7 +156,9 @@ The frontend reads the public Supabase URL and anon key from `GET /api/config`, 
 | `POST` | `/api/recipe` | Generate a recipe for a phase from optional ingredients |
 | `POST` | `/api/form-tips` | AI form cues, a common mistake and benefits for a custom workout |
 | `GET` | `/api/recipe-photo?q=` | An openly licensed food photo with credit (Openverse; Pexels if `PEXELS_API_KEY` is set) |
-| `POST` | `/api/ai-plan` | Generate a personalised workout and nutrition plan |
+| `POST` | `/api/plan-week` | Plan the next 7 days from the workout library, fitted to each day's phase |
+| `POST` | `/api/coach-chat` | Training coach chat (cycle and recent-training aware) |
+| `POST` | `/api/ai-plan` | Generate a personalised workout and nutrition plan (older clients) |
 | `POST` | `/api/body-insight` | Cycle-aware feedback on body measurements |
 | `POST` | `/api/nutrition` | Estimate macros from a food description |
 | `POST` | `/api/health-check` | Feedback on health goals |

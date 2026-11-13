@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { RotateCcw, SendHorizontal, Trash2 } from "lucide-react";
 import { C } from "../theme";
-import { callFoodChat } from "../lib/api";
+import { callCoachChat, callFoodChat } from "../lib/api";
 import { load, save } from "../lib/storage";
 import { buildFoodContext, MAX_USER_CHARS, recentForSend, STARTER_PROMPTS, stripEmphasis, trimHistory } from "../data/foodChat";
 import { Glyph } from "./Glyph";
@@ -11,7 +11,27 @@ interface FoodChatProps {
   cycleInfo: CycleInfo | null;
   /** Pre-fills the input (e.g. a question from a workout guide); not sent automatically. */
   initialDraft?: string;
+  /** "training" turns this into the Coach tab's chat (own history, prompts and endpoint). */
+  topic?: "food" | "training";
+  /** Extra context for the training coach (recent training, today's check-in). */
+  extraContext?: string;
 }
+
+const TOPICS = {
+  food: {
+    key: "food-chat", title: "Ask your food coach", emoji: "🥗", emptyTitle: "What's on your plate?",
+    emptyText: "Ask anything about food, cravings, hydration or eating for your goals.",
+    starters: STARTER_PROMPTS, label: "Ask a food question", placeholder: "Ask about food, cravings, snacks...",
+    disclaimer: "General food guidance, not medical advice. For symptoms that worry you, see a doctor or dietitian.",
+  },
+  training: {
+    key: "coach-chat", title: "Ask your coach", emoji: "💪", emptyTitle: "What do you want to work on?",
+    emptyText: "Ask about workouts, form, progress, soreness or training around your cycle.",
+    starters: ["How do I get stronger glutes?", "What should I do on a low-energy day?", "How many sets and reps should I do?", "Is it okay to train on my period?"],
+    label: "Ask your coach", placeholder: "Ask about workouts, form, rest...",
+    disclaimer: "General fitness guidance, not medical advice. For pain or injuries, see a doctor or physio.",
+  },
+} as const;
 
 const PURPLE = C.accentInk;
 
@@ -27,8 +47,9 @@ function TypingDots() {
 }
 
 /** The "Ask" sub-tab: a cycle-aware food coach chat, persisted under "food-chat". */
-export function FoodChat({ cycleInfo, initialDraft }: FoodChatProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>(() => trimHistory(load<ChatMessage[]>("food-chat", [])));
+export function FoodChat({ cycleInfo, initialDraft, topic = "food", extraContext }: FoodChatProps) {
+  const t = TOPICS[topic];
+  const [messages, setMessages] = useState<ChatMessage[]>(() => trimHistory(load<ChatMessage[]>(t.key, [])));
   const [input, setInput] = useState(() => (initialDraft ?? "").slice(0, MAX_USER_CHARS));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +59,7 @@ export function FoodChat({ cycleInfo, initialDraft }: FoodChatProps) {
   const endRef = useRef<HTMLDivElement>(null);
   const mounted = useRef(false);
 
-  useEffect(() => { save("food-chat", messages); }, [messages]);
+  useEffect(() => { save(t.key, messages); }, [t.key, messages]);
 
   useEffect(() => {
     // Don't jump the page on first render; follow new messages afterwards.
@@ -51,7 +72,11 @@ export function FoodChat({ cycleInfo, initialDraft }: FoodChatProps) {
     setLoading(true);
     setError(null);
     try {
-      const reply = stripEmphasis(await callFoodChat(recentForSend(history), buildFoodContext(cycleInfo, goal) || undefined));
+      const context = topic === "training"
+        ? [cycleInfo ? `${cycleInfo.phase.label} phase, day ${cycleInfo.dayOfCycle} of ${cycleInfo.cycleLength}.` : "", extraContext ?? ""].filter(Boolean).join(" ").slice(0, 500)
+        : buildFoodContext(cycleInfo, goal);
+      const ask = topic === "training" ? callCoachChat : callFoodChat;
+      const reply = stripEmphasis(await ask(recentForSend(history), context || undefined));
       if (id !== requestId.current) return;
       setMessages(m => trimHistory([...m, { role: "assistant", content: reply || "Sorry, I didn't catch that. Could you ask again?" }]));
     } catch (e) {
@@ -83,7 +108,7 @@ export function FoodChat({ cycleInfo, initialDraft }: FoodChatProps) {
     <div>
       <div className="row-between" style={{marginBottom:12}}>
         <div>
-          <div style={{fontWeight:600,fontSize:14,color:C.textMid}}>Ask your food coach</div>
+          <div style={{fontWeight:600,fontSize:14,color:C.textMid}}>{t.title}</div>
           <div style={{fontSize:12,color:C.textSoft,fontWeight:500,marginTop:2}}>
             {cycleInfo ? <>Answers tuned to your {cycleInfo.phase.label.toLowerCase()} phase (day {cycleInfo.dayOfCycle})</> : "Log your cycle in Body for phase-aware answers"}
           </div>
@@ -97,14 +122,14 @@ export function FoodChat({ cycleInfo, initialDraft }: FoodChatProps) {
 
       {messages.length === 0 && !loading ? (
         <div className="card" style={{marginBottom:14,textAlign:"center",padding:"22px 18px"}}>
-          <div style={{marginBottom:10}}><Glyph emoji="🥗" size={20}/></div>
-          <div style={{fontWeight:600,fontSize:15,marginBottom:6}}>What's on your plate?</div>
+          <div style={{marginBottom:10}}><Glyph emoji={t.emoji} size={20}/></div>
+          <div style={{fontWeight:600,fontSize:15,marginBottom:6}}>{t.emptyTitle}</div>
           <div style={{fontSize:12,color:C.textSoft,fontWeight:500,lineHeight:1.6,marginBottom:14}}>
-            Ask anything about food, cravings, hydration or eating for your goals.
-            {goal && <> I'll keep your goal in mind: <span style={{color:C.textMid,fontWeight:700}}>{goal}</span>.</>}
+            {t.emptyText}
+            {topic === "food" && goal && <> I'll keep your goal in mind: <span style={{color:C.textMid,fontWeight:700}}>{goal}</span>.</>}
           </div>
           <div style={{display:"flex",flexWrap:"wrap",gap:8,justifyContent:"center"}}>
-            {STARTER_PROMPTS.map(p => (
+            {t.starters.map(p => (
               <button key={p} className="chip" onClick={() => send(p)} style={{textAlign:"left",lineHeight:1.4}}>{p}</button>
             ))}
           </div>
@@ -132,12 +157,12 @@ export function FoodChat({ cycleInfo, initialDraft }: FoodChatProps) {
       )}
 
       <form className="row" style={{gap:8}} onSubmit={e => { e.preventDefault(); send(input); }}>
-        <input className="input" aria-label="Ask a food question" placeholder="Ask about food, cravings, snacks..." autoFocus={!!initialDraft} value={input} maxLength={MAX_USER_CHARS} onChange={e => setInput(e.target.value)} style={{fontSize:13}}/>
+        <input className="input" aria-label={t.label} placeholder={t.placeholder} autoFocus={!!initialDraft} value={input} maxLength={MAX_USER_CHARS} onChange={e => setInput(e.target.value)} style={{fontSize:13}}/>
         <button type="submit" className="btn btn-primary" aria-label="Send" disabled={loading || !input.trim()} style={{flexShrink:0,width:44,height:44,padding:0,opacity:loading||!input.trim()?0.6:1}}>
           {loading ? <div className="spin"/> : <SendHorizontal size={18} aria-hidden="true"/>}
         </button>
       </form>
-      <div style={{fontSize:10,color:C.textSoft,fontWeight:500,marginTop:8,textAlign:"center",lineHeight:1.5}}>General food guidance, not medical advice. For symptoms that worry you, see a doctor or dietitian.</div>
+      <div style={{fontSize:10,color:C.textSoft,fontWeight:500,marginTop:8,textAlign:"center",lineHeight:1.5}}>{t.disclaimer}</div>
     </div>
   );
 }

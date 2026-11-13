@@ -3,7 +3,7 @@ import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { CSS, C } from "../theme";
 import { Glyph } from "../components/Glyph";
 import { getSupabase } from "../lib/supabase";
-import { clearAppData, deleteRemoteState, pullOrSeed, startAutoSync } from "../lib/sync";
+import { clearAppData, deleteRemoteState, pullOrSeed, pushSnapshot, startAutoSync } from "../lib/sync";
 import { AuthContext, type AuthContextValue } from "./AuthContext";
 import { AuthScreen } from "./AuthScreen";
 
@@ -124,6 +124,9 @@ export function AuthGate({ children }: { children: ReactNode }) {
       },
       deleteCloudData: async () => {
         if (state.status === "signed-in") await deleteRemoteState(state.client, state.user.id);
+      },
+      saveToCloud: async () => {
+        if (state.status === "signed-in") await pushSnapshot(state.client, state.user.id);
       },
     };
   }, [state]);

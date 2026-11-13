@@ -271,6 +271,114 @@ async def food_chat(req: FoodChatRequest):
     return {"result": strip_markdown(text)}
 
 
+# ── Training coach: chat and "Plan my week" ─────────────────────────────────
+
+COACH_CHAT_SYSTEM = """You are Formly's training coach: a warm, practical, cycle-aware personal trainer for women.
+How to answer:
+- Be concise: a short direct answer, then a few practical ideas. Usually under 150 words.
+- Plain text only. No markdown tables, headings or bold. Short bullet lines starting with "- " are fine.
+- Cover workouts, form, sets and reps, progression, recovery, rest days, motivation and how training fits each cycle phase. Tie advice to the user's phase, energy and recent training when they are given.
+- Keep it safe for a healthy adult: suggest easier versions, warm-ups and rest. Never promise specific results, never push through pain, and never give extreme weight-loss or overtraining advice.
+- If the user mentions pain that is sharp, lasting or getting worse, an injury, dizziness, chest pain, pregnancy, or very heavy or painful periods, respond kindly and suggest seeing a doctor or physiotherapist before training through it.
+- For food questions give a short answer and suggest the food coach in the Nutrition tab for more.
+- Stay on training, movement and recovery. If asked about something unrelated, politely say what you can help with."""
+
+
+@app.post("/api/coach-chat")
+async def coach_chat(req: FoodChatRequest):
+    system = COACH_CHAT_SYSTEM
+    if req.context:
+        system += f"\n\nWhat the app knows about this user (use it when relevant): {req.context}"
+    messages = [{"role": "system", "content": system}]
+    messages += [{"role": m.role, "content": m.content} for m in req.messages]
+    text = await call_groq_messages(messages, max_tokens=500, temperature=0.6)
+    return {"result": strip_markdown(text)}
+
+
+PLAN_WEEK_SYSTEM = """You are Formly's training coach planning someone's next 7 days around their menstrual cycle.
+Rules:
+- Use ONLY workout ids from the CANDIDATES list. Never invent workouts.
+- Plan exactly the number of workout days asked for; the other days are rest days with an empty list.
+- Give each workout day 1 or 2 workouts. Spread workout days out and avoid training the same muscle group on two days in a row.
+- Fit the phase: menstrual = gentle (yoga, pilates, walks, light strength); follicular = build up, try harder sessions;
+  ovulation = strongest days, harder strength and intervals; luteal = steady and moderate; the last days before a period = lighter.
+- Favour muscle groups the user hasn't trained recently. If their energy today is low, make today gentle or a rest day.
+- Each note is one short, friendly sentence (under 16 words) saying why that day looks the way it does.
+Reply with JSON only, no other text, in exactly this shape:
+{"summary": "<one or two friendly sentences about the week>", "days": [{"date": "YYYY-MM-DD", "ids": [<candidate ids>], "note": "<sentence>"}]}"""
+
+PlanText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=60)]
+
+
+class PlanDayIn(BaseModel):
+    date: Annotated[str, StringConstraints(pattern=r"^\d{4}-\d{2}-\d{2}$")]
+    weekday: PlanText
+    phase: Optional[Literal["menstrual", "follicular", "ovulation", "luteal", "late luteal"]] = None
+
+
+class PlanCandidate(BaseModel):
+    id: int
+    name: PlanText
+    muscle: Annotated[str, StringConstraints(strip_whitespace=True, max_length=40)] = ""
+    kind: Literal["strength", "cardio", "recovery"]
+
+
+class PlanWeekRequest(BaseModel):
+    days: list[PlanDayIn] = Field(min_length=1, max_length=7)
+    candidates: list[PlanCandidate] = Field(min_length=1, max_length=120)
+    sessions: int = Field(ge=1, le=7)
+    context: OptionalShortText = None
+
+
+def _json_object(text: str) -> Optional[dict]:
+    """The first {...} object in a model reply (models sometimes wrap JSON in prose or fences)."""
+    import json
+    start = text.find("{")
+    end = text.rfind("}")
+    if start < 0 or end <= start:
+        return None
+    try:
+        value = json.loads(text[start:end + 1])
+    except ValueError:
+        return None
+    return value if isinstance(value, dict) else None
+
+
+def clean_week_plan(raw: Optional[dict], req: PlanWeekRequest) -> dict:
+    """Keeps only the requested dates and known candidate ids (at most 2 a day), in date order."""
+    valid_ids = {c.id for c in req.candidates}
+    wanted = [d.date for d in req.days]
+    by_date: dict[str, dict] = {}
+    for day in (raw or {}).get("days") or []:
+        if not isinstance(day, dict) or day.get("date") not in wanted or day["date"] in by_date:
+            continue
+        ids = []
+        for i in day.get("ids") or []:
+            if isinstance(i, int) and i in valid_ids and i not in ids:
+                ids.append(i)
+        note = day.get("note") if isinstance(day.get("note"), str) else ""
+        by_date[day["date"]] = {"date": day["date"], "ids": ids[:2], "note": strip_markdown(note)[:160]}
+    days = [by_date.get(d, {"date": d, "ids": [], "note": ""}) for d in wanted]
+    summary = (raw or {}).get("summary")
+    return {"summary": strip_markdown(summary)[:300] if isinstance(summary, str) else "", "days": days}
+
+
+@app.post("/api/plan-week")
+async def plan_week(req: PlanWeekRequest):
+    lines = [f"Workout days wanted: {req.sessions} of the next {len(req.days)}."]
+    if req.context:
+        lines.append(f"About the user: {req.context}")
+    lines.append("DAYS:")
+    lines += [f"- {d.date} ({d.weekday}): {d.phase or 'phase unknown'}" for d in req.days]
+    lines.append("CANDIDATES (id | name | muscle | kind):")
+    lines += [f"- {c.id} | {c.name} | {c.muscle or '-'} | {c.kind}" for c in req.candidates]
+    text = await call_groq(prompt="\n".join(lines), system=PLAN_WEEK_SYSTEM, max_tokens=900, temperature=0.5)
+    plan = clean_week_plan(_json_object(text), req)
+    if not any(d["ids"] for d in plan["days"]):
+        raise HTTPException(status_code=502, detail="The coach couldn't make a plan this time. Try again.")
+    return {"plan": plan}
+
+
 # ── Recipe generator ─────────────────────────────────────────────────────────
 
 PHASE_NUTRIENTS = {
