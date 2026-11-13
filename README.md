@@ -4,11 +4,11 @@
 
 **Fitness that follows your cycle.** Workouts, food and body tracking that adapt to the four phases of your cycle, and learn your rhythm the more you log.
 
-Formly is a mobile-first fitness app that combines workout planning, food guidance and optional menstrual-cycle tracking, with AI coaching that adapts to where you are in your cycle. It installs as a PWA and works offline.
+Formly is a mobile-first fitness app that combines workout planning, food guidance and optional menstrual-cycle tracking, with a coach that checks in on how you feel and plans your week around where you are in your cycle. Pick your mascot, colours and dark mode, and download your data as a PDF report. It installs as a PWA and works offline.
 
 **Live demo:** https://formly-teal.vercel.app
 
-**Tech Stack:** React 19 · TypeScript · Vite · Vitest · FastAPI · Groq LLM API · Supabase (auth + Postgres) · Openverse (recipe photos) · wger (exercise images) · Vercel (frontend + serverless API)
+**Tech Stack:** React 19 · TypeScript · Vite · Vitest · FastAPI · Groq LLM API · Supabase (auth + Postgres) · jsPDF (reports) · Openverse (recipe photos) · wger (exercise images) · Vercel (frontend + serverless API)
 
 ---
 
@@ -29,6 +29,16 @@ Formly is a mobile-first fitness app that combines workout planning, food guidan
   <img src="docs/screenshots/measurements.png" width="240" alt="Body: measurements, weight trend and measurement history">
   <img src="docs/screenshots/profile.png" width="240" alt="Profile: details, cycle summary and about Formly">
   <img src="docs/screenshots/profile-about.png" width="240" alt="Profile: what Formly does, our approach, and data and privacy">
+</p>
+<p align="center">
+  <img src="docs/screenshots/coach.png" width="240" alt="Coach: a daily check-in that suggests gentler swaps on a drained, crampy day">
+  <img src="docs/screenshots/plan-week.png" width="240" alt="Coach: Plan my week, seven days fitted to each day's cycle phase">
+  <img src="docs/screenshots/dark.png" width="240" alt="Dark mode with Buff Blobby flexing in the cycle ring">
+</p>
+<p align="center">
+  <img src="docs/screenshots/customise.png" width="240" alt="Customise: four mascots, light, dark or device theme, and five colour palettes">
+  <img src="docs/screenshots/report.png" width="240" alt="PDF report: cycle summary, period history, workouts and measurements">
+  <img src="docs/screenshots/delete.png" width="240" alt="Delete all data: offers a backup first and needs DELETE typed to confirm">
 </p>
 
 ## About Formly
