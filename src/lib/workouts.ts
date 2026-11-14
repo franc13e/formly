@@ -32,6 +32,34 @@ export function moveInSchedule(schedule: Schedule, from: string, index: number, 
   return next;
 }
 
+/**
+ * Moves every workout of session `group` on day `from` to the end of day `to`, in order,
+ * keeping them grouped. A "rest" target becomes a list; an emptied source day is removed.
+ * Returns `schedule` unchanged when nothing would move.
+ */
+export function moveGroupInSchedule(schedule: Schedule, from: string, group: string, to: string): Schedule {
+  const source = schedule[from];
+  if (from === to || !Array.isArray(source)) return schedule;
+  const inGroup = (g?: string) => (g?.trim() || "") === group.trim();
+  const moving = source.filter(w => inGroup(w.group));
+  if (!moving.length) return schedule;
+  const rest = source.filter(w => !inGroup(w.group));
+  const target = schedule[to];
+  const next: Schedule = { ...schedule, [to]: [...(Array.isArray(target) ? target : []), ...moving] };
+  if (rest.length) next[from] = rest;
+  else delete next[from];
+  return next;
+}
+
+/**
+ * The 7 days offered in a "Move to" picker for a workout on `day`: from two days before it,
+ * but never before today, so on a Sunday you can still move into next week.
+ */
+export function moveTargets(day: string, today: string): string[] {
+  const from = addDays(day, -2) < today ? today : addDays(day, -2);
+  return Array.from({ length: 7 }, (_, i) => addDays(from, i));
+}
+
 /** Number of weeks in a row (Mon to Sun) with at least one log, ending this week (or last week, if this week has none yet). */
 export function weekStreak(dates: Iterable<string>, today: string = localDateKey()): number {
   const weeks = new Set([...dates].filter(d => d <= today).map(d => weekOf(d)[0]));

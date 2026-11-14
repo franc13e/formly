@@ -15,7 +15,7 @@ import { BrowseTab } from "../components/BrowseTab";
 import type { CycleInfo, LoggableWorkout, PhaseId, Schedule, ScheduledWorkout, Setter, ShowToast, Workout, WorkoutLogEntry, WorkoutLogForm } from "../types";
 import { localDateKey } from "../lib/date";
 import { load, save } from "../lib/storage";
-import { addDays, groupLogByDate, weekStreak, monthStats, moveInSchedule, weekOf } from "../lib/workouts";
+import { addDays, groupLogByDate, weekStreak, monthStats, moveGroupInSchedule, moveInSchedule, moveTargets, weekOf } from "../lib/workouts";
 import { builtInGuide, cachedFormTips, findLibraryWorkout } from "../lib/formTips";
 import { groupDayItems, toScheduled } from "../lib/sessions";
 import { phaseFit, workoutKind, type WorkoutKind } from "../lib/workoutKind";
@@ -79,6 +79,8 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
   const [scheduleView, setScheduleView] = useState<ScheduleView>("week");
   const [movingIdx, setMovingIdx] = useState<number | null>(null);
   const [moveDate, setMoveDate] = useState("");
+  // A whole session being moved (its group name), shown under the session header.
+  const [movingGroup, setMovingGroup] = useState<string | null>(null);
   const [historyDay, setHistoryDay] = useState<string | null>(null);
   const [customWorkouts, setCustomWorkouts] = useState<Workout[]>(()=>load("custom-workouts",[]));
   const [customModal, setCustomModal] = useState<{ initial: Workout | null } | null>(null);
@@ -107,7 +109,13 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
     setMovingIdx(null); setMoveDate("");
     showToast(`Moved to ${shortDate(to)}`);
   };
-  const selectDay = (date: string) => { setPickingDay(p => p===date ? null : date); setMovingIdx(null); };
+  const moveGroup = (from: string, group: string, to: string) => {
+    if (!to || to===from) return;
+    setSchedule(s => moveGroupInSchedule(s, from, group, to));
+    setMovingGroup(null); setMoveDate("");
+    showToast(`Moved ${group} to ${shortDate(to)}`);
+  };
+  const selectDay = (date: string) => { setPickingDay(p => p===date ? null : date); setMovingIdx(null); setMovingGroup(null); };
   const openLog = (w: LoggableWorkout) => {
     setLogModal(w);
     setLogKind(workoutKind(findLibraryWorkout(w) ?? { name: w.name, muscle: w.muscle }));
@@ -258,7 +266,25 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
 
                 {/* Workouts for this day, grouped under their session when added as one */}
                 {groupDayItems(items).map((b,bi)=>{
-                  const renderItem = (item: ScheduledWorkout, idx: number) => (
+                  // "Move to" day picker, shared by single workouts and whole sessions.
+                  const movePanel = (onMove: (to: string) => void) => (
+                    <div className="slide-in" style={{padding:"0 12px 12px"}}>
+                      <div style={{fontSize:11,color:C.textSoft,fontWeight:700,marginBottom:6}}>Move to:</div>
+                      <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:4,marginBottom:8}}>
+                        {moveTargets(pickingDay,todayStr).map(d=>{const dt=new Date(d+"T12:00"),cur=d===pickingDay||d<todayStr;return(
+                          <button key={d} disabled={cur} onClick={()=>onMove(d)} aria-label={`Move to ${shortDate(d)}`} style={{padding:"6px 0",borderRadius:10,border:`1.5px solid ${cur?C.border:C.lavenderDeep}`,background:cur?"transparent":C.white,color:cur?C.textSoft:C.accentDeep,cursor:cur?"default":"pointer",fontFamily:"DM Sans",display:"flex",flexDirection:"column",alignItems:"center",lineHeight:1.2,opacity:cur?.5:1}}>
+                            <span style={{fontSize:9,fontWeight:600}}>{dt.toLocaleDateString("en-US",{weekday:"short"})}</span>
+                            <span style={{fontSize:12,fontWeight:700}}>{dt.getDate()}</span>
+                          </button>
+                        );})}
+                      </div>
+                      <div className="row" style={{gap:8}}>
+                        <input className="input" type="date" aria-label="Move to another date" value={moveDate} onChange={e=>setMoveDate(e.target.value)} style={{fontSize:13,padding:"8px 12px"}}/>
+                        <button className="btn btn-primary btn-sm" style={{flexShrink:0}} disabled={!moveDate||moveDate===pickingDay} onClick={()=>onMove(moveDate)}>Move</button>
+                      </div>
+                    </div>
+                  );
+                  const renderItem = (item: ScheduledWorkout, idx: number, inSession = false) => (
                     <div key={idx} style={{background:C.bgDeep,borderRadius:12,marginBottom:8}}>
                       <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px"}}>
                         <WorkoutThumb workout={{...guideTargetFor(item),emoji:item.emoji||"🏋️"}} size={40} radius={10}/>
@@ -273,29 +299,13 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
                           {!(isToday&&completedToday.has(item.name))&&<button style={iconBtn} aria-label={`Form guide for ${item.name}`} onClick={()=>setGuideFor(guideTargetFor(item))}>
                             <BookOpen size={15} strokeWidth={1.8} aria-hidden="true"/>
                           </button>}
-                          <button style={{...iconBtn,color:movingIdx===idx?C.accentInk:C.textSoft,background:movingIdx===idx?C.lavender:"none"}} aria-label={`Move ${item.name} to another day`} aria-expanded={movingIdx===idx} onClick={()=>{setMovingIdx(movingIdx===idx?null:idx);setMoveDate("");}}>
+                          {!inSession&&<button style={{...iconBtn,color:movingIdx===idx?C.accentInk:C.textSoft,background:movingIdx===idx?C.lavender:"none"}} aria-label={`Move ${item.name} to another day`} aria-expanded={movingIdx===idx} onClick={()=>{setMovingIdx(movingIdx===idx?null:idx);setMovingGroup(null);setMoveDate("");}}>
                             <ArrowRightLeft size={15} strokeWidth={1.8}/>
-                          </button>
+                          </button>}
                           <button style={{...iconBtn,fontSize:16}} aria-label={`Remove ${item.name}`} onClick={()=>removeFromDay(pickingDay,idx)}>×</button>
                         </div>
                       </div>
-                      {movingIdx===idx&&(
-                        <div className="slide-in" style={{padding:"0 12px 12px"}}>
-                          <div style={{fontSize:11,color:C.textSoft,fontWeight:700,marginBottom:6}}>Move to:</div>
-                          <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:4,marginBottom:8}}>
-                            {weekOf(pickingDay).map(d=>{const dt=new Date(d+"T12:00"),cur=d===pickingDay;return(
-                              <button key={d} disabled={cur} onClick={()=>moveItem(pickingDay,idx,d)} aria-label={`Move to ${shortDate(d)}`} style={{padding:"6px 0",borderRadius:10,border:`1.5px solid ${cur?C.border:C.lavenderDeep}`,background:cur?"transparent":C.white,color:cur?C.textSoft:C.accentDeep,cursor:cur?"default":"pointer",fontFamily:"DM Sans",display:"flex",flexDirection:"column",alignItems:"center",lineHeight:1.2,opacity:cur?.5:1}}>
-                                <span style={{fontSize:9,fontWeight:600}}>{dt.toLocaleDateString("en-US",{weekday:"short"})}</span>
-                                <span style={{fontSize:12,fontWeight:700}}>{dt.getDate()}</span>
-                              </button>
-                            );})}
-                          </div>
-                          <div className="row" style={{gap:8}}>
-                            <input className="input" type="date" aria-label="Move to another date" value={moveDate} onChange={e=>setMoveDate(e.target.value)} style={{fontSize:13,padding:"8px 12px"}}/>
-                            <button className="btn btn-primary btn-sm" style={{flexShrink:0}} disabled={!moveDate||moveDate===pickingDay} onClick={()=>moveItem(pickingDay,idx,moveDate)}>Move</button>
-                          </div>
-                        </div>
-                      )}
+                      {!inSession&&movingIdx===idx&&movePanel(to=>moveItem(pickingDay,idx,to))}
                     </div>
                   );
                   if (!b.group) return <Fragment key={`u-${bi}`}>{b.entries.map(({item,index})=>renderItem(item,index))}</Fragment>;
@@ -303,10 +313,16 @@ export function WorkoutsPage({ workoutPlan, setWorkoutPlan, schedule, setSchedul
                     <section key={`g-${bi}`} aria-label={`${b.group} session`} style={{marginBottom:10}}>
                       <div className="row" style={{gap:6,margin:"4px 2px 6px"}}>
                         <span style={{fontSize:12,fontWeight:700,color:C.accentInk}}>{b.group}</span>
-                        <span style={{fontSize:11,fontWeight:600,color:C.textSoft}}>· {b.entries.length} exercise{b.entries.length===1?"":"s"}</span>
+                        <span style={{fontSize:11,fontWeight:600,color:C.textSoft,flex:1}}>· {b.entries.length} exercise{b.entries.length===1?"":"s"}</span>
+                        <button className="btn btn-ghost btn-sm" style={{padding:"5px 10px",fontSize:11,color:movingGroup===b.group?C.accentInk:C.textMid,background:movingGroup===b.group?C.lavender:C.white}}
+                          aria-label={`Move the ${b.group} session to another day`} aria-expanded={movingGroup===b.group}
+                          onClick={()=>{const g=b.group as string;setMovingGroup(movingGroup===g?null:g);setMovingIdx(null);setMoveDate("");}}>
+                          <ArrowRightLeft size={13} strokeWidth={2} aria-hidden="true"/> Move session
+                        </button>
                       </div>
+                      {movingGroup===b.group&&<div style={{background:C.bgDeep,borderRadius:12,marginBottom:8,paddingTop:12}}>{movePanel(to=>moveGroup(pickingDay,b.group as string,to))}</div>}
                       <div style={{borderLeft:`2px solid ${C.roseDeep}`,paddingLeft:8}}>
-                        {b.entries.map(({item,index})=>renderItem(item,index))}
+                        {b.entries.map(({item,index})=>renderItem(item,index,true))}
                       </div>
                     </section>
                   );

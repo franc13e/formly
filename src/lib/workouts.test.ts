@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Schedule, WorkoutLogEntry } from "../types";
-import { addDays, groupLogByDate, weekStreak, monthStats, moveInSchedule, suggestWorkoutEmoji, weekOf } from "./workouts";
+import { addDays, groupLogByDate, weekStreak, monthStats, moveInSchedule, moveGroupInSchedule, moveTargets, suggestWorkoutEmoji, weekOf } from "./workouts";
 
 const run = { name: "Run", emoji: "🏃" };
 const squat = { name: "Squat", emoji: "🦵", detail: "Legs · 30 min" };
@@ -105,5 +105,36 @@ describe("suggestWorkoutEmoji", () => {
   });
   it("doesn't match keywords inside other words", () => {
     expect(suggestWorkoutEmoji("Abstract flow", "Back")).toBe("🏋️");
+  });
+});
+
+describe("moveGroupInSchedule", () => {
+  const leg = (name: string) => ({ name, emoji: "x", group: "Leg day" });
+  const day = { "2026-11-16": [leg("Squat"), { name: "Walk", emoji: "x" }, leg("Lunge")], "2026-11-18": [{ name: "Yoga", emoji: "x" }] };
+
+  it("moves the whole session together, in order", () => {
+    const next = moveGroupInSchedule(day, "2026-11-16", "Leg day", "2026-11-18");
+    expect(next["2026-11-16"]).toEqual([{ name: "Walk", emoji: "x" }]);
+    expect(next["2026-11-18"]).toEqual([{ name: "Yoga", emoji: "x" }, leg("Squat"), leg("Lunge")]);
+  });
+
+  it("removes an emptied day and turns a rest day into a list", () => {
+    const next = moveGroupInSchedule({ a: [leg("Squat")], b: "rest" }, "a", "Leg day", "b");
+    expect(next.a).toBeUndefined();
+    expect(next.b).toEqual([leg("Squat")]);
+  });
+
+  it("does nothing for the same day or an unknown session", () => {
+    expect(moveGroupInSchedule(day, "2026-11-16", "Leg day", "2026-11-16")).toBe(day);
+    expect(moveGroupInSchedule(day, "2026-11-16", "Arm day", "2026-11-18")).toBe(day);
+  });
+});
+
+describe("moveTargets", () => {
+  it("starts at today and runs a week ahead, so Sunday can move into next week", () => {
+    expect(moveTargets("2026-11-15", "2026-11-15")).toEqual(["2026-11-15", "2026-11-16", "2026-11-17", "2026-11-18", "2026-11-19", "2026-11-20", "2026-11-21"]);
+  });
+  it("includes two days before a future day", () => {
+    expect(moveTargets("2026-11-20", "2026-11-15")[0]).toBe("2026-11-18");
   });
 });

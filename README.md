@@ -108,7 +108,7 @@ These are the same words as the About section on the app's Profile screen.
 - **Editable period length**, learned from the days you log a period ending
 
 **Workouts**
-- **Week / month schedule**: plan workouts on any day, mark rest days and move planned workouts to another day
+- **Week / month schedule**: plan workouts on any day, mark rest days and move planned workouts to another day (a whole session moves together)
 - **Logging that fits the workout**: strength asks for sets, reps and weight; runs, rides and swims for time and distance (with your pace); yoga and stretching for time and how it felt. The type is picked for you and can be changed
 - **History calendar**: each logged workout's icon on the day you did it, plus monthly totals and your weekly streak (weeks in a row with at least one workout)
 - **Insights**: this week or month at a glance: muscle groups trained (and not yet), what that training did for your body (e.g. glutes: supports your hips, knees and lower back) with your most-done workout, strength / cardio / recovery balance, training by cycle phase and one gentle suggestion
